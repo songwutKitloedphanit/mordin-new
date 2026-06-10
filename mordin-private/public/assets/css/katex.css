@@ -1,0 +1,6 @@
+.katex {
+  font-size: 1.0rem  !important; /* ย่อขนาดตัวหนังสือ */
+  color: #333;
+  margin: 0;
+  text-align: left !important;
+}

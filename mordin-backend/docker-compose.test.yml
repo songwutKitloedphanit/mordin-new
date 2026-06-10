@@ -1,0 +1,17 @@
+services:
+  main-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mordin_test
+      POSTGRES_PASSWORD: mordin_test
+      POSTGRES_DB: mordin_test
+    ports:
+      - "127.0.0.1:55432:5432"
+  logs-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mordin_test
+      POSTGRES_PASSWORD: mordin_test
+      POSTGRES_DB: mordin_logs_test
+    ports:
+      - "127.0.0.1:55433:5432"

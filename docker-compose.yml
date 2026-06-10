@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mordin-backend:
+    build:
+      context: ./mordin-backend
+      dockerfile: Dockerfile
+    container_name: mordin-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./mordin-backend/.env
+    restart: always
+
+  mordin-public:
+    build:
+      context: ./mordin-public
+      dockerfile: Dockerfile
+    container_name: mordin-public
+    ports:
+      - "8080:80"
+    environment:
+      - API_BASE_URL=http://mordin-backend:3000/
+    depends_on:
+      - mordin-backend
+    restart: always
+
+  mordin-private:
+    build:
+      context: ./mordin-private
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:3000
+        - VITE_BASE_URL=http://localhost:8081
+        - VITE_PUBLIC_APP_URL=http://localhost:8080
+    container_name: mordin-private
+    ports:
+      - "8081:80"
+    depends_on:
+      - mordin-backend
+    restart: always

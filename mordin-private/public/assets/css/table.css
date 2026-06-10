@@ -1,0 +1,10 @@
+table, th, td {
+  border: none;
+  outline: 1px solid white;
+}
+.table-bordered, .table-bordered th, .table-bordered td {
+  border: 1px solid black;
+  outline: none;
+}
+
+

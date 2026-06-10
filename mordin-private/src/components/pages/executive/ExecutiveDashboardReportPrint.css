@@ -1,0 +1,238 @@
+.executive-print-document {
+  width: 210mm;
+  min-height: 297mm;
+  box-sizing: border-box;
+  padding: 14mm;
+  background: #fff;
+  color: #17232d;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 10pt;
+  line-height: 1.45;
+}
+
+.executive-print-document * {
+  box-sizing: border-box;
+}
+
+.executive-print-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid #dce5ea;
+  padding-bottom: 10px;
+}
+
+.executive-print-header img {
+  width: 52px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.executive-print-header-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.executive-print-header h1 {
+  margin: 0;
+  font-size: 15pt;
+  line-height: 1.35;
+}
+
+.executive-print-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 3px;
+  color: #64717d;
+  font-size: 8pt;
+}
+
+.executive-print-meta strong {
+  color: #075985;
+}
+
+.executive-print-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 14px 0;
+  border-left: 3px solid #075985;
+  border-radius: 3px;
+  padding: 8px 10px;
+  background: #f5fafc;
+}
+
+.executive-print-filter strong {
+  color: #075985;
+  font-size: 8pt;
+}
+
+.executive-print-section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 14px 0 7px;
+  break-after: avoid;
+}
+
+.executive-print-section-header > div {
+  flex: 1;
+  border-bottom: 1px solid #dce5ea;
+  padding-bottom: 5px;
+}
+
+.executive-print-section-number {
+  display: inline-flex;
+  flex: 0 0 22px;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #075985;
+  color: #fff;
+  font-weight: 700;
+}
+
+.executive-print-section-header h2,
+.executive-print-group h3 {
+  margin: 0;
+  color: #17232d;
+  font-size: 12pt;
+  line-height: 1.25;
+}
+
+.executive-print-section-header p {
+  margin: 1px 0 0;
+  color: #64717d;
+  font-size: 8pt;
+}
+
+.executive-print-summary {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #dce5ea;
+  border-radius: 4px;
+}
+
+.executive-print-summary > div {
+  display: grid;
+  grid-template-columns: 30% 70%;
+  border-bottom: 1px solid #dce5ea;
+  padding: 8px 10px;
+  break-inside: avoid;
+}
+
+.executive-print-summary > div:last-child {
+  border-bottom: 0;
+}
+
+.executive-print-summary dt {
+  color: #64717d;
+  font-weight: 700;
+}
+
+.executive-print-summary dd {
+  margin: 0;
+}
+
+.executive-print-summary dd strong {
+  color: #075985;
+}
+
+.executive-print-document table {
+  width: 100%;
+  margin-bottom: 10px;
+  border: 1px solid #dce5ea;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 9pt;
+}
+
+.executive-print-document thead {
+  display: table-header-group;
+}
+
+.executive-print-document tr {
+  break-inside: avoid;
+}
+
+.executive-print-document th,
+.executive-print-document td {
+  border-bottom: 1px solid #dce5ea;
+  padding: 6px 7px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.executive-print-document th {
+  background: #eaf4f8;
+  color: #075985;
+  font-size: 8pt;
+  font-weight: 700;
+}
+
+.executive-print-document tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.executive-print-number {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.executive-print-muted {
+  color: #64717d;
+  font-size: 8pt;
+}
+
+.executive-print-highlight {
+  background: #eef8f2;
+}
+
+.executive-print-group h3 {
+  margin: 6px 0 4px;
+  color: #075985;
+  font-size: 10pt;
+  break-after: avoid;
+}
+
+.executive-print-improvement {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  padding-top: 14mm;
+}
+
+.executive-print-empty {
+  border-radius: 4px;
+  padding: 12px;
+  background: #f5fafc;
+  color: #64717d;
+  text-align: center;
+}
+
+.executive-print-document footer {
+  margin-top: 14px;
+  border-top: 1px solid #dce5ea;
+  padding-top: 5px;
+  color: #64717d;
+  font-size: 7pt;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  .executive-print-document {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 14mm;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

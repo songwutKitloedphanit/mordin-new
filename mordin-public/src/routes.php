@@ -1,0 +1,211 @@
+<?php
+require_once __DIR__.'/services/ServiceCalendarAPI.php';
+require_once __DIR__.'/services/qr-code/QRCodeAPI.php';
+
+// AJAX: address cascade
+Flight::route('GET /api/districts/@provinceCode', function($provinceCode) {
+    require_once __DIR__.'/services/AddressAPI.php';
+    $result = AddressAPI::getDistrictsByProvince($provinceCode);
+    Flight::json($result['success'] ? $result['data'] : []);
+});
+
+Flight::route('GET /api/subdistricts/@districtCode', function($districtCode) {
+    require_once __DIR__.'/services/AddressAPI.php';
+    $result = AddressAPI::getSubdistrictsByDistrict($districtCode);
+    Flight::json($result['success'] ? $result['data'] : []);
+});
+
+// AJAX: farmer lookup
+Flight::route('POST /api/farmer-lookup', function() {
+    require_once __DIR__.'/services/FarmerAPI.php';
+    $body = json_decode(Flight::request()->getBody(), true);
+    $firstName   = trim($body['firstName'] ?? '');
+    $phoneNumber = preg_replace('/\D/', '', $body['phoneNumber'] ?? '');
+    if (!$firstName || !$phoneNumber) {
+        Flight::json(['success' => false, 'message' => 'กรุณากรอกชื่อและเบอร์โทร'], 400);
+        return;
+    }
+    $result = FarmerAPI::publicLookupByNamePhone($firstName, $phoneNumber);
+    Flight::json($result);
+});
+
+Flight::route('GET /', function() {
+         Flight::render('home.php');
+
+});
+
+Flight::route('GET /calendar', function() {
+    $data = ServiceCalendarAPI::getUpComingCalendar();
+    Flight::render('calendar.php', ['upComingData' => $data]);
+});
+
+Flight::route('GET /contact', function() {
+     Flight::render('contact.php');
+});
+
+Flight::route('GET /shops', function() {
+     Flight::render('shops.php');
+});
+
+Flight::route('GET /soil-improvement', function() {
+     Flight::render('soil-improvement.php');
+});
+
+Flight::route('GET|POST /services/book/login', function() {
+     Flight::render('services/service-books/login.php');
+});
+
+Flight::route('GET /services/book/logout', function () {
+    Flight::render('services/service-books/logout.php');
+});
+
+Flight::route('GET|POST /services/book/register', function() {
+     Flight::render('services/service-books/register.php');
+});
+
+Flight::route('GET|POST /services/book/farmer/edit', function() {
+     Flight::render('services/service-books/farmer-edit.php');
+});
+
+Flight::route('GET /services/book/farmer', function() {
+     Flight::render('services/service-books/farmer.php');
+});
+
+Flight::route('GET|POST /services/book/land/add', function() {
+     Flight::render('services/service-books/land-add.php');
+});
+
+Flight::route('GET /services/book/land/edit', function() {
+     Flight::render('services/service-books/land-edit.php');
+});
+
+Flight::route('GET /services/mitr', function() {
+     Flight::render('services/service-mitr/service-mitr.php');
+});
+
+Flight::route('GET /services/price', function() {
+     Flight::render('services/service-price/service-price.php');
+});
+
+Flight::route('GET /services/report/land', function() {
+     Flight::render('services/service-reports/report-land.php');
+});
+
+Flight::route('POST /services/report/summary', function() {
+     Flight::render('services/service-reports/report-summary.php');
+});
+
+// หน้าเข้าสู่ระบบรายงาน
+Flight::route('GET|POST /services/report/login', function() {
+     Flight::render('services/service-reports/login.php');
+});
+
+// ยืนยันตัวตน (mock) แล้ว redirect ไปดูรายงาน
+Flight::route('POST /services/report/login', function() {
+  // ตัวอย่างรับค่าจากฟอร์ม
+  $identifier = $_POST['identifier'] ?? null;
+  $phone      = $_POST['phone'] ?? null;
+  $loginType  = $_POST['login_type'] ?? 'farmer_no';
+
+  // TODO: ที่จริงควรตรวจสอบกับฐานข้อมูล/ API
+  if ($identifier && $phone) {
+    $_SESSION['report_auth'] = [
+      'login_type' => $loginType,
+      'identifier' => $identifier,
+      'phone'      => $phone,
+      'login_time' => date('Y-m-d H:i:s')
+    ];
+    // เข้าสู่หน้า report หลังล็อกอิน
+    Flight::redirect('/services/report');
+  } else {
+    // กลับไปหน้า login ถ้าข้อมูลไม่ครบ
+    Flight::redirect('/services/report/login');
+  }
+});
+
+// ป้องกันเข้าหน้ารายงานโดยยังไม่ล็อกอิน
+Flight::route('GET /services/report', function() {
+  Flight::render('services/service-reports/report-land.php');
+});
+
+
+Flight::route('GET /services/soil', function() {
+     Flight::render('services/service-soil/service-soil.php');
+});
+
+Flight::route('GET|POST /collect-sample/@code', function($code) {
+    $normalizedCode = trim((string) $code);
+    $hasValidTokenShape = (bool) preg_match('/^[A-Za-z0-9_-]{16,512}$/', $normalizedCode);
+    $isValidCode = false;
+    $qrCode = [];
+
+    if ($hasValidTokenShape) {
+        $isValidCode = QRCodeAPI::checkEncryptQrCode($normalizedCode);
+        $qrCode = QRCodeAPI::getQrCodeByEncryptCode($normalizedCode);
+    }
+
+    Flight::render('collect-sample.php', [
+        'qrCode' => $qrCode,
+        'isValidCode' => $hasValidTokenShape && $isValidCode,
+        'code' => $normalizedCode
+    ]);
+});
+
+Flight::route('GET /services/report/pdf', function() {
+     Flight::render('services/service-reports/pdf.php');
+});
+
+
+Flight::route('GET|POST /booking', function() {
+     Flight::render('booking.php');
+});
+
+Flight::route('/services/book/create-booking', function () {
+     Flight::render('services/service-books/create-booking.php');
+});
+
+Flight::route('/services/book/update-booking', function () {
+     Flight::render('services/service-books/update-booking.php');
+});
+
+Flight::route('/services/book/cancel-booking', function () {
+     Flight::render('services/service-books/cancel-booking.php');
+});
+
+Flight::route('/api/districts/by-province/@provinceCode', function($provinceCode){
+    require_once SERVICES_PATH . 'AddressAPI.php';
+    $res = AddressAPI::getDistrictsByProvince($provinceCode);
+    if ($res['success']) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($res['data'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    } else {
+        Flight::halt($res['httpCode'] ?: 500, $res['message']);
+    }
+});
+
+Flight::route('/api/subdistricts/by-district/@districtCode', function($districtCode){
+    require_once SERVICES_PATH . 'AddressAPI.php';
+    $res = AddressAPI::getSubdistrictsByDistrict($districtCode);
+    if ($res['success']) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($res['data'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    } else {
+        Flight::halt($res['httpCode'] ?: 500, $res['message']);
+    }
+});
+
+Flight::route('/services/book/land/delete', function () {
+    Flight::render('services/service-books/land-delete.php');
+});
+
+Flight::route('GET|POST /services/book/land/edit', function () {
+    Flight::render('services/service-books/land-edit.php');
+});
+
+Flight::route('/api/service-areas/by-factory/@factoryId', function($factoryId){
+    require_once SERVICES_PATH . 'ServiceAreaAPI.php';
+    $data = serviceAreaAPI::getServiceAreasByFactory($factoryId);
+    Flight::json($data['data'] ?? []);
+});

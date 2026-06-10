@@ -1,0 +1,32 @@
+import { BusInput } from '../../types/Bus';
+import api from '../Axios';
+
+export async function getAllBuses() {
+  const response = await api.get('/buses');
+  return response.data;
+}
+
+export async function createBus(busData: BusInput) {
+  const response = await api.post('/buses', busData);
+  return response.data;
+}
+
+export async function updateBus(busId: number, busData: BusInput) {
+  const response = await api.patch(`/buses/${busId}`, busData);
+  return response.data;
+}
+
+export async function getBusById(busId: number) {
+  const response = await api.get(`/buses/${busId}`);
+  return response.data;
+}
+
+export async function deleteBus(busId: number) {
+  const response = await api.delete(`/buses/${busId}`);
+  return response.data;
+}
+
+export async function getBusSummary() {
+  const response = await api.get(`/buses/summary`);
+  return response.data;
+}

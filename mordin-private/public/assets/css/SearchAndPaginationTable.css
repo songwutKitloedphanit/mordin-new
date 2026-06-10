@@ -1,0 +1,73 @@
+table.dataTable thead > tr > th span.dt-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+/* Title grows to fill */
+span.dt-column-title {
+  flex-grow: 1;
+}
+
+/* Order icon placeholder */
+span.dt-column-order {
+  position: relative;
+  width: 12px;
+  height: 20px;
+}
+
+/* Ascending arrow */
+table.dataTable thead > tr > th.dt-orderable-asc span.dt-column-order:before,
+table.dataTable thead > tr > th.dt-ordering-asc span.dt-column-order:before {
+  position: absolute;
+  display: block;
+  bottom: 50%;
+  content: "\25B2";
+  left: 0;
+  opacity: .125;
+  line-height: 9px;
+  font-size: .8em;
+}
+
+/* Descending arrow */
+table.dataTable thead > tr > th.dt-orderable-desc span.dt-column-order:after,
+table.dataTable thead > tr > th.dt-ordering-desc span.dt-column-order:after {
+  position: absolute;
+  display: block;
+  top: 50%;
+  content: "\25BC";
+  left: 0;
+  opacity: .125;
+  line-height: 9px;
+  font-size: .8em;
+}
+
+/* Highlight on active sort */
+table.dataTable thead > tr > th.dt-ordering-asc span.dt-column-order:before,
+table.dataTable thead > tr > th.dt-ordering-desc span.dt-column-order:after {
+  opacity: .6;
+}
+
+/* 1) ปรับ default (light) */
+table.dataTable thead > tr > th.dt-orderable-asc span.dt-column-order:before {
+  content: "▲";
+  opacity: .2;       /* สีจาง */
+  color: gray;       /* หรือ #ccc */
+}
+table.dataTable thead > tr > th.dt-orderable-desc span.dt-column-order:after {
+  content: "▼";
+  opacity: .2;
+  color: gray;
+}
+
+/* 2) สถานะ active (เข้มขึ้น) */
+table.dataTable thead > tr > th.dt-ordering-asc span.dt-column-order:before {
+  opacity: .8;       /* สีเข้ม */
+  color: black;      /* หรือ #333 */
+}
+table.dataTable thead > tr > th.dt-ordering-desc span.dt-column-order:after {
+  opacity: .8;
+  color: black;
+}
