@@ -46,3 +46,24 @@
 
 - **การอัปเดต Migration**: ไฟล์ `Dockerfile` ของ Backend มีการรันคำสั่ง `node scripts/migrate.js up` ก่อนเริ่มโปรแกรมเสมอ ดังนั้นหากคุณมีการแก้ไขฐานข้อมูล ระบบจะอัปเดต Schema ให้โดยอัตโนมัติ
 - **SSL**: ระบบ Render จะเปิดใช้งาน SSL (`https`) ให้กับทุก Web Service โดยอัตโนมัติ
+
+---
+
+## 🗄️ วิธีการ Restore ฐานข้อมูล (Database Restore)
+
+ในโฟลเดอร์ `db-backups/20260604_095337_schema_restored/` จะมีไฟล์ Backup ฐานข้อมูล (`.dump`) เตรียมไว้ให้ คุณสามารถนำเข้าข้อมูลไปยัง Render Postgres ได้ดังนี้:
+
+### 1. ดึง External Database URL
+- เข้าไปที่บริการ **mordin-db** (PostgreSQL) ใน Render Dashboard
+- ค้นหาช่อง **External Connection String** (ตัวอย่าง: `postgresql://mordin_user:pwd@dpg-xxx-a.oregon-postgres.render.com/mordin`)
+
+### 2. นำเข้าข้อมูลด้วย pg_restore
+ใช้เครื่องมือ `pg_restore` (ซึ่งติดตั้งมาพร้อมกับ PostgreSQL Client บนเครื่องของคุณ) ในการ Restore ข้อมูลผ่าน Terminal หรือ Command Prompt:
+
+```bash
+# นำเข้าข้อมูลระบบหลัก (Main Database)
+pg_restore --no-owner --no-privileges --clean --if-exists -d "EXTERNAL_CONNECTION_STRING" db-backups/20260604_095337_schema_restored/main.full.dump
+```
+
+*หมายเหตุ: สำหรับ `EXTERNAL_CONNECTION_STRING` ให้ใส่ URL ที่คัดลอกมาจาก Render โดยแนะนำให้เติม `?sslmode=require` ต่อท้ายเพื่อความปลอดภัยในกรณีที่จำเป็น*
+
