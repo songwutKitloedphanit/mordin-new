@@ -88,9 +88,9 @@ services:
     dockerfilePath: mordin-public/Dockerfile
     plan: free
     envVars:
-      # Use internal private networking host for backend API communication
+      # Use public URL for backend API communication due to Render Free Tier limits on private network
       - key: API_BASE_URL
-        value: http://mordin-backend:3000/
+        value: https://mordin-backend.onrender.com/
 
   # 3. Private React Admin Web Service
   - type: web
