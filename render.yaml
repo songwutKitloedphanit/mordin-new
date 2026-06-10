@@ -2,13 +2,13 @@ services:
   # 1. NestJS Backend Web Service
   - type: web
     name: mordin-backend
-    env: docker
+    runtime: docker
     dockerContext: mordin-backend
     dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: PORT
-        value: 3000
+        value: "3000"
       - key: POSTGRES_HOST
         fromDatabase:
           name: mordin-db
@@ -65,7 +65,7 @@ services:
   # 2. Public PHP Website Web Service
   - type: web
     name: mordin-public
-    env: docker
+    runtime: docker
     dockerContext: mordin-public
     dockerfilePath: Dockerfile
     plan: free
@@ -77,16 +77,18 @@ services:
   # 3. Private React Admin Web Service
   - type: web
     name: mordin-private
-    env: docker
+    runtime: docker
     dockerContext: mordin-private
     dockerfilePath: Dockerfile
     plan: free
-    # Note: Build arguments for React/Vite must be public URLs because React runs in the browser.
-    # Set these values in the Render Dashboard when deploying this Blueprint.
-    dockerBuildArgs:
-      - VITE_API_URL: https://mordin-backend.onrender.com
-      - VITE_BASE_URL: https://mordin-private.onrender.com
-      - VITE_PUBLIC_APP_URL: https://mordin-public.onrender.com
+    # Note: Environment variables are automatically passed as build arguments by Render to the Docker build context.
+    envVars:
+      - key: VITE_API_URL
+        value: https://mordin-backend.onrender.com
+      - key: VITE_BASE_URL
+        value: https://mordin-private.onrender.com
+      - key: VITE_PUBLIC_APP_URL
+        value: https://mordin-public.onrender.com
 
 databases:
   - name: mordin-db
