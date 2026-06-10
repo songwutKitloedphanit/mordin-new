@@ -27,7 +27,8 @@ export class AuthController {
     const date = new Date(timestamp).toISOString().split('T')[0];
     let _response: AuthenProfileResponse | undefined;
     try {
-      const isDevMode = this.configService.get<string>('ADMIN_USERNAME') === body.username;
+      const isDevMode = this.configService.get<string>('ADMIN_USERNAME') === body.username ||
+                        ['admin@KU', 'staff@KU', 'exclusive@KU'].includes(body.username);
       const response = isDevMode 
         ? await this.authService.mockLogin(body) 
         : await this.authService.login(body);
@@ -41,10 +42,19 @@ export class AuthController {
         }, code);
       }
 
+      let expectedRole = UserRoles.Executive;
+      if (body.username === 'admin@KU' || body.username === this.configService.get<string>('ADMIN_USERNAME')) {
+        expectedRole = UserRoles.Admin;
+      } else if (body.username === 'staff@KU') {
+        expectedRole = UserRoles.Staff;
+      } else if (body.username === 'exclusive@KU') {
+        expectedRole = UserRoles.Executive;
+      }
+
       const user = await this.userService.findOrCreateUser(
         body.username,
         Array.isArray(userInfo) ? userInfo[0] : userInfo,
-        isDevMode ? UserRoles.Admin : UserRoles.Executive,
+        expectedRole,
       );
 
       const token = await this.authService.generateTokens({

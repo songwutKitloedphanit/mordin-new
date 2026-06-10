@@ -108,8 +108,13 @@ export class AuthService {
     const env_username = this.configService.get<string>('ADMIN_USERNAME');
     const env_password = this.configService.get<string>('ADMIN_PASSWORD');
 
-    if (payload.username === env_username && payload.password === env_password) {
-      const email = `${env_username}@admin.dev`;
+    const isValidAdmin = payload.username === env_username && payload.password === env_password;
+    const isValidKUUser = ['admin@KU', 'staff@KU', 'exclusive@KU'].includes(payload.username) && payload.password === 'KU@123';
+
+    if (isValidAdmin || isValidKUUser) {
+      const email = payload.username.includes('@') ? payload.username : `${payload.username}@admin.dev`;
+      const name = payload.username.split('@')[0];
+      const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
       return {
         code: 200,
         record: 1,
@@ -119,12 +124,12 @@ export class AuthService {
             mail: email,
             userPrincipalName: email,
             companyCode: 'mock',
-            department: 'mock',
-            companyName: 'mock',
+            department: 'KU Department',
+            companyName: 'KU',
             description: 'mock',
             employeeType: 'mock',
             manager: 'mock',
-            name: `Dev Mordin`,
+            name: `${capitalizedName} KU`,
             plantCode: 'mock',
             plantName: 'mock',
             telephoneNumber: '0987654321',
