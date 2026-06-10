@@ -4,7 +4,7 @@ services:
     name: mordin-backend
     runtime: docker
     dockerContext: mordin-backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: mordin-backend/Dockerfile
     plan: free
     envVars:
       - key: PORT
@@ -67,7 +67,7 @@ services:
     name: mordin-public
     runtime: docker
     dockerContext: mordin-public
-    dockerfilePath: Dockerfile
+    dockerfilePath: mordin-public/Dockerfile
     plan: free
     envVars:
       # Use internal private networking host for backend API communication
@@ -79,7 +79,7 @@ services:
     name: mordin-private
     runtime: docker
     dockerContext: mordin-private
-    dockerfilePath: Dockerfile
+    dockerfilePath: mordin-private/Dockerfile
     plan: free
     # Note: Environment variables are automatically passed as build arguments by Render to the Docker build context.
     envVars:
