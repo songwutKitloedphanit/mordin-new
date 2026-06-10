@@ -61,6 +61,24 @@ services:
         generateValue: true
       - key: JWT_ACCESS_EXPIRATION
         value: 1d
+      # --- Azure AD / Authentication Configuration ---
+      - key: AZURE_AD_URL
+        value: https://login.microsoftonline.com/common/oauth2/v2.0/token
+      - key: CLIENT_ID
+        value: dummy_client_id
+      - key: CLIENT_SECRET
+        value: dummy_client_secret
+      - key: APIM_SUBSCRIPTION_KEY
+        value: dummy_apim_key
+      - key: SCOPE
+        value: dummy_scope
+      - key: API_AUTHEN_PROFILE_URL
+        value: https://apim.example.com/authen/profile
+      # --- Mock Admin Login Bypass Credentials (use these for your demo login) ---
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: admin1234
 
   # 2. Public PHP Website Web Service
   - type: web
