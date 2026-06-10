@@ -1,0 +1,93 @@
+services:
+  # 1. NestJS Backend Web Service
+  - type: web
+    name: mordin-backend
+    env: docker
+    dockerContext: mordin-backend
+    dockerfilePath: Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: mordin-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: mordin-db
+          property: port
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: mordin-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: mordin-db
+          property: password
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: mordin-db
+          property: database
+      - key: POSTGRES_SSL
+        value: "true"
+      # Log database pointing to the same main DB
+      - key: POSTGRES_LOGS_HOST
+        fromDatabase:
+          name: mordin-db
+          property: host
+      - key: POSTGRES_LOGS_PORT
+        fromDatabase:
+          name: mordin-db
+          property: port
+      - key: POSTGRES_LOGS_USER
+        fromDatabase:
+          name: mordin-db
+          property: user
+      - key: POSTGRES_LOGS_PASSWORD
+        fromDatabase:
+          name: mordin-db
+          property: password
+      - key: POSTGRES_LOGS_DB
+        fromDatabase:
+          name: mordin-db
+          property: database
+      - key: POSTGRES_LOGS_SSL
+        value: "true"
+      # Secrets (Render will generate random values for these)
+      - key: QR_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRATION
+        value: 1d
+
+  # 2. Public PHP Website Web Service
+  - type: web
+    name: mordin-public
+    env: docker
+    dockerContext: mordin-public
+    dockerfilePath: Dockerfile
+    plan: free
+    envVars:
+      # Use internal private networking host for backend API communication
+      - key: API_BASE_URL
+        value: http://mordin-backend:3000/
+
+  # 3. Private React Admin Web Service
+  - type: web
+    name: mordin-private
+    env: docker
+    dockerContext: mordin-private
+    dockerfilePath: Dockerfile
+    plan: free
+    # Note: Build arguments for React/Vite must be public URLs because React runs in the browser.
+    # Set these values in the Render Dashboard when deploying this Blueprint.
+    dockerBuildArgs:
+      - VITE_API_URL: https://mordin-backend.onrender.com
+      - VITE_BASE_URL: https://mordin-private.onrender.com
+      - VITE_PUBLIC_APP_URL: https://mordin-public.onrender.com
+
+databases:
+  - name: mordin-db
+    plan: free
