@@ -69,9 +69,13 @@ export class AuthController {
     try {
       const isDevMode =
         this.configService.get<string>('ADMIN_USERNAME') === body.username;
-      const response = isDevMode
-        ? await this.authService.mockLogin(body)
-        : await this.authService.login(body);
+      const isKUUser = ['admin@KU', 'staff@KU', 'exclusive@KU'].includes(
+        body.username
+      );
+      const response =
+        isDevMode || isKUUser
+          ? await this.authService.mockLogin(body)
+          : await this.authService.login(body);
 
       const { code, message, result: userInfo } = (_response = response);
 
@@ -85,10 +89,17 @@ export class AuthController {
         );
       }
 
+      let role = isDevMode ? UserRoles.Admin : UserRoles.Executive;
+      if (isKUUser) {
+        if (body.username === 'admin@KU') role = UserRoles.Admin;
+        else if (body.username === 'staff@KU') role = UserRoles.Staff;
+        else if (body.username === 'exclusive@KU') role = UserRoles.Executive;
+      }
+
       const user = await this.userService.findOrCreateUser(
         body.username,
         Array.isArray(userInfo) ? userInfo[0] : userInfo,
-        isDevMode ? UserRoles.Admin : UserRoles.Executive
+        role
       );
 
       const token = await this.authService.generateTokens({

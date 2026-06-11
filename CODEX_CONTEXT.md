@@ -16,9 +16,9 @@
 - Do not change API contracts or database schema without explicit approval.
 
 ## Latest Completed Task (2026-06-11)
-- **Public Header Contrast and Mobile Menu UI Fixes**:
-  1. Changed `.public-profile-toggle` button styling on white headers to be a blue button matching active registration/CTA buttons, improving contrast for name, arrow, and avatar elements.
-  2. Fixed mobile navigation visibility bug where menu link text was white on white background when menu was active on transparent headers.
+- **Fixed KU Mock User Bypass for Render Deployment**:
+  1. Updated uth.service.ts and uth.controller.ts to ensure dmin@KU, staff@KU, and exclusive@KU correctly bypass the Azure AD token request, which was failing on the deployed app due to placeholder dummy_scope values.
+  2. Ensured correct UserRoles assignment for each KU mock user.
   3. Styled mobile user profile container at the bottom of the nav menu to have a blue border, and styled its inner avatar to be a blue circle with high-contrast white text for the initial letter.
 
 ## Files Recently Changed
