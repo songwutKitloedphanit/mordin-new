@@ -161,10 +161,13 @@ const QrScanner: React.FC<QrScannerProps> = ({
       <div
         id={readerId}
         style={{
-          width: qrbox,
-          height: qrbox,
+          width: '100%',
+          maxWidth: qrbox,
+          minHeight: qrbox,
           margin: '0 auto',
-          background: '#eee',
+          background: '#eef2f7',
+          borderRadius: 12,
+          overflow: 'hidden',
         }}
       />
       <button
@@ -172,7 +175,8 @@ const QrScanner: React.FC<QrScannerProps> = ({
         className={`btn ${isScanning ? 'btn-danger' : 'btn-primary'} mt-2`}
         onClick={isScanning ? stopScanning : startScanning}
       >
-        {isScanning ? 'Stop Scanning' : 'Start Scanning'}
+        <i className={`fas ${isScanning ? 'fa-stop' : 'fa-camera'} me-2`} />
+        {isScanning ? 'หยุดสแกน' : 'เริ่มสแกน'}
       </button>
     </div>
   );

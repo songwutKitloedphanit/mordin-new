@@ -1,11 +1,12 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { ResultGradeLevel } from '../result-grade-levels/entities/result-grade-level.entity';
+
 import { CreateResultGradeDto } from './dto/create-result-grade.dto';
 import { UpdateResultGradeDto } from './dto/update-result-grade.dto';
 import { ResultGrade } from './entities/result-grade.entity';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UpdateResultGradeLevelDto } from '../result-grade-levels/dto/update-result-grade-level.dto';
-import { ResultGradeLevel } from '../result-grade-levels/entities/result-grade-level.entity';
 import { ResultGradeLog } from './entities/result-grade.log.entity';
 
 @Injectable()
@@ -19,16 +20,21 @@ export class ResultGradesService {
 
     @InjectRepository(ResultGradeLog)
     private readonly resultGradeLog: Repository<ResultGradeLog>
-  ) { }
+  ) {}
 
-  async createForServiceType(serviceTypeId: number, labId: number, updatedUid: number) {
+  async createForServiceType(
+    serviceTypeId: number,
+    labId: number,
+    updatedUid: number
+  ) {
     const resultGrade = this.resultGradesRepository.create({
       serviceTypeId,
       laboratoryId: labId,
-      updatedUid: updatedUid,
+      updatedUid,
     });
     return await this.resultGradesRepository.save(resultGrade);
   }
+
   create(createResultGradeDto: CreateResultGradeDto, Uid: number) {
     return 'This action adds a new resultGrade';
   }
@@ -56,8 +62,11 @@ export class ResultGradesService {
     return resultGrade;
   }
 
-  async update(id: number, updateResultGradeDto: UpdateResultGradeDto, Uid: number) {
-
+  async update(
+    id: number,
+    updateResultGradeDto: UpdateResultGradeDto,
+    Uid: number
+  ) {
     // ตรวจสอบว่ามี resultGrade หรือไม่
     const resultGrade = await this.resultGradesRepository.findOneBy({
       resultGradeId: id,
@@ -80,12 +89,14 @@ export class ResultGradesService {
       }
       await this.resultGradeLevelRepository.remove(levelsToRemove);
     }
-    
+
     // เตรียมข้อมูลใหม่เพื่อ save
-    const resultGradeLevels = updateResultGradeDto.resultGradeLevels.map(level => ({
-      ...level,
-      resultGrade: { resultGradeId: id },
-    }));
+    const resultGradeLevels = updateResultGradeDto.resultGradeLevels.map(
+      level => ({
+        ...level,
+        resultGrade: { resultGradeId: id },
+      })
+    );
 
     // save ข้อมูลใหม่
     return await this.resultGradeLevelRepository.save(resultGradeLevels);

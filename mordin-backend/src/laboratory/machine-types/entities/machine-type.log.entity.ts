@@ -1,10 +1,6 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
 import { MachineTypeTypes } from 'src/laboratory/enums/machine-type.enum';
-import {
-  Column,
-  Entity,
-  PrimaryColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('machine_types_logs')
 export class MachineTypeLog extends BaseLogEntity {
@@ -15,8 +11,6 @@ export class MachineTypeLog extends BaseLogEntity {
   name: string;
 
   @Column({ name: 'type', enum: MachineTypeTypes, nullable: false })
-
   @Column({ name: 'update_uid', type: 'int' })
   updateUid: number;
-
 }

@@ -1,9 +1,9 @@
-import { IsNumber } from "class-validator";
+import { IsNumber } from 'class-validator';
 
 export class CreateStandardCertificateDto {
-    @IsNumber()
-    laboratoryId: number;
+  @IsNumber()
+  laboratoryId: number;
 
-    @IsNumber()
-    certificateValue: number;
+  @IsNumber()
+  certificateValue: number;
 }

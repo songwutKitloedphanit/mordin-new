@@ -43,12 +43,6 @@ export class ServiceFertilizerMinor {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
@@ -71,12 +65,18 @@ export class ServiceFertilizerMinor {
 
   @OneToMany(
     () => ServiceFertilizerMinorUsage,
-    (servFerMinorUsage) => servFerMinorUsage.serviceFertilizerMinor,
-    { cascade: true },
+    servFerMinorUsage => servFerMinorUsage.serviceFertilizerMinor,
+    { cascade: true }
   )
   serviceFertilizerMinorUsages: ServiceFertilizerMinorUsage[];
 
   @ManyToOne(() => Unit)
   @JoinColumn({ name: 'unit_id' })
   unit: Unit;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

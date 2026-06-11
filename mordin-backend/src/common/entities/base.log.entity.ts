@@ -1,4 +1,4 @@
-import { Column, Index, PrimaryColumn } from 'typeorm'; 
+import { Column, Index, PrimaryColumn } from 'typeorm';
 
 export abstract class BaseLogEntity {
   @PrimaryColumn({ name: 'inserted_at', type: 'bigint' })

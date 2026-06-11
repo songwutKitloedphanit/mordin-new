@@ -1,28 +1,28 @@
-import { ValidationPipe } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+import { ValidationPipe, INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Test } from '@nestjs/testing';
 import { getDataSourceToken } from '@nestjs/typeorm';
-import { INestApplication } from '@nestjs/common';
-import { DataSource } from 'typeorm';
-import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
-import { Department } from 'src/users/entities/department.entity';
-import { User } from 'src/users/entities/user.entity';
-import { UserRoles } from 'src/users/enums/user.enum';
-import { Factory } from 'src/service-area/factories/entities/factory.entity';
-import { ServiceArea } from 'src/service-area/service-areas/entities/service-area.entity';
+import { CryptoService } from 'src/common/crypto/crypto.service';
 import { Farmer } from 'src/farmers/entities/farmer.entity';
-import { QrCode } from 'src/sample/qr-codes/entities/qr-code.entity';
 import { Book } from 'src/sample/books/entities/book.entity';
-import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
-import { ServiceTypeColor } from 'src/service-type/enums/service-types.enum';
 import {
   QrCodeTypeEnum,
   SampleStatusEnum,
 } from 'src/sample/enums/qr-code.enum';
-import { CryptoService } from 'src/common/crypto/crypto.service';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { QrCode } from 'src/sample/qr-codes/entities/qr-code.entity';
+import { Factory } from 'src/service-area/factories/entities/factory.entity';
+import { ServiceArea } from 'src/service-area/service-areas/entities/service-area.entity';
+import { ServiceTypeColor } from 'src/service-type/enums/service-types.enum';
+import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
+import { Department } from 'src/users/entities/department.entity';
+import { User } from 'src/users/entities/user.entity';
+import { UserRoles } from 'src/users/enums/user.enum';
+import * as request from 'supertest';
+import { DataSource } from 'typeorm';
 
 jest.setTimeout(30000);
 
@@ -52,7 +52,9 @@ describe('service-area and public QR contracts', () => {
       imports: [AppModule],
     }).compile();
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true })
+    );
     await app.init();
     dataSource = app.get<DataSource>(getDataSourceToken());
     logsDataSource = app.get<DataSource>(getDataSourceToken('logs'));
@@ -61,26 +63,14 @@ describe('service-area and public QR contracts', () => {
       join(migrationDir, '20260602_service_area_outbox_main.sql'),
       'utf8'
     );
-    const versioningMainMigration = readFileSync(
-      join(migrationDir, '20260605_service_area_versioning_main.sql'),
-      'utf8'
-    );
     const logsMigration = readFileSync(
       join(migrationDir, '20260602_service_area_outbox_logs.sql'),
       'utf8'
     );
-    const versioningLogsMigration = readFileSync(
-      join(migrationDir, '20260605_service_area_versioning_logs.sql'),
-      'utf8'
-    );
     await dataSource.query(mainMigration);
     await dataSource.query(mainMigration);
-    await dataSource.query(versioningMainMigration);
-    await dataSource.query(versioningMainMigration);
     await logsDataSource.query(logsMigration);
     await logsDataSource.query(logsMigration);
-    await logsDataSource.query(versioningLogsMigration);
-    await logsDataSource.query(versioningLogsMigration);
 
     const now = Date.now();
     const department = await dataSource.getRepository(Department).save({
@@ -185,7 +175,7 @@ describe('service-area and public QR contracts', () => {
     await request(app.getHttpServer())
       .patch(`/service-areas/${movable.serviceAreaId}/move`)
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ targetFactoryId: factoryA.factoryId })
+      .send({ factoryId: factoryA.factoryId })
       .expect(200);
     expect(
       (await areaRepo.findOneByOrFail({ serviceAreaId: movable.serviceAreaId }))
@@ -205,7 +195,7 @@ describe('service-area and public QR contracts', () => {
     await request(app.getHttpServer())
       .patch(`/service-areas/${movable.serviceAreaId}/move`)
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ targetFactoryId: factoryB.body.factoryId })
+      .send({ factoryId: factoryB.body.factoryId })
       .expect(409);
 
     await request(app.getHttpServer())
@@ -225,77 +215,16 @@ describe('service-area and public QR contracts', () => {
         newServiceAreas: [],
       })
       .expect(409);
-
-    const supersede = await request(app.getHttpServer())
-      .post(`/service-areas/${movable.serviceAreaId}/supersede`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
-        targetFactoryId: factoryA.factoryId,
-        effectiveFrom: '2026-07-01',
-        code: 'B01',
-        name: 'South Replacement',
-      })
-      .expect(201);
-    expect(supersede.body.serviceAreaId).not.toBe(movable.serviceAreaId);
-    expect(supersede.body.factoryId).toBe(factoryA.factoryId);
-    expect(supersede.body.isActive).toBe(true);
-
-    const oldArea = await areaRepo.findOneByOrFail({
-      serviceAreaId: movable.serviceAreaId,
-    });
-    expect(oldArea.isActive).toBe(false);
-    expect(oldArea.effectiveTo).toBe('2026-06-30');
-    expect(oldArea.supersededByServiceAreaId).toBe(
-      supersede.body.serviceAreaId
-    );
-    expect(
-      (await dataSource.getRepository(Farmer).findOneByOrFail({
-        serviceAreaId: movable.serviceAreaId,
-      })).serviceAreaId
-    ).toBe(movable.serviceAreaId);
-
-    const publicFactory = await request(app.getHttpServer())
-      .get(`/factories/${factoryA.factoryId}`)
-      .expect(200);
-    expect(
-      publicFactory.body.serviceAreas.some(
-        (area: { serviceAreaId: number }) =>
-          area.serviceAreaId === movable.serviceAreaId
-      )
-    ).toBe(false);
-    expect(
-      publicFactory.body.serviceAreas.some(
-        (area: { serviceAreaId: number }) =>
-          area.serviceAreaId === supersede.body.serviceAreaId
-      )
-    ).toBe(true);
-
-    const activeAreas = await request(app.getHttpServer())
-      .get(`/service-areas/by-factory/${factoryA.factoryId}`)
-      .expect(200);
-    expect(
-      activeAreas.body.some(
-        (area: { serviceAreaId: number }) =>
-          area.serviceAreaId === movable.serviceAreaId
-      )
-    ).toBe(false);
-
-    await request(app.getHttpServer())
-      .patch(`/factories/${factoryA.factoryId}`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
-        name: factoryA.name,
-        initial: factoryA.initial,
-        note: factoryA.note ?? '',
-        serviceAreas: [],
-        newServiceAreas: [{ code: 'B01', name: 'Duplicate Active Zone' }],
-      })
-      .expect(409);
   });
 
   it('closes incomplete standalone mutations and validates numeric ids', async () => {
-    await request(app.getHttpServer()).post('/service-areas').send({}).expect(404);
-    await request(app.getHttpServer()).get('/factories/not-a-number').expect(400);
+    await request(app.getHttpServer())
+      .post('/service-areas')
+      .send({})
+      .expect(404);
+    await request(app.getHttpServer())
+      .get('/factories/not-a-number')
+      .expect(400);
   });
 
   it('never returns national id from public QR endpoints and rejects resubmit', async () => {

@@ -1,14 +1,8 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import { Factory } from 'src/service-area/factories/entities/factory.entity';
-import { User } from 'src/users/entities/user.entity';
-import {
-  Column,
-  Entity,
-  PrimaryColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('service_areas_logs')
-export class ServiceAreaLog extends BaseLogEntity{
+export class ServiceAreaLog extends BaseLogEntity {
   @PrimaryColumn()
   serviceAreaId: number;
 

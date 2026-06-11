@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -20,14 +20,14 @@ const KPI_CONFIG = [
     key: 'totalFactories' as keyof FactorySummary,
     label: 'โรงงานทั้งหมด',
     icon: 'fas fa-archway',
-    accent: '#31CE36',
+    accent: '#18a05c',
     unit: 'โรงงาน',
   },
   {
     key: 'totalServiceAres' as keyof FactorySummary,
     label: 'เขตส่งเสริมทั้งหมด',
     icon: 'fas fa-map-marker-alt',
-    accent: '#337AB7',
+    accent: '#3b9bd9',
     unit: 'เขต',
   },
 ];
@@ -67,10 +67,7 @@ const ServiceAreaAdd: React.FC = () => {
   const addRow = () => {
     setFactoryInput(prev => ({
       ...prev,
-      serviceAreas: [
-        ...prev.serviceAreas,
-        createEmptyArea(),
-      ],
+      serviceAreas: [...prev.serviceAreas, createEmptyArea()],
     }));
   };
 
@@ -171,6 +168,31 @@ const ServiceAreaAdd: React.FC = () => {
 
   return (
     <>
+      {/* Page Header / Breadcrumbs */}
+      <div className="d-flex align-items-left align-items-md-center flex-column flex-md-row mb-4">
+        <div>
+          <h2 className="text-dark fw-bold mb-1">จัดการโรงงานและเขตส่งเสริม</h2>
+          <ul
+            className="breadcrumbs mb-0 d-flex gap-2 list-unstyled align-items-center"
+            style={{ fontSize: '0.85rem' }}
+          >
+            <li className="nav-home">
+              <a href="/admin/dashboard" className="text-primary">
+                <i className="fas fa-home" />
+              </a>
+            </li>
+            <li className="separator text-muted">/</li>
+            <li className="nav-item">
+              <a href="/admin/service-area" className="text-primary">
+                โรงงาน & เขตส่งเสริม
+              </a>
+            </li>
+            <li className="separator text-muted">/</li>
+            <li className="nav-item text-muted">เพิ่มโรงงาน</li>
+          </ul>
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <div className="row g-3 mb-4">
         {KPI_CONFIG.map(cfg => {
@@ -243,11 +265,11 @@ const ServiceAreaAdd: React.FC = () => {
 
       {/* Form Card */}
       <div className="row justify-content-center">
-        <div className="col-md-10">
-          <div className="private-card">
-            <div className="private-card-header d-flex align-items-center justify-content-between">
-              <h4 className="private-card-title mb-0">
-                <i className="fas fa-archway me-2" />
+        <div className="col-12">
+          <div className="private-card shadow-sm border-0">
+            <div className="private-card-header d-flex align-items-center justify-content-between p-4 border-bottom">
+              <h4 className="private-card-title mb-0 fw-bold d-flex align-items-center gap-2">
+                <i className="fas fa-plus-circle text-primary" />
                 เพิ่มโรงงานและเขตส่งเสริม
               </h4>
               <div className="d-flex gap-2">
@@ -258,16 +280,17 @@ const ServiceAreaAdd: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="private-card-body">
+            <div className="private-card-body p-4">
               <form onSubmit={handleSubmit} noValidate>
-                <div className="row">
+                {/* Factory Info Section */}
+                <div className="row g-3 mb-4">
                   <div className="col-md-6">
                     <GenFormText1
                       isRequired
                       id="factoryName"
                       name="factoryName"
                       label="ชื่อโรงงาน"
-                      placeholder="ระบุชื่อโรงงาน"
+                      placeholder="ระบุชื่อโรงงาน เช่น โรงงานน้ำตาลมิตรผล"
                       value={factoryInput.name ?? ''}
                       onChange={e =>
                         setFactoryInput(prev => ({
@@ -284,7 +307,7 @@ const ServiceAreaAdd: React.FC = () => {
                       id="initial"
                       name="initial"
                       label="ชื่อย่อโรงงาน"
-                      placeholder="3-4 ตัวอักษร"
+                      placeholder="3-4 ตัวอักษร เช่น MPT"
                       value={factoryInput.initial ?? ''}
                       onChange={e =>
                         setFactoryInput(prev => ({
@@ -300,7 +323,7 @@ const ServiceAreaAdd: React.FC = () => {
                       isRequired={false}
                       id="note"
                       name="note"
-                      label="หมายเหตุ"
+                      label="หมายเหตุโรงงาน"
                       placeholder="หมายเหตุ"
                       value={factoryInput.note || ''}
                       onChange={e =>
@@ -313,19 +336,39 @@ const ServiceAreaAdd: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="table-responsive mt-2">
-                  <table className="table table-bordered w-100">
-                    <thead>
+                {/* Service Areas Section Title */}
+                <div className="d-flex align-items-center justify-content-between mb-3 mt-4 pt-3 border-top">
+                  <h5 className="fw-bold mb-0 text-dark">
+                    <i className="fas fa-map-marked-alt text-primary me-2" />
+                    รายการเขตส่งเสริมที่จะเพิ่ม
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm d-flex align-items-center gap-2"
+                    onClick={addRow}
+                    style={{ borderRadius: '8px', padding: '6px 14px' }}
+                  >
+                    <i className="fas fa-plus" />
+                    เพิ่มแถวเขตส่งเสริม
+                  </button>
+                </div>
+
+                {/* Service Areas Table */}
+                <div className="table-responsive">
+                  <table
+                    className="table table-hover align-middle border"
+                    style={{ borderRadius: '10px', overflow: 'hidden' }}
+                  >
+                    <thead className="table-light">
                       <tr>
-                        <th>รหัสเขตส่งเสริม</th>
-                        <th>ชื่อเขตส่งเสริม</th>
-                        <th>หมายเหตุ</th>
-                        <th style={{ width: 60 }}>
-                          <GenButtonCircle
-                            color={B_LIST.add.color}
-                            icon={B_LIST.add.icon}
-                            onClick={addRow}
-                          />
+                        <th style={{ width: '220px' }}>รหัสเขตส่งเสริม</th>
+                        <th style={{ minWidth: '220px' }}>ชื่อเขตส่งเสริม</th>
+                        <th style={{ minWidth: '180px' }}>หมายเหตุ</th>
+                        <th style={{ width: '150px' }} className="text-center">
+                          สถานะ
+                        </th>
+                        <th style={{ width: '80px' }} className="text-center">
+                          การจัดการ
                         </th>
                       </tr>
                     </thead>
@@ -337,8 +380,13 @@ const ServiceAreaAdd: React.FC = () => {
                               type="text"
                               className={`form-control ${errors[`rows.${idx}.code`] ? 'is-invalid' : ''}`}
                               value={r.code ?? ''}
+                              placeholder="รหัส เช่น KSL-01"
                               onChange={e =>
-                                updateRow(idx, 'code', e.target.value)
+                                updateRow(
+                                  idx,
+                                  'code',
+                                  e.target.value.toUpperCase()
+                                )
                               }
                             />
                             {errors[`rows.${idx}.code`] && (
@@ -351,6 +399,7 @@ const ServiceAreaAdd: React.FC = () => {
                             <input
                               className={`form-control ${errors[`rows.${idx}.name`] ? 'is-invalid' : ''}`}
                               value={r.name ?? ''}
+                              placeholder="ระบุชื่อเขตส่งเสริม"
                               onChange={e =>
                                 updateRow(idx, 'name', e.target.value)
                               }
@@ -366,40 +415,81 @@ const ServiceAreaAdd: React.FC = () => {
                               type="text"
                               className="form-control"
                               value={r.note ?? ''}
+                              placeholder="-"
                               onChange={e =>
                                 updateRow(idx, 'note', e.target.value)
                               }
                             />
                           </td>
-                          <td>
-                            <GenButtonCircle
-                              color={B_LIST.del.color}
-                              icon={B_LIST.del.icon}
+                          <td className="text-center">
+                            <span
+                              className="badge bg-info-subtle text-info border border-info-subtle"
+                              style={{ fontSize: '11px', padding: '4px 10px' }}
+                            >
+                              รายการใหม่
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center mx-auto"
+                              style={{ width: '32px', height: '32px' }}
+                              title="ลบแถว"
                               onClick={() => setRowToRemove(idx)}
-                            />
+                            >
+                              <i className="fas fa-trash-alt" />
+                            </button>
                           </td>
                         </tr>
                       ))}
+                      {!factoryInput.serviceAreas?.length && (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="text-center py-4 text-muted italic"
+                          >
+                            <i className="fas fa-folder-open me-2" />
+                            ไม่มีเขตส่งเสริมที่จะเพิ่ม กรุณากด
+                            "เพิ่มแถวเขตส่งเสริม"
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
 
-                <div className="private-action-footer mt-4 d-flex justify-content-between">
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    style={{ width: 150 }}
-                    disabled={isSubmitting}
-                  >
-                    เพิ่มโรงงาน
-                  </button>
+                {/* Form Action Buttons */}
+                <div className="private-action-footer mt-5 d-flex justify-content-end gap-2 border-top pt-4">
                   <button
                     type="button"
-                    className="btn btn-danger"
-                    style={{ width: 150 }}
+                    className="btn btn-outline-secondary px-4"
                     onClick={() => setShowConfirm(true)}
+                    disabled={isSubmitting}
+                    style={{ borderRadius: '8px', fontWeight: 600 }}
                   >
                     ยกเลิก
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-success px-4 d-flex align-items-center gap-2"
+                    disabled={isSubmitting}
+                    style={{ borderRadius: '8px', fontWeight: 600 }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm"
+                          role="status"
+                          aria-hidden="true"
+                        />
+                        กำลังบันทึก...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-save" />
+                        บันทึกข้อมูล
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -408,6 +498,7 @@ const ServiceAreaAdd: React.FC = () => {
         </div>
       </div>
 
+      {/* Confirm Alerts */}
       {showConfirm && (
         <ConfirmAlert
           title="ยืนยันการยกเลิก"
@@ -438,4 +529,3 @@ const ServiceAreaAdd: React.FC = () => {
 };
 
 export default ServiceAreaAdd;
-

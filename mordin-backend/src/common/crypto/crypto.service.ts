@@ -20,7 +20,7 @@
 //     const cipher = crypto.createCipheriv(this.algorithm, this.key, iv);
 //     let encrypted = cipher.update(plainText, 'utf8', 'base64');
 //     encrypted += cipher.final('base64');
-//     const finalEncrypted = iv.toString('base64') + ':' + encrypted; 
+//     const finalEncrypted = iv.toString('base64') + ':' + encrypted;
 //     return encodeURIComponent(finalEncrypted);
 //   }
 
@@ -34,9 +34,10 @@
 //     return decrypted;
 //   }
 // }
+import * as crypto from 'crypto';
+
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as crypto from 'crypto';
 
 @Injectable()
 export class CryptoService {
@@ -56,7 +57,8 @@ export class CryptoService {
   }
 
   private base64UrlEncode(buffer: Buffer): string {
-    return buffer.toString('base64')
+    return buffer
+      .toString('base64')
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');

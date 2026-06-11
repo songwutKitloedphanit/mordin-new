@@ -451,7 +451,9 @@ const ServiceTypeEdit = () => {
         </div>
 
         <div className="col-md-3 ps-md-0">
-          <div className={`private-pricing-card private-pricing-card-${serviceTypeInput.color}`}>
+          <div
+            className={`private-pricing-card private-pricing-card-${serviceTypeInput.color}`}
+          >
             <div className="pricing-header position-relative">
               <h3 className="fw-bold mb-3 d-flex align-items-center">
                 <span style={{ flex: 1 }}>
@@ -630,4 +632,3 @@ const ServiceTypeEdit = () => {
 };
 
 export default ServiceTypeEdit;
-

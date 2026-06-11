@@ -1,5 +1,4 @@
-import { Type } from 'class-transformer';
-import { IsArray, ArrayNotEmpty, IsInt, Min, IsOptional, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 export class GetReportDto {
   // @IsArray()

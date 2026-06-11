@@ -142,4 +142,3 @@ const CalendarInfo = () => {
 };
 
 export default CalendarInfo;
-

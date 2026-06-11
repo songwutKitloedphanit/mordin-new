@@ -1,4 +1,3 @@
-import { Level } from 'src/fertilizer/enums/level.enum';
 import { ServiceFertilizerMinor } from 'src/fertilizer/service-fertilizer-minors/entities/service-fertilizer-minor.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
@@ -9,8 +8,6 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
-  PrimaryGeneratedColumn,
-  Unique,
 } from 'typeorm';
 
 @Entity('service_fertilizer_minor_usages')
@@ -40,12 +37,6 @@ export class ServiceFertilizerMinorUsage {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
@@ -55,4 +46,10 @@ export class ServiceFertilizerMinorUsage {
   })
   @JoinColumn({ name: 'service_fertilizer_minor_id' })
   serviceFertilizerMinor: ServiceFertilizerMinor;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

@@ -9,7 +9,7 @@ export type LogCsv<T extends CsvHeader> = {
   type: 'csv';
   csvData: CsvData<T>;
   csvFilePath: string;
-}
+};
 export type LogCsvAndRaw<T extends CsvHeader> = {
   type: 'csvAndRaw';
   csvData: CsvData<T>;

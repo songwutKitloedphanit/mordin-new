@@ -31,13 +31,13 @@ export class SampleBlankResultLog extends BaseLogEntity {
   @Column({ name: 'recorded_uid', type: 'int' })
   recordedUid: number;
 
-  @Column({ name: 'post_value', type: 'float',  nullable: true })
+  @Column({ name: 'post_value', type: 'float', nullable: true })
   postValue: number;
 
-  @Column({ name: 'pre_value', type: 'float',  nullable: true })
+  @Column({ name: 'pre_value', type: 'float', nullable: true })
   preValue: number;
 
-  @Column({ name: 'certificate', type: 'float',  nullable: true })
+  @Column({ name: 'certificate', type: 'float', nullable: true })
   certificate: number;
 
   @Column({ name: 'laboratory_setting_id', type: 'int' })
@@ -48,5 +48,4 @@ export class SampleBlankResultLog extends BaseLogEntity {
   setRecordedAt() {
     this.recordedAt = Date.now();
   }
-
 }

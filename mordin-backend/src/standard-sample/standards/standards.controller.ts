@@ -8,11 +8,12 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { StandardsService } from './standards.service';
-import { CreateStandardDto } from './dto/create-standard.dto';
-import { UpdateStandardDto } from './dto/update-standard.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateStandardDto } from './dto/create-standard.dto';
+import { UpdateStandardDto } from './dto/update-standard.dto';
+import { StandardsService } from './standards.service';
 
 @Controller('standards')
 export class StandardsController {
@@ -40,6 +41,7 @@ export class StandardsController {
   findOne(@Param('id') id: string) {
     return this.standardsService.findOne(+id);
   }
+
   @UseGuards(AuthGuard)
   @Patch(':id')
   update(
@@ -49,6 +51,7 @@ export class StandardsController {
   ) {
     return this.standardsService.update(+id, updateStandardDto, userId);
   }
+
   @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {

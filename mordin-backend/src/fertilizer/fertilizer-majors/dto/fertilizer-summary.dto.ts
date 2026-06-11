@@ -4,10 +4,13 @@ import { IsNumber } from 'class-validator';
 export class FertilizerSummaryDto {
   @IsNumber()
   majorCount: number;
+
   @IsNumber()
   majorAvgPricePerSack: number;
+
   @IsNumber()
   minorCount: number;
+
   @IsNumber()
   minorAvgPricePerKg: number;
 }

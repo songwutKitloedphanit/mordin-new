@@ -3,9 +3,13 @@ import Swal from 'sweetalert2';
 
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
 import { GenFormSelect } from '@/components/gui/GuiForm';
-import { createFarmer, getFarmerById, searchFarmers } from '@/services/api/FarmerApi';
-import { getServiceAreaById } from '@/services/api/service-area/ServiceAreaApi';
+import {
+  createFarmer,
+  getFarmerById,
+  searchFarmers,
+} from '@/services/api/FarmerApi';
 import { settingOwnerData } from '@/services/api/qr-code/BookApi';
+import { getServiceAreaById } from '@/services/api/service-area/ServiceAreaApi';
 import {
   getAllServiceTypes,
   getServiceTypeById,
@@ -84,7 +88,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           : []
       );
       setCollectExamInput(prev => ({ ...prev, farmerId: newFarmer.farmerId }));
-    } catch (err: unknown) {
+    } catch (_err: unknown) {
       console.error('handleCreateFromQR error');
       Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถสร้างข้อมูลได้', 'error');
     } finally {
@@ -253,7 +257,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
       });
 
       const bookId = qrCodeData?.book?.bookId;
-      const effectiveFarmerId = collectExamInput.farmerId ?? selectedFarmer?.farmerId ?? null;
+      const effectiveFarmerId =
+        collectExamInput.farmerId ?? selectedFarmer?.farmerId ?? null;
       const effectiveInput = {
         ...collectExamInput,
         farmerId: effectiveFarmerId,
@@ -267,7 +272,11 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
       if (!effectiveFarmerId) {
         Swal.close();
-        Swal.fire('กรุณาเลือกเกษตรกร', 'กรุณาค้นหาและเลือกเกษตรกร หรือกดปุ่ม "สร้างเกษตรกรจากข้อมูล QR"', 'warning');
+        Swal.fire(
+          'กรุณาเลือกเกษตรกร',
+          'กรุณาค้นหาและเลือกเกษตรกร หรือกดปุ่ม "สร้างเกษตรกรจากข้อมูล QR"',
+          'warning'
+        );
         return;
       }
 
@@ -396,13 +405,18 @@ const SearchModal: React.FC<SearchModalProps> = ({
                     ) : (
                       <tr>
                         <td colSpan={4} className="text-center py-3 text-muted">
-                          {qrCodeData.thaiNationalId || qrCodeData.phoneNumber ? (
+                          {qrCodeData.thaiNationalId ||
+                          qrCodeData.phoneNumber ? (
                             <>
                               ไม่พบข้อมูลเกษตรกรในระบบ
                               <br />
                               <small className="text-muted d-block mb-2">
-                                {[qrCodeData.firstName, qrCodeData.lastName].filter(Boolean).join(' ')}
-                                {qrCodeData.thaiNationalId ? ` · ${qrCodeData.thaiNationalId}` : ''}
+                                {[qrCodeData.firstName, qrCodeData.lastName]
+                                  .filter(Boolean)
+                                  .join(' ')}
+                                {qrCodeData.thaiNationalId
+                                  ? ` · ${qrCodeData.thaiNationalId}`
+                                  : ''}
                               </small>
                               <button
                                 type="button"
@@ -411,10 +425,15 @@ const SearchModal: React.FC<SearchModalProps> = ({
                                 onClick={handleCreateFromQR}
                               >
                                 {creatingFarmer ? (
-                                  <><span className="spinner-border spinner-border-sm me-1" />กำลังสร้าง...</>
+                                  <>
+                                    <span className="spinner-border spinner-border-sm me-1" />
+                                    กำลังสร้าง...
+                                  </>
                                 ) : (
-                                  <><i className="fa-solid fa-plus me-1" />สร้างเกษตรกรจากข้อมูล QR</>
-
+                                  <>
+                                    <i className="fa-solid fa-plus me-1" />
+                                    สร้างเกษตรกรจากข้อมูล QR
+                                  </>
                                 )}
                               </button>
                             </>

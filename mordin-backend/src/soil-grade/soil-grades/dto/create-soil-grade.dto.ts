@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsNumber,
   IsOptional,
@@ -5,9 +7,7 @@ import {
   Length,
   ValidateNested,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 import { CreateSoilGradeLevelDto } from 'src/soil-grade/soil-grade-levels/dto/create-soil-grade-level.dto';
-import { Type } from 'class-transformer';
 
 export class CreateSoilGradeDto {
   @ApiProperty({ description: 'Service type ID' })

@@ -1,7 +1,7 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ActionMeta, SingleValue } from 'react-select';
-import Swal from 'sweetalert2';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
@@ -154,7 +154,7 @@ const KPI_CONFIG = [
     key: 'totalLands' as keyof LandSummary,
     label: 'แปลงทั้งหมด',
     icon: 'fas fa-map-marked',
-    accent: '#31CE36',
+    accent: '#18a05c',
     unit: 'แปลง',
   },
   {
@@ -168,14 +168,14 @@ const KPI_CONFIG = [
     key: 'normalSoilCount' as keyof LandSummary,
     label: 'ดินปกติ',
     icon: 'fas fa-check-circle',
-    accent: '#337AB7',
+    accent: '#3b9bd9',
     unit: 'แปลง',
   },
   {
     key: 'fertileSoilCount' as keyof LandSummary,
     label: 'ดินสมบูรณ์',
     icon: 'fas fa-leaf',
-    accent: '#26C281',
+    accent: '#2fb380',
     unit: 'แปลง',
   },
 ];
@@ -223,19 +223,23 @@ const LandAdd: React.FC = () => {
 
     const props = feature.properties;
     const allProvinces = await getAllProvinces();
-    const matchedProv = allProvinces.find((p: ProvinceAddress) =>
-      nameMatch(p.nameTh, props.NL_NAME_1) ||
-      nameMatch(p.nameEn ?? '', props.NAME_1)
+    const matchedProv = allProvinces.find(
+      (p: ProvinceAddress) =>
+        nameMatch(p.nameTh, props.NL_NAME_1) ||
+        nameMatch(p.nameEn ?? '', props.NAME_1)
     );
     if (!matchedProv) return false;
 
-    const districts = await getDistrictsByProvinceCode(Number(matchedProv.code));
+    const districts = await getDistrictsByProvinceCode(
+      Number(matchedProv.code)
+    );
     const provinceDistricts = districts.filter((d: DistrictAddress) =>
       isDistrictInProvince(d, matchedProv.code)
     );
-    const matchedDist = provinceDistricts.find((d: DistrictAddress) =>
-      nameMatch(d.nameTh, props.NL_NAME_2) ||
-      nameMatch(d.nameEn ?? '', props.NAME_2)
+    const matchedDist = provinceDistricts.find(
+      (d: DistrictAddress) =>
+        nameMatch(d.nameTh, props.NL_NAME_2) ||
+        nameMatch(d.nameEn ?? '', props.NAME_2)
     );
 
     let subs: Subdistrict[] = [];
@@ -290,17 +294,20 @@ const LandAdd: React.FC = () => {
       );
       const geo = await res.json();
       const addr = geo.address ?? {};
-      const rawState  = addr.state ?? addr.state_district ?? '';
+      const rawState = addr.state ?? addr.state_district ?? '';
       const rawCounty = addr.county ?? addr.city ?? '';
-      const rawSub    = addr.suburb ?? addr.quarter ?? addr.village ?? addr.city_district ?? '';
+      const rawSub =
+        addr.suburb ?? addr.quarter ?? addr.village ?? addr.city_district ?? '';
 
       const allProvinces = await getAllProvinces();
-      const matchedProv = allProvinces.find((p: { code: number; nameTh: string }) =>
-        nameMatch(p.nameTh, rawState)
+      const matchedProv = allProvinces.find(
+        (p: { code: number; nameTh: string }) => nameMatch(p.nameTh, rawState)
       );
       if (!matchedProv) return;
 
-      const districts = await getDistrictsByProvinceCode(Number(matchedProv.code));
+      const districts = await getDistrictsByProvinceCode(
+        Number(matchedProv.code)
+      );
       const provinceDistricts = districts.filter((d: DistrictAddress) =>
         isDistrictInProvince(d, matchedProv.code)
       );
@@ -317,7 +324,10 @@ const LandAdd: React.FC = () => {
 
       setDistrictsOptions([
         { value: '', name: '-- กรุณาเลือกอำเภอ --' },
-        ...provinceDistricts.map((d: DistrictAddress) => ({ value: d.code, name: d.nameTh })),
+        ...provinceDistricts.map((d: DistrictAddress) => ({
+          value: d.code,
+          name: d.nameTh,
+        })),
       ]);
       if (matchedDist) {
         setSubdistricts(subs);
@@ -332,12 +342,16 @@ const LandAdd: React.FC = () => {
         provinceId: matchedProv.code,
         districtId: matchedDist?.code,
         subdistrictCode: matchedSub?.code ?? '',
-        zipCode: matchedSub?.zipCode ? Number(matchedSub.zipCode) : prev.zipCode,
+        zipCode: matchedSub?.zipCode
+          ? Number(matchedSub.zipCode)
+          : prev.zipCode,
       }));
     } catch (err) {
       console.error('Reverse geocode failed:', err);
     } finally {
-      setTimeout(() => { geocodingRef.current = false; }, 300);
+      setTimeout(() => {
+        geocodingRef.current = false;
+      }, 300);
     }
   };
 
@@ -382,9 +396,11 @@ const LandAdd: React.FC = () => {
         }
 
         setTimeout(() => {
-          stateHydratingRef.current = false;
           geocodingRef.current = false;
         }, 1000);
+        setTimeout(() => {
+          stateHydratingRef.current = false;  // longer guard covers district/subdistrict API calls
+        }, 3000);
 
         if (state.farmerId) {
           try {
@@ -444,7 +460,7 @@ const LandAdd: React.FC = () => {
             name: d.nameTh,
           })),
         ]);
-        if (!geocodingRef.current) {
+        if (!geocodingRef.current && !stateHydratingRef.current) {
           const firstDistrict = provinceDistricts[0];
           setLand(prev => ({
             ...prev,
@@ -472,10 +488,10 @@ const LandAdd: React.FC = () => {
             name: s.nameTh,
           })),
         ]);
-        if (!geocodingRef.current && subs.length > 0) {
+        if (!geocodingRef.current && !stateHydratingRef.current && subs.length > 0) {
           setLand(prev => ({ ...prev, subdistrictCode: subs[0].code }));
         }
-      } else if (!geocodingRef.current) {
+      } else if (!geocodingRef.current && !stateHydratingRef.current) {
         setSubdistrictOptions([]);
         setLand(prev => ({
           ...prev,
@@ -493,7 +509,10 @@ const LandAdd: React.FC = () => {
       if (sub) {
         setLand(prev => ({ ...prev, zipCode: Number(sub.zipCode) }));
         if (sub.latitude && sub.longitude && !geocodingRef.current) {
-          const center = { lat: Number(sub.latitude), lng: Number(sub.longitude) };
+          const center = {
+            lat: Number(sub.latitude),
+            lng: Number(sub.longitude),
+          };
           setLocation(center);
           setDefaultCenter(center);
         }
@@ -501,7 +520,6 @@ const LandAdd: React.FC = () => {
     } else {
       setLand(prev => ({ ...prev, zipCode: undefined }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [land.subdistrictCode, subdistrictOptions, subdistricts]);
 
   const handleInputChange = (
@@ -548,7 +566,10 @@ const LandAdd: React.FC = () => {
     if (!land.districtId) validationErrors.district = 'กรุณาเลือกอำเภอ';
     if (!land.subdistrictCode) validationErrors.subdistrict = 'กรุณาเลือกตำบล';
     if (!land.areaSize) validationErrors.areaSize = 'กรุณากรอกพื้นที่';
-    else if (!Number.isFinite(Number(land.areaSize)) || Number(land.areaSize) <= 0)
+    else if (
+      !Number.isFinite(Number(land.areaSize)) ||
+      Number(land.areaSize) <= 0
+    )
       validationErrors.areaSize = 'พื้นที่ต้องเป็นตัวเลขที่มากกว่า 0';
     if (!land.zipCode) validationErrors.zipCode = 'กรุณากรอกรหัสไปรษณีย์';
     if (land.landCode && !/^\d+$/.test(land.landCode))
@@ -594,14 +615,7 @@ const LandAdd: React.FC = () => {
           longitude: dataToSubmit.longitude,
         });
       }
-      await Swal.fire({
-        title: 'สำเร็จ!',
-        text: 'เพิ่มข้อมูลพื้นที่เกษตรกรเสร็จสิ้น',
-        icon: 'success',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      });
+      await swalSuccessTimer('สำเร็จ!', 'เพิ่มข้อมูลพื้นที่เกษตรกรเสร็จสิ้น');
       if (state?.bookId) {
         navigate(-1);
       } else {
@@ -612,11 +626,12 @@ const LandAdd: React.FC = () => {
       const err = error as {
         response?: { data?: { message?: string | string[] } };
       };
-      const message = err?.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลได้';
+      const message =
+        err?.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลได้';
       const errorMessage = Array.isArray(message)
         ? message.join(', ')
         : message;
-      await Swal.fire('เกิดข้อผิดพลาด', errorMessage, 'error');
+      await swalError('เกิดข้อผิดพลาด', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -718,6 +733,17 @@ const LandAdd: React.FC = () => {
               </div>
             </div>
             <div className="private-card-body">
+              {state?.bookId && (
+                <div className="alert alert-info border-0 d-flex align-items-start gap-2 mb-3 py-2 px-3 small">
+                  <i className="fas fa-circle-info mt-1 flex-shrink-0" />
+                  <div>
+                    <strong>ดึงข้อมูลจาก QR Booking อัตโนมัติ</strong>
+                    <span className="text-muted ms-1">
+                      — กรุณาตรวจสอบและเติมข้อมูลที่ยังขาดให้ครบก่อนบันทึก
+                    </span>
+                  </div>
+                </div>
+              )}
               <GenFormSearchSelect
                 id="farmer-select"
                 label="เจ้าของ"
@@ -862,10 +888,7 @@ const LandAdd: React.FC = () => {
                   บันทึกตำแหน่งพิกัด
                 </label>
               </div>
-              <LeafletMapMarker
-                center={defaultCenter}
-                onChange={setLocation}
-              />
+              <LeafletMapMarker center={defaultCenter} onChange={setLocation} />
             </div>
           </div>
         </div>
@@ -888,4 +911,3 @@ const LandAdd: React.FC = () => {
 };
 
 export default LandAdd;
-

@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import { GenButtonCircle, B_LIST } from '../../../components/gui/GuiButton';
 
@@ -18,7 +18,7 @@ import {
 } from '@/services/api/qr-code/QrCodeApi';
 import { FarmerInfo } from '@/types/Farmer';
 import { LandInfoInterface } from '@/types/Land';
-import { Book, QrCodeInfo } from '@/types/qr-code/QrCode';
+import { Book, QrCodeInfo, SampleStatusEnum } from '@/types/qr-code/QrCode';
 import { TimeStampToDate } from '@/utils/Date';
 import { formatThaiNationalId } from '@/utils/IdentificationNumberFormat';
 
@@ -161,7 +161,9 @@ const SampleReceivingInfo: React.FC = () => {
     ]);
 
     const idFarmers = Array.isArray(idResult?.data) ? idResult.data : [];
-    const phoneFarmers = Array.isArray(phoneResult?.data) ? phoneResult.data : [];
+    const phoneFarmers = Array.isArray(phoneResult?.data)
+      ? phoneResult.data
+      : [];
 
     const idMatchedFarmer = getUniqueFarmer(
       idFarmers.filter(
@@ -221,7 +223,8 @@ const SampleReceivingInfo: React.FC = () => {
     try {
       const farmer = await getFarmerById(book.farmerId);
       const matchedLand = farmer.lands?.find(
-        (land: LandInfoInterface) => normalizeLandCode(land.landCode) === qrLandCode
+        (land: LandInfoInterface) =>
+          normalizeLandCode(land.landCode) === qrLandCode
       );
 
       if (!matchedLand) {
@@ -333,11 +336,7 @@ const SampleReceivingInfo: React.FC = () => {
     };
 
     fetchBookingFromCalendar();
-  }, [
-    effectiveServiceCalendarId,
-    queryBookId,
-    stateBookingData,
-  ]);
+  }, [effectiveServiceCalendarId, queryBookId, stateBookingData]);
 
   const handleRecivedQrCode = async () => {
     try {
@@ -356,26 +355,12 @@ const SampleReceivingInfo: React.FC = () => {
         serviceCalendarId: Number(effectiveServiceCalendarId),
       });
 
-      Swal.fire({
-        title: 'สำเร็จ!',
-        text: 'ยืนยันผลการวิเคราะห์ดิน',
-        icon: 'success',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      }).then(() => {
+      swalSuccessTimer('สำเร็จ!', 'ยืนยันผลการวิเคราะห์ดิน').then(() => {
         navigate('/officer/sample-receiving');
       });
     } catch (error) {
       console.log(error);
-      Swal.fire({
-        title: 'เกิดข้อผิดพลาด!',
-        text: 'ไม่สามารถยืนยันผลการวิเคราะห์ดิน',
-        icon: 'error',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      });
+      swalError('เกิดข้อผิดพลาด!', 'ไม่สามารถยืนยันผลการวิเคราะห์ดิน');
     }
   };
 
@@ -387,138 +372,268 @@ const SampleReceivingInfo: React.FC = () => {
         !qrCodeData.qrCode ||
         !effectiveServiceCalendarId
       ) {
-        Swal.fire('ข้อผิดพลาด', 'ข้อมูลไม่ครบถ้วน', 'error');
+        swalError('ข้อผิดพลาด', 'ข้อมูลไม่ครบถ้วน');
         return;
       }
 
       // เรียก API โดยส่ง bookId ไปด้วย
       await receivedSampleByDecryptedCode(qrCodeData.qrCode, {
         serviceCalendarId: Number(effectiveServiceCalendarId),
-        bookId: resolvedBookingData.bookId,  // ส่ง bookId เพื่อ pair
+        bookId: resolvedBookingData.bookId, // ส่ง bookId เพื่อ pair
       });
 
-      Swal.fire({
-        title: 'สำเร็จ!',
-        text: 'จับคู่ข้อมูลเรียบร้อยแล้ว',
-        icon: 'success',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      }).then(() => {
+      swalSuccessTimer('สำเร็จ!', 'จับคู่ข้อมูลเรียบร้อยแล้ว').then(() => {
         navigate('/officer/sample-receiving');
       });
     } catch (error) {
       console.error(error);
-      Swal.fire({
-        title: 'เกิดข้อผิดพลาด!',
-        text: 'ไม่สามารถจับคู่ข้อมูลได้',
-        icon: 'error',
-        confirmButtonText: 'ตกลง',
-      });
+      swalError('เกิดข้อผิดพลาด!', 'ไม่สามารถจับคู่ข้อมูลได้');
     }
   };
 
   let isDisabled = true;
 
   if (isPairingMode) {
-    // Pairing mode: ต้องมี bookingData และ qrCode
     isDisabled = !resolvedBookingData || !qrCodeData.qrCode;
   } else if (isIndependentSample) {
     isDisabled = false;
   } else {
-    // Walk-in mode: validation เดิม
     const hasFarmer = qrCodeData.book?.farmerId;
     const hasLand = qrCodeData.book?.landId;
     const hasServiceType = qrCodeData.book?.serviceTypeId;
     isDisabled = !hasFarmer || !hasLand || !hasServiceType;
   }
 
+  const renderTimeline = (status: SampleStatusEnum) => {
+    const steps = [
+      {
+        label: 'กระจายรหัส QR',
+        statuses: [
+          SampleStatusEnum.DISTRIBUTED,
+          SampleStatusEnum.COLLECTED,
+          SampleStatusEnum.RECEIVED,
+          SampleStatusEnum.ANALYZING,
+          SampleStatusEnum.ANALYZED,
+          SampleStatusEnum.APPROVED,
+        ],
+        icon: 'fas fa-qrcode',
+      },
+      {
+        label: 'เก็บตัวอย่างดิน',
+        statuses: [
+          SampleStatusEnum.COLLECTED,
+          SampleStatusEnum.RECEIVED,
+          SampleStatusEnum.ANALYZING,
+          SampleStatusEnum.ANALYZED,
+          SampleStatusEnum.APPROVED,
+        ],
+        icon: 'fas fa-map-marker-alt',
+      },
+      {
+        label: 'รับเข้าระบบ',
+        statuses: [
+          SampleStatusEnum.RECEIVED,
+          SampleStatusEnum.ANALYZING,
+          SampleStatusEnum.ANALYZED,
+          SampleStatusEnum.APPROVED,
+        ],
+        icon: 'fas fa-check-circle',
+      },
+      {
+        label: 'วิเคราะห์แล็บ',
+        statuses: [
+          SampleStatusEnum.ANALYZING,
+          SampleStatusEnum.ANALYZED,
+          SampleStatusEnum.APPROVED,
+        ],
+        icon: 'fas fa-vial',
+      },
+      {
+        label: 'ออกรายงาน',
+        statuses: [SampleStatusEnum.ANALYZED, SampleStatusEnum.APPROVED],
+        icon: 'fas fa-file-invoice',
+      },
+    ];
+
+    return (
+      <div className="private-card mb-4">
+        <div className="private-card-body py-4">
+          <h5 className="fw-bold text-dark mb-4 text-center">
+            <i className="fas fa-route me-2 text-primary" />
+            สถานะขั้นตอนของตัวอย่างดิน
+          </h5>
+          <div className="flow">
+            {steps.map((step, idx) => {
+              const isDone =
+                step.statuses.includes(status) && status !== step.statuses[0];
+              const isNow =
+                status === step.statuses[0] || (idx === 0 && !status);
+              const stepClass = isDone
+                ? 'flow-step done'
+                : isNow
+                  ? 'flow-step now'
+                  : 'flow-step';
+
+              return (
+                <div key={idx} className={stepClass}>
+                  <div className="flow-dot">
+                    {isDone ? (
+                      <i className="fas fa-check" />
+                    ) : (
+                      <i className={step.icon} style={{ fontSize: '10px' }} />
+                    )}
+                  </div>
+                  <span className="flow-label">{step.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <>
+    <div className="private-page-transition">
+      {/* Page Header */}
+      <div className="page-header d-flex flex-column flex-sm-row justify-content-between align-items-sm-start align-items-sm-center gap-3 mb-4">
+        <div className="d-flex align-items-center gap-3">
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-icon"
+            onClick={() => navigate('/officer/sample-receiving')}
+            style={{ width: '40px', height: '40px', borderRadius: '50%' }}
+            title="ย้อนกลับ"
+          >
+            <i className="fas fa-arrow-left" />
+          </button>
+          <div>
+            <h1 className="h3 fw-bold text-dark mb-1">
+              รายละเอียดตัวอย่าง {qrCodeData.qrCode || qrCode}
+            </h1>
+            <p className="text-muted mb-0">
+              {isPairingMode
+                ? 'โหมดจับคู่ข้อมูลการจองคิวก่อนลงระบบ'
+                : qrCodeData.phoneNumber || qrCodeData.thaiNationalId
+                  ? `รหัสตัวอย่าง: ${qrCodeData.book?.sampleCode || '-'}`
+                  : 'ตัวอย่างอิสระ (ไม่ระบุตัวตน)'}
+            </p>
+          </div>
+        </div>
+        {!isPairingMode && (
+          <button
+            type="button"
+            className="btn btn-outline-primary d-flex align-items-center gap-2"
+            onClick={() => setSearchModal(true)}
+          >
+            <i className="fas fa-cog" />
+            ตั้งค่าและเชื่อมโยงข้อมูล
+          </button>
+        )}
+      </div>
+
       {loadError && (
         <div className="alert alert-danger mt-3" role="alert">
+          <i className="fas fa-exclamation-triangle me-2" />
           {loadError}
         </div>
       )}
 
       {!loading && (
         <>
-          {/* [PAIRING MODE] กรณีรับงานจาก Booking */}
+          {/* Timeline Status Step */}
+          {renderTimeline(qrCodeData.status)}
+
+          {/* [PAIRING MODE] */}
           {isPairingMode ? (
             <>
-              <div className="alert alert-warning border-warning">
-                <div className="d-flex align-items-center">
-                  <i className="fas fa-link me-3 fs-4"></i>
+              <div
+                className="alert alert-warning border-0 shadow-sm mb-4"
+                style={{ backgroundColor: '#fffbeb', color: '#854d0e' }}
+              >
+                <div className="d-flex align-items-center gap-3">
+                  <i className="fas fa-link fs-4 text-warning" />
                   <div>
-                    <strong>โหมดจับคู่ข้อมูล:</strong> กำลังเชื่อมข้อมูลการจองกับ QR Code ที่สแกน
+                    <strong>โหมดจับคู่ข้อมูล:</strong>{' '}
+                    กำลังเชื่อมโยงข้อมูลคิวจองล่วงหน้ากับถุงตัวอย่างดิน รหัส{' '}
+                    <strong>{qrCodeData.qrCode}</strong>
                   </div>
                 </div>
               </div>
 
-              <div className="row mt-4">
-                {/* ฝั่งซ้าย: ข้อมูลจาก Booking */}
-                <div className="col-md-6">
-                  <div className="private-card private-card-accent-primary">
-                    <div className="private-card-header bg-primary text-white">
-                      <h5 className="mb-0">
-                        <i className="fas fa-clipboard-list me-2"></i>
-                        ข้อมูลการจอง
+              <div className="row g-4">
+                {/* Left side: Booking details */}
+                <div className="col-lg-6">
+                  <div className="private-card private-card-accent-primary h-100">
+                    <div className="private-card-header bg-primary text-white py-3">
+                      <h5 className="mb-0 text-white">
+                        <i className="fas fa-clipboard-list me-2" />
+                        ข้อมูลการจองและแปลงเกษตรกร
                       </h5>
                     </div>
                     <div className="private-card-body">
-                      <InfoTable
-                        title="เกษตรกร"
-                        data={{
-                          'ชื่อ-นามสกุล': `${resolvedBookingData?.farmer?.firstName || ''} ${resolvedBookingData?.farmer?.lastName || ''}`,
-                          'เบอร์โทรศัพท์': resolvedBookingData?.farmer?.phone || '-',
-                          'เลขบัตรประชาชน': formatThaiNationalId(resolvedBookingData?.farmer?.thaiNationalId || '')
-                        }}
-                        loading={false}
-                      />
-                      <InfoTable
-                        title="แปลง"
-                        data={{
-                          'รหัสแปลง': resolvedBookingData?.land?.landCode || '-',
-                          'ชื่อแปลง': resolvedBookingData?.land?.name || '-'
-                        }}
-                        loading={false}
-                      />
-                      <InfoTable
-                        title="บริการ"
-                        data={{
-                          'ประเภทบริการ': resolvedBookingData?.serviceType?.name || '-'
-                        }}
-                        loading={false}
-                      />
+                      <div className="row g-3">
+                        <InfoTable
+                          title="เกษตรกร"
+                          data={{
+                            'ชื่อ-นามสกุล': `${resolvedBookingData?.farmer?.firstName || ''} ${resolvedBookingData?.farmer?.lastName || ''}`,
+                            เบอร์โทรศัพท์:
+                              resolvedBookingData?.farmer?.phone || '-',
+                            เลขบัตรประชาชน: formatThaiNationalId(
+                              resolvedBookingData?.farmer?.thaiNationalId || ''
+                            ),
+                          }}
+                          loading={false}
+                        />
+                        <InfoTable
+                          title="แปลง"
+                          data={{
+                            รหัสแปลง:
+                              resolvedBookingData?.land?.landCode || '-',
+                            ชื่อแปลง: resolvedBookingData?.land?.name || '-',
+                          }}
+                          loading={false}
+                        />
+                        <InfoTable
+                          title="บริการ"
+                          data={{
+                            ประเภทบริการ:
+                              resolvedBookingData?.serviceType?.name || '-',
+                          }}
+                          loading={false}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* ฝั่งขวา: QR Code ที่สแกน */}
-                <div className="col-md-6">
-                  <div className="private-card private-card-accent-success">
-                    <div className="private-card-header bg-success text-white">
-                      <h5 className="mb-0">
-                        <i className="fas fa-qrcode me-2"></i>
-                        QR Code ที่สแกน
+                {/* Right side: Scanned QR Info */}
+                <div className="col-lg-6">
+                  <div className="private-card private-card-accent-success h-100">
+                    <div className="private-card-header bg-success text-white py-3">
+                      <h5 className="mb-0 text-white">
+                        <i className="fas fa-qrcode me-2" />
+                        รายละเอียดรหัส QR ที่สแกน
                       </h5>
                     </div>
                     <div className="private-card-body">
-                      <InfoTable
-                        title="ข้อมูล QR"
-                        data={{
-                          'รหัส QR': qrCodeData.qrCode || '-',
-                          'สถานะ': qrCodeData.status || '-',
-                          'สร้างเมื่อ': TimeStampToDate(qrCodeData.createdAt)
-                        }}
-                        loading={loading}
-                      />
+                      <div className="row g-3">
+                        <InfoTable
+                          title="ข้อมูล QR"
+                          data={{
+                            'รหัส QR': qrCodeData.qrCode || '-',
+                            สถานะ: qrCodeData.status || '-',
+                            สร้างเมื่อ: TimeStampToDate(qrCodeData.createdAt),
+                          }}
+                          loading={loading}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Map */}
+              {/* Map coordinates */}
               {(() => {
                 const lat =
                   resolvedBookingData?.land?.latitude ??
@@ -528,13 +643,13 @@ const SampleReceivingInfo: React.FC = () => {
                   parseFloat(resolvedBookingData?.longitude ?? '');
                 if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
                 return (
-                  <div className="row mt-3">
+                  <div className="row mt-4">
                     <div className="col-12">
                       <div className="private-card">
-                        <div className="private-card-header bg-primary text-white">
-                          <h5 className="mb-0">
-                            <i className="fas fa-map-marked-alt me-2"></i>
-                            พิกัดแปลง
+                        <div className="private-card-header">
+                          <h5 className="mb-0 text-dark fw-bold">
+                            <i className="fas fa-map-marked-alt me-2 text-primary" />
+                            พิกัดแปลงปลูกจากข้อมูลการจอง
                           </h5>
                         </div>
                         <div className="private-card-body p-0">
@@ -545,7 +660,7 @@ const SampleReceivingInfo: React.FC = () => {
                                 lat,
                                 lng,
                                 title:
-                                  resolvedBookingData?.land?.name ?? 'แปลง',
+                                  resolvedBookingData?.land?.name ?? 'แปลงปลูก',
                               },
                             ]}
                           />
@@ -556,41 +671,40 @@ const SampleReceivingInfo: React.FC = () => {
                 );
               })()}
 
-              {/* ปุ่มยืนยันการ Pair */}
+              {/* Confirm Pairing Action */}
               <div className="d-flex justify-content-center mt-4">
                 <button
-                  className="btn btn-lg btn-primary px-5"
+                  className="btn btn-lg btn-primary px-5 py-3 shadow-lg d-flex align-items-center gap-2 fw-bold"
                   disabled={isDisabled}
                   onClick={handlePairConfirm}
                 >
-                  <i className="fas fa-check me-2"></i>
-                  ยืนยันการจับคู่ข้อมูล
+                  <i className="fas fa-check" />
+                  ยืนยันการจับคู่ข้อมูลคิวจอง
                 </button>
               </div>
             </>
           ) : (
-            /* [WALK-IN MODE] กรณีรับงานปกติ */
+            /* [WALK-IN MODE] */
             <>
-              <div className="d-flex">
-                <h2 className="fw-bold mb-3">QR Code {qrCodeData.qrCode}</h2>
-                <span>
-                  <GenButtonCircle
-                    color={B_LIST.info.color}
-                    icon="fas fa-cog"
-                    className="ms-2 mt-1"
-                    onClick={() => setSearchModal(true)}
-                  />
-                </span>
-              </div>
-              {qrCodeData.phoneNumber || qrCodeData.thaiNationalId ? (
-                <h2 className="fw-bold mb-3">
-                  รหัสตัวอย่าง {qrCodeData.book?.sampleCode || '-'}
-                </h2>
-              ) : (
-                <div className="d-flex flex-column mb-3">
-                  <div className="d-flex align-items-center gap-2">
-                    <h2 className="mb-0">ตัวอย่างอิสระ</h2>
-                    <div className="form-check">
+              {/* If Independent Sample Toggle */}
+              {!qrCodeData.phoneNumber && !qrCodeData.thaiNationalId && (
+                <div
+                  className="private-card mb-4"
+                  style={{ borderLeft: '4px solid #0aa2c0' }}
+                >
+                  <div className="private-card-body py-3 d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center gap-2">
+                      <i className="fas fa-circle-info text-info" />
+                      <div>
+                        <span className="fw-bold text-dark">
+                          ตัวอย่างอิสระ (Walk-in ด่วน)
+                        </span>
+                        <p className="text-muted small mb-0">
+                          ทำเครื่องหมายหากไม่มีข้อมูลเกษตรกรและไม่ต้องการผูกประวัติชาวไร่
+                        </p>
+                      </div>
+                    </div>
+                    <div className="form-check form-switch fs-5">
                       <input
                         className="form-check-input"
                         type="checkbox"
@@ -600,15 +714,419 @@ const SampleReceivingInfo: React.FC = () => {
                       />
                     </div>
                   </div>
-                  {!qrCodeData.book?.serviceTypeId && !isDisabled ? (
-                    <h6 className="text-muted mt-1 ms-2">
-                      กรุณาตั้งค่าประเภทการให้บริการ
-                    </h6>
-                  ) : (
-                    ''
-                  )}
                 </div>
               )}
+
+              <div className="row g-4">
+                {/* Farmer Info */}
+                <div className="col-md-4">
+                  <div className="private-card h-100">
+                    <div className="private-card-header d-flex align-items-center justify-content-between">
+                      <h4 className="private-card-title mb-0">
+                        <i className="fas fa-user me-2 text-primary" />
+                        ข้อมูลเกษตรกร
+                      </h4>
+                      <div className="d-flex gap-1">
+                        <GenButtonCircle
+                          color={B_LIST.list.color}
+                          icon={B_LIST.list.icon}
+                          link="/admin/farmer"
+                        />
+                        {qrCodeData?.book?.farmerId ? (
+                          <GenButtonCircle
+                            color={B_LIST.edit.color}
+                            icon={B_LIST.edit.icon}
+                            link={`/admin/farmer/${qrCodeData?.book?.farmerId}/edit`}
+                          />
+                        ) : (
+                          <GenButtonCircle
+                            color={B_LIST.add.color}
+                            icon={B_LIST.add.icon}
+                            onClick={() =>
+                              navigate(`/admin/farmer/add`, {
+                                state: {
+                                  thaiNationalId: qrCodeData.thaiNationalId,
+                                  firstName: qrCodeData.firstName,
+                                  lastName: qrCodeData.lastName,
+                                  phoneNumber: qrCodeData.phoneNumber,
+                                  bookId: qrCodeData.book?.bookId,
+                                  serviceAreaId:
+                                    qrCodeData.book?.serviceAreaId ??
+                                    qrCodeData.serviceArea?.serviceAreaId ??
+                                    qrCodeData.serviceAreaId,
+                                },
+                              })
+                            }
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="private-card-body">
+                      {loading ? (
+                        <div className="text-center py-5">
+                          <div
+                            className="spinner-border text-primary"
+                            role="status"
+                          />
+                        </div>
+                      ) : !qrCodeData.book?.farmer ? (
+                        <div className="text-center py-4 text-muted">
+                          {qrCodeData.phoneNumber ? (
+                            <div className="text-start">
+                              <p className="fw-semibold text-danger mb-2">
+                                ไม่พบข้อมูลเกษตรกรในระบบ:
+                              </p>
+                              <table className="table table-sm table-borderless mb-0 small">
+                                <tbody>
+                                  <tr>
+                                    <th
+                                      className="ps-0"
+                                      style={{ width: '80px' }}
+                                    >
+                                      บัตรประชาชน
+                                    </th>
+                                    <td>
+                                      {formatThaiNationalId(
+                                        qrCodeData.thaiNationalId
+                                      )}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th className="ps-0">ชื่อ-สกุล</th>
+                                    <td>
+                                      {qrCodeData.firstName}{' '}
+                                      {qrCodeData.lastName}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th className="ps-0">เบอร์โทร</th>
+                                    <td>{qrCodeData.phoneNumber}</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div>
+                              <i className="fas fa-user-slash fa-2x mb-2 opacity-50" />
+                              <p className="mb-0">
+                                ไม่มีข้อมูลเกษตรกรที่ผูกไว้
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <table
+                          className="table table-sm table-borderless mb-0"
+                          style={{ minHeight: '180px' }}
+                        >
+                          <tbody className="small">
+                            <tr>
+                              <th
+                                className="ps-0 text-muted"
+                                style={{ width: '90px' }}
+                              >
+                                หมายเลขบัตร
+                              </th>
+                              <td>
+                                {formatThaiNationalId(
+                                  qrCodeData?.book?.farmer?.thaiNationalId ?? ''
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="ps-0 text-muted">ชื่อ-นามสกุล</th>
+                              <td className="fw-bold">
+                                {qrCodeData?.book?.farmer?.firstName}{' '}
+                                {qrCodeData?.book?.farmer?.lastName}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="ps-0 text-muted">เบอร์โทรศัพท์</th>
+                              <td>{qrCodeData?.book?.farmer?.phone || '-'}</td>
+                            </tr>
+                            <tr>
+                              <th className="ps-0 text-muted">โรงงาน</th>
+                              <td>
+                                {qrCodeData.book?.farmer?.factory?.name || '-'}{' '}
+                                (
+                                {qrCodeData.book?.farmer?.factory?.initial ||
+                                  '-'}
+                                )
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="ps-0 text-muted">เขตพื้นที่</th>
+                              <td>
+                                เขต{' '}
+                                {qrCodeData.book?.farmer?.serviceArea.code ||
+                                  '-'}{' '}
+                                {qrCodeData.book?.farmer?.serviceArea.name ||
+                                  '-'}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Plot Info */}
+                <div className="col-md-4">
+                  <div className="private-card h-100">
+                    <div className="private-card-header d-flex align-items-center justify-content-between">
+                      <h4 className="private-card-title mb-0">
+                        <i className="fas fa-map-pin me-2 text-primary" />
+                        ข้อมูลแปลงปลูก
+                      </h4>
+                      <div className="d-flex gap-1">
+                        <GenButtonCircle
+                          color={B_LIST.list.color}
+                          icon={B_LIST.list.icon}
+                          link="/admin/land"
+                        />
+                        {qrCodeData?.book?.landId ? (
+                          <GenButtonCircle
+                            color={B_LIST.edit.color}
+                            icon={B_LIST.edit.icon}
+                            link={`/admin/land/${qrCodeData?.book?.landId}/edit`}
+                          />
+                        ) : (
+                          <GenButtonCircle
+                            color={B_LIST.add.color}
+                            icon={B_LIST.add.icon}
+                            onClick={() => {
+                              // ดึงข้อมูลที่ดีที่สุดจากทุก source ที่มี
+                              const book = qrCodeData.book;
+                              const bookSubdistrict = book?.subdistrict;
+                              const provinceCode =
+                                bookSubdistrict?.district?.province?.code;
+                              const districtCode =
+                                bookSubdistrict?.district?.code;
+                              navigate(`/admin/land/add`, {
+                                state: {
+                                  bookId: book?.bookId,
+                                  farmerId: book?.farmerId,
+                                  landCode: qrCodeData.landCode || undefined,
+                                  landName: qrCodeData.landName || undefined,
+                                  areaSize: book?.areaSize ?? undefined,
+                                  serviceTypeId: book?.serviceTypeId,
+                                  serviceAreaId:
+                                    book?.serviceAreaId ??
+                                    qrCodeData.serviceArea?.serviceAreaId ??
+                                    qrCodeData.serviceAreaId,
+                                  provinceCode: provinceCode ?? undefined,
+                                  districtCode: districtCode ?? undefined,
+                                  subdistrictCode:
+                                    book?.subdistrictCode ?? undefined,
+                                  zipCode: book?.zipCode ?? undefined,
+                                  latitude: book?.latitude ?? undefined,
+                                  longitude: book?.longitude ?? undefined,
+                                },
+                              });
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="private-card-body">
+                      {loading ? (
+                        <div className="text-center py-5">
+                          <div
+                            className="spinner-border text-primary"
+                            role="status"
+                          />
+                        </div>
+                      ) : !qrCodeData.book?.land ? (
+                        <div className="text-center py-4 text-muted">
+                          {qrCodeData.landCode ? (
+                            <div className="text-start">
+                              <p className="fw-semibold text-danger mb-2">
+                                ไม่พบข้อมูลแปลงในระบบ:
+                              </p>
+                              <table className="table table-sm table-borderless mb-0 small">
+                                <tbody>
+                                  <tr>
+                                    <th
+                                      className="ps-0"
+                                      style={{ width: '80px' }}
+                                    >
+                                      รหัสแปลง
+                                    </th>
+                                    <td>{qrCodeData.landCode}</td>
+                                  </tr>
+                                  <tr>
+                                    <th className="ps-0">ชื่อแปลง</th>
+                                    <td>{qrCodeData.landName}</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div>
+                              <i className="fas fa-map-marked fa-2x mb-2 opacity-50" />
+                              <p className="mb-0">
+                                ไม่มีข้อมูลแปลงปลูกที่ผูกไว้
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <table
+                          className="table table-sm table-borderless mb-0"
+                          style={{ minHeight: '180px' }}
+                        >
+                          <tbody className="small">
+                            <tr>
+                              <th
+                                className="ps-0 text-muted"
+                                style={{ width: '90px' }}
+                              >
+                                รหัสโควต้าอ้อย
+                              </th>
+                              <td>
+                                {qrCodeData?.book?.land?.quotaCode ?? '-'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="ps-0 text-muted">หมายเลขแปลง</th>
+                              <td className="fw-bold">
+                                {qrCodeData?.book?.land?.landCode}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="ps-0 text-muted">ชื่อแปลง</th>
+                              <td>{qrCodeData?.book?.land?.name || '-'}</td>
+                            </tr>
+                            <tr>
+                              <th className="ps-0 text-muted">พิกัดแปลง</th>
+                              <td>
+                                {qrCodeData.book?.latitude
+                                  ? `${qrCodeData.book.latitude}, ${qrCodeData.book.longitude}`
+                                  : '-'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="ps-0 text-muted">พื้นที่</th>
+                              <td>
+                                {qrCodeData.book?.land?.areaSize
+                                  ? `${qrCodeData.book.land.areaSize} ไร่`
+                                  : '-'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <th className="ps-0 text-muted">ที่อยู่แปลง</th>
+                              <td
+                                style={{
+                                  fontSize: '0.75rem',
+                                  lineHeight: '1.2',
+                                }}
+                              >
+                                {qrCodeData.book?.land?.village} ต.
+                                {qrCodeData.book?.land?.subdistrict?.nameTh} อ.
+                                {
+                                  qrCodeData.book?.land?.subdistrict?.district
+                                    ?.nameTh
+                                }{' '}
+                                จ.
+                                {
+                                  qrCodeData.book?.land?.subdistrict?.district
+                                    ?.province?.nameTh
+                                }{' '}
+                                {qrCodeData.book?.land?.zipCode}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Plot Map & Actions */}
+                <div className="col-md-4">
+                  <div className="private-card h-100">
+                    <div className="private-card-header">
+                      <h4 className="private-card-title mb-0">
+                        <i className="fas fa-map-marked-alt me-2 text-primary" />
+                        แผนที่แปลง
+                      </h4>
+                    </div>
+                    <div
+                      className="private-card-body p-0 d-flex flex-column justify-content-between"
+                      style={{ minHeight: '260px' }}
+                    >
+                      <div
+                        className="flex-grow-1"
+                        style={{ height: '180px', overflow: 'hidden' }}
+                      >
+                        {loading ? (
+                          <div className="text-center py-5">
+                            <div
+                              className="spinner-border text-primary"
+                              role="status"
+                            />
+                          </div>
+                        ) : isShowMap ? (
+                          <LeafletMap markers={location} />
+                        ) : (
+                          <div className="d-flex align-items-center justify-content-center h-100 text-muted small">
+                            ไม่พบข้อมูลพิกัดแปลงปลูก
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3 bg-light border-top">
+                        <button
+                          type="button"
+                          className="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2 fw-bold"
+                          disabled={isDisabled}
+                          onClick={handleRecivedQrCode}
+                        >
+                          <i className="fas fa-check-circle" />
+                          ยืนยันรับเข้าห้องแล็บ
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Extra Info Tables */}
+              <div className="row g-4 mt-1">
+                <InfoTable
+                  title="ข้อมูลการจองและการเก็บดิน"
+                  data={{
+                    'รหัส QR code จอง': qrCodeData.qrCode,
+                    'วัน-เวลา ดำเนินการจอง': TimeStampToDate(
+                      qrCodeData.book?.bookedAt
+                    ),
+                    'วัน-เวลา เก็บดิน': TimeStampToDate(
+                      qrCodeData.book?.collectSampleAt
+                    ),
+                  }}
+                  loading={loading}
+                />
+                <InfoTable
+                  title="การรับบริการ"
+                  data={{
+                    รหัสตัวอย่าง: qrCodeData.book?.sampleCode || '-',
+                    'วัน-เวลา ส่งดินวิเคราะห์': TimeStampToDate(
+                      qrCodeData.book?.sampleReceivedAt
+                    ),
+                    ประเภทการรับบริการ:
+                      qrCodeData.book?.serviceType?.name ||
+                      resolvedBookingData?.serviceType?.name ||
+                      '-',
+                    ห้องปฏิบัติการ:
+                      qrCodeData?.result
+                        ?.map(
+                          res => res.laboratorySetting.laboratory.shortNameAfter
+                        )
+                        .join(', ') || '-',
+                  }}
+                  loading={loading}
+                />
+              </div>
             </>
           )}
         </>
@@ -617,439 +1135,17 @@ const SampleReceivingInfo: React.FC = () => {
       {searchModal && (
         <SearchModal
           onClose={() => {
-            setSearchModal(false); // ปิด modal เฉยๆ
+            setSearchModal(false);
           }}
           onSubmit={() => {
-            setSearchModal(false); // ปิด modal แล้ว fetch ข้อมูลใหม่
+            setSearchModal(false);
             fetchQrCode();
           }}
           qrCodeData={qrCodeData}
         />
       )}
-
-      {/* OLD UI - Show only in Walk-in mode */}
-      {!isPairingMode && (
-        <>
-          <div className="row">
-            {/* Farmer Info */}
-            <div className="col-md-4">
-              <div className="private-card">
-                <div className="private-card-header">
-                  <div className="row row-demo-grid">
-                    <div
-                      className="col-md-8 col-sm-8 col-8"
-                      style={{ textAlign: 'left' }}
-                    >
-                      <h4 className="private-card-title">
-                        ข้อมูลเกษตรกร{' '}
-                        {qrCodeData?.book?.farmer?.phone
-                          ? '(' + qrCodeData?.book?.farmer?.phone + ')'
-                          : ''}
-                      </h4>
-                    </div>
-                    <div
-                      className="col-md-4 col-sm-4 col-4 ms-auto"
-                      style={{ textAlign: 'right' }}
-                    >
-                      <GenButtonCircle
-                        color={B_LIST.list.color}
-                        icon={B_LIST.list.icon}
-                        link="/admin/farmer"
-                        className="mx-1"
-                      />
-                      {qrCodeData?.book?.farmerId ? (
-                        <GenButtonCircle
-                          color={B_LIST.edit.color}
-                          icon={B_LIST.edit.icon}
-                          link={`/admin/farmer/${qrCodeData?.book?.farmerId}/edit`}
-                        />
-                      ) : (
-                        <GenButtonCircle
-                          color={B_LIST.add.color}
-                          icon={B_LIST.add.icon}
-                          onClick={() =>
-                            navigate(`/admin/farmer/add`, {
-                              state: {
-                                thaiNationalId: qrCodeData.thaiNationalId,
-                                firstName: qrCodeData.firstName,
-                                lastName: qrCodeData.lastName,
-                                phoneNumber: qrCodeData.phoneNumber,
-                                bookId: qrCodeData.book?.bookId,
-                                serviceAreaId:
-                                  qrCodeData.book?.serviceAreaId ??
-                                  qrCodeData.serviceArea?.serviceAreaId ??
-                                  qrCodeData.serviceAreaId,
-                              },
-                            })
-                          }
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="private-card-body">
-                  <div className="col-md-12 ms-auto me-auto">
-                    <div className="row p-4">
-                      {loading ? (
-                        <div className="text-center p-5">
-                          <div
-                            className="spinner-border text-primary"
-                            role="status"
-                          >
-                            <span className="visually-hidden">Loading...</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <table style={{ minHeight: '205px' }}>
-                          <tbody>
-                            {!qrCodeData.book?.farmer ? (
-                              <div className="space-y-4">
-                                {qrCodeData.phoneNumber ? (
-                                  <>
-                                    <p>ไม่พบข้อมูลเกษตรกรที่ตรงกับ:</p>
-                                    <tr>
-                                      <th>หมายเลขบัตรประชาชน:</th>
-                                      <td>
-                                        {formatThaiNationalId(
-                                          qrCodeData.thaiNationalId
-                                        )}
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <th>ชื่อ นามสกุล:</th>
-                                      <td>
-                                        {qrCodeData.firstName}{' '}
-                                        {qrCodeData.lastName}
-                                      </td>
-                                    </tr>
-                                    <tr>
-                                      <th>โทรศัพท์:</th>
-                                      <td>{qrCodeData.phoneNumber}</td>
-                                    </tr>
-                                  </>
-                                ) : (
-                                  <div>ไม่พบข้อมูลเกษตรกร</div>
-                                )}
-                              </div>
-                            ) : (
-                              <>
-                                <tr>
-                                  <th>ประเภทบัตร</th>
-                                  <td>บัตรประชาชน</td>
-                                </tr>
-                                <tr>
-                                  <th>หมายเลขบัตร</th>
-                                  <td>
-                                    {formatThaiNationalId(
-                                      qrCodeData?.book?.farmer
-                                        ?.thaiNationalId ?? ''
-                                    )}
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <th>ชื่อ นามสกุล</th>
-                                  <td>
-                                    {qrCodeData?.book?.farmer?.firstName}{' '}
-                                    {qrCodeData?.book?.farmer?.lastName}
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td colSpan={2}>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                  <th>โทรศัพท์</th>
-                                  <td>{qrCodeData?.book?.farmer?.phone}</td>
-                                </tr>
-                                <tr>
-                                  <td colSpan={2}>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                  <th>โรงงาน</th>
-                                  <td>
-                                    {qrCodeData.book?.farmer?.factory?.name} (
-                                    {qrCodeData.book?.farmer?.factory?.initial})
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <th>เขตพื้นที่</th>
-                                  <td>
-                                    เขต{' '}
-                                    {qrCodeData.book?.farmer?.serviceArea.code}{' '}
-                                    {qrCodeData.book?.farmer?.serviceArea.name}
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td colSpan={2}>&nbsp;</td>
-                                </tr>
-                              </>
-                            )}
-                          </tbody>
-                        </table>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Plot Info */}
-            <div className="col-md-4">
-              <div className="private-card">
-                <div className="private-card-header">
-                  <div className="row row-demo-grid">
-                    <div
-                      className="col-md-8 col-sm-8 col-8"
-                      style={{ textAlign: 'left' }}
-                    >
-                      <h4 className="private-card-title">
-                        ข้อมูลแปลง{' '}
-                        {qrCodeData?.book?.land?.name
-                          ? '(' + qrCodeData?.book?.land?.name + ')'
-                          : ''}
-                      </h4>
-                    </div>
-                    <div
-                      className="col-md-4 col-sm-4 col-4 ms-auto"
-                      style={{ textAlign: 'right' }}
-                    >
-                      <GenButtonCircle
-                        color={B_LIST.list.color}
-                        icon={B_LIST.list.icon}
-                        link="/admin/land"
-                        className="mx-1"
-                      />
-                      {qrCodeData?.book?.landId ? (
-                        <GenButtonCircle
-                          color={B_LIST.edit.color}
-                          icon={B_LIST.edit.icon}
-                          link={`/admin/land/${qrCodeData?.book?.landId}/edit`}
-                        />
-                      ) : (
-                        <GenButtonCircle
-                          color={B_LIST.add.color}
-                          icon={B_LIST.add.icon}
-                          onClick={() =>
-                            navigate(`/admin/land/add`, {
-                              state: {
-                                bookId: qrCodeData.book?.bookId,
-                                farmerId: qrCodeData.book?.farmerId,
-                                landCode: qrCodeData.landCode,
-                                landName: qrCodeData.landName,
-                                areaSize: qrCodeData.book?.areaSize,
-                                serviceTypeId: qrCodeData.book?.serviceTypeId,
-                                provinceCode:
-                                  qrCodeData.book?.subdistrict?.district
-                                    ?.province?.code,
-                                districtCode:
-                                  qrCodeData.book?.subdistrict?.district?.code,
-                                subdistrictCode:
-                                  qrCodeData.book?.subdistrictCode,
-                                zipCode: qrCodeData.book?.zipCode,
-                                latitude: qrCodeData.book?.latitude,
-                                longitude: qrCodeData.book?.longitude,
-                              },
-                            })
-                          }
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="private-card-body">
-                  <div className="col-md-12 ms-auto me-auto">
-                    <div className="row p-4">
-                      {loading ? (
-                        <div className="text-center p-5">
-                          <div
-                            className="spinner-border text-primary"
-                            role="status"
-                          >
-                            <span className="visually-hidden">Loading...</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <table style={{ minHeight: '205px' }}>
-                          <tbody>
-                            {!qrCodeData.book?.land ? (
-                              <div className="space-y-4">
-                                {qrCodeData.landCode ? (
-                                  <>
-                                    <p>ไม่พบข้อมูลแปลงสำหรับ:</p>
-                                    <tr>
-                                      <th>หมายเลขแปลง: </th>
-                                      <td>{qrCodeData.landCode}</td>
-                                    </tr>
-                                    <tr>
-                                      <th>ชื่อแปลง: </th>
-                                      <td>{qrCodeData.landName}</td>
-                                    </tr>
-                                  </>
-                                ) : (
-                                  <div>ไม่พบข้อมูลแปลง</div>
-                                )}
-                              </div>
-                            ) : (
-                              <>
-                                <tr>
-                                  <th>รหัสโควต้าอ้อย</th>
-                                  <td>
-                                    {qrCodeData?.book?.land?.quotaCode ?? '-'}
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <th>หมายเลขแปลง</th>
-                                  <td>{qrCodeData?.book?.land?.landCode}</td>
-                                </tr>
-                                <tr>
-                                  <th>ชื่อแปลง</th>
-                                  <td>{qrCodeData?.book?.land?.name}</td>
-                                </tr>
-                                <tr>
-                                  <td colSpan={2}>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                  <th>พิกัด</th>
-                                  <td>
-                                    {qrCodeData.book?.latitude
-                                      ? `${qrCodeData?.book?.latitude},
-                                  ${qrCodeData?.book?.longitude}`
-                                      : '-'}
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td colSpan={2}>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                  <th>อำเภอ</th>
-                                  <td>
-                                    {
-                                      qrCodeData.book?.land?.subdistrict
-                                        ?.district?.nameTh
-                                    }
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <th>จังหวัด</th>
-                                  <td>
-                                    {
-                                      qrCodeData.book?.land?.subdistrict
-                                        ?.district?.province?.nameTh
-                                    }
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <th>ที่อยู่</th>
-                                  <td>
-                                    {qrCodeData.book?.land?.village} ต.
-                                    {
-                                      qrCodeData.book?.land?.subdistrict?.nameTh
-                                    }{' '}
-                                    อ.
-                                    {
-                                      qrCodeData.book?.land?.subdistrict
-                                        ?.district?.nameTh
-                                    }{' '}
-                                    จ.
-                                    {
-                                      qrCodeData.book?.land?.subdistrict
-                                        ?.district?.province?.nameTh
-                                    }{' '}
-                                    {qrCodeData.book?.land?.zipCode}
-                                  </td>
-                                </tr>
-                                <tr>
-                                  <td colSpan={2}>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                  <th>พื้นที่</th>
-                                  <td>{qrCodeData.book?.land?.areaSize} ไร่</td>
-                                </tr>
-                              </>
-                            )}
-                          </tbody>
-                        </table>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Plot Coordinates */}
-            <div className="col-md-4">
-              <div className="private-card">
-                <div className="private-card-header">
-                  <div className="private-card-title">พิกัดแปลง</div>
-                </div>
-                <div className="private-card-body">
-                  {loading ? (
-                    <div className="text-center p-5">
-                      <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                      </div>
-                    </div>
-                  ) : isShowMap ? (
-                    <LeafletMap markers={location} />
-                  ) : (
-                    <div>ไม่พบข้อมูลพิกัดแปลง</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Confirmation Button */}
-              <div
-                className="d-flex justify-content-center mt-3"
-                style={isDisabled ? { cursor: 'not-allowed' } : {}}
-              >
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={isDisabled}
-                  onClick={handleRecivedQrCode}
-                >
-                  ยืนยัน
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="row">
-            <InfoTable
-              title="การจองและการเก็บดิน"
-              data={{
-                'รหัส QR code จอง': qrCodeData.qrCode,
-                'วัน-เวลา ดำเนินการจอง': TimeStampToDate(
-                  qrCodeData.book?.bookedAt
-                ),
-                'วัน-เวลา เก็บดิน': TimeStampToDate(
-                  qrCodeData.book?.collectSampleAt
-                ),
-              }}
-              loading={loading}
-            />
-            <InfoTable
-              title="การรับบริการ"
-              data={{
-                'รหัสตัวอย่าง': qrCodeData.book?.sampleCode || '-',
-                'วัน-เวลา ส่งดินวิเคราะห์': TimeStampToDate(
-                  qrCodeData.book?.sampleReceivedAt
-                ),
-                // รถวิเคราะห์: qrCodeData.analysisCarCode,
-                'ประเภทการรับบริการ': qrCodeData.book?.serviceType?.name || resolvedBookingData?.serviceType?.name || '-',
-                'ทดสอบ':
-                  qrCodeData?.result
-                    ?.map(res => res.laboratorySetting.laboratory.shortNameAfter)
-                    .join(', ') || '-',
-              }}
-              loading={loading}
-            />
-          </div>
-        </>
-      )}
-    </>
+    </div>
   );
 };
 
 export default SampleReceivingInfo;
-
-
-

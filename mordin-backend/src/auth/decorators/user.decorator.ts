@@ -1,4 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+
 import { JWTPayload } from '../interfaces/token';
 
 export const User = createParamDecorator(
@@ -9,5 +10,5 @@ export const User = createParamDecorator(
     // ถ้าใช้ @User('sub') จะ return user.sub (ซึ่งคือ userId)
     // ถ้าใช้ @User() จะ return user ทั้ง object
     return data ? user?.[data] : user;
-  },
-);  
+  }
+);

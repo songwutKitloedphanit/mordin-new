@@ -1,21 +1,8 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import { NormalLevelEnum } from 'src/common/enums/normal-level.enum';
-import { SoilGrade } from 'src/soil-grade/soil-grades/entities/soil-grade.entity';
-import { User } from 'src/users/entities/user.entity';
-import {
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('soil_grade_levels_logs')
-export class SoilGradeLevelLog extends BaseLogEntity{
+export class SoilGradeLevelLog extends BaseLogEntity {
   @PrimaryColumn()
   soilGradeLevelId: number;
 

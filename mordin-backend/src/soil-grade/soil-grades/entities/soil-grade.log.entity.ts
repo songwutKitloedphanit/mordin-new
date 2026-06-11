@@ -1,20 +1,5 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
-import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
-import { SoilGradeLevel } from 'src/soil-grade/soil-grade-levels/entities/soil-grade-level.entity';
-import { User } from 'src/users/entities/user.entity';
-import {
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 @Entity('soil_grades_logs')
 @Unique('unique_service_type_laboratory_logs', [

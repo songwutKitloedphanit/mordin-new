@@ -1,12 +1,5 @@
 import { Geography } from 'src/address/geographies/entities/geography.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToMany,
-  ManyToOne,
-  PrimaryColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 @Entity('provinces')
 export class Province {

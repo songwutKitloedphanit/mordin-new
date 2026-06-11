@@ -427,4 +427,3 @@ const FertilizerMajorEdit: React.FC = () => {
 };
 
 export default FertilizerMajorEdit;
-

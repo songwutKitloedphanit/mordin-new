@@ -3,21 +3,21 @@ import { useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 import { GenFormSelect, GenFormText1 } from '../../components/gui/GuiForm';
+import { getDistrictsByProvinceCode } from '../../services/api/address/DistrictApi';
+import { getAllProvinces } from '../../services/api/address/ProvinceApi';
+import { getSubdistrictsByDistrictCode } from '../../services/api/address/SubdistrictApi';
+import { publicLookupFarmerByNamePhone } from '../../services/api/FarmerApi';
+import { createPublicLandByFarmer } from '../../services/api/LandApi';
 import {
   checkEncryptQrCode,
   getQrCodeByEncryptCode,
   updateDataByFarmer,
 } from '../../services/api/qr-code/QrCodeApi';
-import { publicLookupFarmerByNamePhone } from '../../services/api/FarmerApi';
-import { createPublicLandByFarmer } from '../../services/api/LandApi';
 import {
   getAllFactories,
   getFactoryById,
 } from '../../services/api/service-area/FactoryApi';
 import { getAllServiceTypes } from '../../services/api/service-type/ServiceTypeApi';
-import { getDistrictsByProvinceCode } from '../../services/api/address/DistrictApi';
-import { getAllProvinces } from '../../services/api/address/ProvinceApi';
-import { getSubdistrictsByDistrictCode } from '../../services/api/address/SubdistrictApi';
 import { District, Province, Subdistrict } from '../../types/address';
 import { FarmerPublicLand, FarmerPublicProfile } from '../../types/Farmer';
 import { CollectSampleInput } from '../../types/qr-code/CollectSample';
@@ -89,8 +89,7 @@ const CollectSample = () => {
   const [selectedFactory, setSelectedFactory] = useState<number>();
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [qrCodeValid, setQrCodeValid] = useState<boolean | null>(null);
-  const [collectMode, setCollectMode] =
-    useState<CollectSampleMode>('choice');
+  const [collectMode, setCollectMode] = useState<CollectSampleMode>('choice');
   const [collectExamForm, setCollectExamForm] = useState<CollectSampleInput>({
     farmerId: null,
     landId: null,
@@ -195,7 +194,8 @@ const CollectSample = () => {
         }
 
         if (qrCode?.status === SampleStatusEnum.DISTRIBUTED) {
-          const qrServiceArea = qrCode?.serviceArea ?? qrCode?.book?.serviceArea;
+          const qrServiceArea =
+            qrCode?.serviceArea ?? qrCode?.book?.serviceArea;
           const factoryId =
             qrServiceArea?.factoryId ??
             qrServiceArea?.factory?.factoryId ??
@@ -645,7 +645,9 @@ const CollectSample = () => {
       const payload = {
         ...collectExamForm,
         farmerId:
-          collectMode === 'returning' ? existingFarmer?.farmerId ?? null : null,
+          collectMode === 'returning'
+            ? (existingFarmer?.farmerId ?? null)
+            : null,
         landId: submittedLandId,
         landCode: submittedLandCode,
         areaSize: Number(collectExamForm.areaSize),
@@ -817,80 +819,80 @@ const CollectSample = () => {
 
               {collectMode === 'first_time' && (
                 <>
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <GenFormText1
-                    id="firstName"
-                    isRequired={true}
-                    name="firstName"
-                    label="ชื่อ"
-                    placeholder=""
-                    value={collectExamForm.firstName}
-                    onChange={handleChange}
-                    remark="* ไม่ต้องใส่คำนำหน้า"
-                    readOnly={
-                      isCollected?.status !== SampleStatusEnum.DISTRIBUTED &&
-                      isCollected
-                        ? true
-                        : false
-                    }
-                  />
-                </div>
-                <div className="col-md-6">
-                  <GenFormText1
-                    id="lastName"
-                    isRequired={true}
-                    name="lastName"
-                    label="นามสกุล"
-                    value={collectExamForm.lastName}
-                    onChange={handleChange}
-                    placeholder=""
-                    readOnly={
-                      isCollected?.status !== SampleStatusEnum.DISTRIBUTED &&
-                      isCollected
-                        ? true
-                        : false
-                    }
-                  />
-                </div>
-              </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <GenFormText1
+                        id="firstName"
+                        isRequired={true}
+                        name="firstName"
+                        label="ชื่อ"
+                        placeholder=""
+                        value={collectExamForm.firstName}
+                        onChange={handleChange}
+                        remark="* ไม่ต้องใส่คำนำหน้า"
+                        readOnly={
+                          isCollected?.status !==
+                            SampleStatusEnum.DISTRIBUTED && isCollected
+                            ? true
+                            : false
+                        }
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <GenFormText1
+                        id="lastName"
+                        isRequired={true}
+                        name="lastName"
+                        label="นามสกุล"
+                        value={collectExamForm.lastName}
+                        onChange={handleChange}
+                        placeholder=""
+                        readOnly={
+                          isCollected?.status !==
+                            SampleStatusEnum.DISTRIBUTED && isCollected
+                            ? true
+                            : false
+                        }
+                      />
+                    </div>
+                  </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <GenFormText1
-                    id="phoneNumber"
-                    isRequired={true}
-                    name="phoneNumber"
-                    label="หมายเลขโทรศัพท์"
-                    placeholder="เช่น 080xxxxxxx"
-                    value={collectExamForm.phoneNumber}
-                    onChange={handleChange}
-                    readOnly={
-                      isCollected?.status !== SampleStatusEnum.DISTRIBUTED &&
-                      isCollected
-                        ? true
-                        : false
-                    }
-                  />
-                </div>
-                <div className="col-md-6">
-                  <GenFormText1
-                    id="thaiNationalId"
-                    isRequired={true}
-                    name="thaiNationalId"
-                    label="รหัสบัตรประชาชน"
-                    placeholder="เช่น 1 2345 67890 12 3"
-                    value={collectExamForm.thaiNationalId}
-                    onChange={handleChange}
-                    readOnly={
-                      isCollected?.status !== SampleStatusEnum.DISTRIBUTED &&
-                      isCollected
-                        ? true
-                        : false
-                    }
-                  />
-                </div>
-              </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <GenFormText1
+                        id="phoneNumber"
+                        isRequired={true}
+                        name="phoneNumber"
+                        label="หมายเลขโทรศัพท์"
+                        placeholder="เช่น 080xxxxxxx"
+                        value={collectExamForm.phoneNumber}
+                        onChange={handleChange}
+                        readOnly={
+                          isCollected?.status !==
+                            SampleStatusEnum.DISTRIBUTED && isCollected
+                            ? true
+                            : false
+                        }
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <GenFormText1
+                        id="thaiNationalId"
+                        isRequired={true}
+                        name="thaiNationalId"
+                        label="รหัสบัตรประชาชน"
+                        placeholder="เช่น 1 2345 67890 12 3"
+                        value={collectExamForm.thaiNationalId}
+                        onChange={handleChange}
+                        readOnly={
+                          isCollected?.status !==
+                            SampleStatusEnum.DISTRIBUTED && isCollected
+                            ? true
+                            : false
+                        }
+                      />
+                    </div>
+                  </div>
                 </>
               )}
 
@@ -940,220 +942,222 @@ const CollectSample = () => {
 
               {(collectMode === 'first_time' || existingFarmer) && (
                 <>
-              <div className="collect-sample-section-title">
-                <i className="fas fa-map-marked-alt" />
-                ข้อมูลแปลง
-              </div>
+                  <div className="collect-sample-section-title">
+                    <i className="fas fa-map-marked-alt" />
+                    ข้อมูลแปลง
+                  </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <GenFormText1
-                    id="areaSize"
-                    isRequired={true}
-                    name="areaSize"
-                    label="พื้นที่ (ไร่)"
-                    placeholder="ระบุขนาดแปลง (ไร่)"
-                    type="number"
-                    step="0.01"
-                    value={collectExamForm.areaSize}
-                    onChange={handleChange}
-                    readOnly={isFormLocked}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <GenFormSelect
-                    isRequired={true}
-                    id="provinceCode"
-                    name="provinceCode"
-                    label="จังหวัด"
-                    onChange={handleChange}
-                    options={[
-                      { value: '', name: '-- กรุณาเลือกจังหวัด --' },
-                      ...provinces.map(province => ({
-                        value: province.code,
-                        name: province.nameTh,
-                      })),
-                    ]}
-                    value={collectExamForm.provinceCode}
-                    disabled={isFormLocked}
-                  />
-                </div>
-              </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <GenFormText1
+                        id="areaSize"
+                        isRequired={true}
+                        name="areaSize"
+                        label="พื้นที่ (ไร่)"
+                        placeholder="ระบุขนาดแปลง (ไร่)"
+                        type="number"
+                        step="0.01"
+                        value={collectExamForm.areaSize}
+                        onChange={handleChange}
+                        readOnly={isFormLocked}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <GenFormSelect
+                        isRequired={true}
+                        id="provinceCode"
+                        name="provinceCode"
+                        label="จังหวัด"
+                        onChange={handleChange}
+                        options={[
+                          { value: '', name: '-- กรุณาเลือกจังหวัด --' },
+                          ...provinces.map(province => ({
+                            value: province.code,
+                            name: province.nameTh,
+                          })),
+                        ]}
+                        value={collectExamForm.provinceCode}
+                        disabled={isFormLocked}
+                      />
+                    </div>
+                  </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <GenFormSelect
-                    isRequired={true}
-                    id="districtCode"
-                    name="districtCode"
-                    label="เขต/อำเภอ"
-                    onChange={handleChange}
-                    options={[
-                      { value: '', name: '-- กรุณาเลือกอำเภอ --' },
-                      ...districts.map(district => ({
-                        value: district.code,
-                        name: district.nameTh,
-                      })),
-                    ]}
-                    value={collectExamForm.districtCode}
-                    emptyMessage="-- กรุณาเลือกจังหวัดก่อนเลือกอำเภอ --"
-                    disabled={isFormLocked}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <GenFormSelect
-                    isRequired={true}
-                    id="subdistrictCode"
-                    name="subdistrictCode"
-                    label="แขวง/ตำบล"
-                    onChange={handleChange}
-                    options={[
-                      { value: '', name: '-- กรุณาเลือกตำบล --' },
-                      ...subdistricts.map(subdistrict => ({
-                        value: subdistrict.code,
-                        name: subdistrict.nameTh,
-                      })),
-                    ]}
-                    value={collectExamForm.subdistrictCode}
-                    emptyMessage="-- กรุณาเลือกอำเภอก่อนเลือกตำบล --"
-                    disabled={isFormLocked}
-                  />
-                </div>
-              </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <GenFormSelect
+                        isRequired={true}
+                        id="districtCode"
+                        name="districtCode"
+                        label="เขต/อำเภอ"
+                        onChange={handleChange}
+                        options={[
+                          { value: '', name: '-- กรุณาเลือกอำเภอ --' },
+                          ...districts.map(district => ({
+                            value: district.code,
+                            name: district.nameTh,
+                          })),
+                        ]}
+                        value={collectExamForm.districtCode}
+                        emptyMessage="-- กรุณาเลือกจังหวัดก่อนเลือกอำเภอ --"
+                        disabled={isFormLocked}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <GenFormSelect
+                        isRequired={true}
+                        id="subdistrictCode"
+                        name="subdistrictCode"
+                        label="แขวง/ตำบล"
+                        onChange={handleChange}
+                        options={[
+                          { value: '', name: '-- กรุณาเลือกตำบล --' },
+                          ...subdistricts.map(subdistrict => ({
+                            value: subdistrict.code,
+                            name: subdistrict.nameTh,
+                          })),
+                        ]}
+                        value={collectExamForm.subdistrictCode}
+                        emptyMessage="-- กรุณาเลือกอำเภอก่อนเลือกตำบล --"
+                        disabled={isFormLocked}
+                      />
+                    </div>
+                  </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <GenFormText1
-                    id="zipCode"
-                    isRequired={true}
-                    name="zipCode"
-                    label="รหัสไปรษณีย์"
-                    placeholder="กรอกอัตโนมัติเมื่อเลือกตำบล"
-                    value={collectExamForm.zipCode}
-                    onChange={handleChange}
-                    readOnly={true}
-                  />
-                </div>
-              </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <GenFormText1
+                        id="zipCode"
+                        isRequired={true}
+                        name="zipCode"
+                        label="รหัสไปรษณีย์"
+                        placeholder="กรอกอัตโนมัติเมื่อเลือกตำบล"
+                        value={collectExamForm.zipCode}
+                        onChange={handleChange}
+                        readOnly={true}
+                      />
+                    </div>
+                  </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <GenFormText1
-                    id="landName"
-                    isRequired={false}
-                    name="landName"
-                    label="ชื่อแปลง"
-                    placeholder=""
-                    value={collectExamForm.landName}
-                    onChange={handleChange}
-                    readOnly={
-                      isCollected?.status !== SampleStatusEnum.DISTRIBUTED &&
-                      isCollected
-                        ? true
-                        : false
-                    }
-                  />
-                </div>
-              </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <GenFormText1
+                        id="landName"
+                        isRequired={false}
+                        name="landName"
+                        label="ชื่อแปลง"
+                        placeholder=""
+                        value={collectExamForm.landName}
+                        onChange={handleChange}
+                        readOnly={
+                          isCollected?.status !==
+                            SampleStatusEnum.DISTRIBUTED && isCollected
+                            ? true
+                            : false
+                        }
+                      />
+                    </div>
+                  </div>
 
-              <div className="collect-sample-section-title">
-                <i className="fas fa-building" />
-                ข้อมูลบริการ
-              </div>
+                  <div className="collect-sample-section-title">
+                    <i className="fas fa-building" />
+                    ข้อมูลบริการ
+                  </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <GenFormSelect
-                    isRequired={true}
-                    id="factory"
-                    name="factory"
-                    onChange={e => setSelectedFactory(Number(e.target.value))}
-                    options={factories.map(factory => {
-                      return {
-                        value: factory.factoryId,
-                        name: `${factory.name} (${factory.initial})`,
-                      };
-                    })}
-                    label="โรงงาน"
-                    value={selectedFactory}
-                    disabled={
-                      isCollected?.status !== SampleStatusEnum.DISTRIBUTED &&
-                      isCollected
-                        ? true
-                        : false
-                    }
-                  />
-                </div>
-                <div className="col-md-6">
-                  <GenFormSelect
-                    isRequired={true}
-                    id="serviceAreaId"
-                    name="serviceAreaId"
-                    onChange={handleChange}
-                    options={serviceAreas.map(serviceArea => {
-                      return {
-                        value: serviceArea.serviceAreaId,
-                        name: `เขต ${serviceArea.code} ${serviceArea.name}`,
-                      };
-                    })}
-                    label="เขตส่งเสริม"
-                    value={collectExamForm.serviceAreaId}
-                    disabled={
-                      isCollected?.status !== SampleStatusEnum.DISTRIBUTED &&
-                      isCollected
-                        ? true
-                        : false
-                    }
-                  />
-                </div>
-              </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <GenFormSelect
+                        isRequired={true}
+                        id="factory"
+                        name="factory"
+                        onChange={e =>
+                          setSelectedFactory(Number(e.target.value))
+                        }
+                        options={factories.map(factory => {
+                          return {
+                            value: factory.factoryId,
+                            name: `${factory.name} (${factory.initial})`,
+                          };
+                        })}
+                        label="โรงงาน"
+                        value={selectedFactory}
+                        disabled={
+                          isCollected?.status !==
+                            SampleStatusEnum.DISTRIBUTED && isCollected
+                            ? true
+                            : false
+                        }
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <GenFormSelect
+                        isRequired={true}
+                        id="serviceAreaId"
+                        name="serviceAreaId"
+                        onChange={handleChange}
+                        options={serviceAreas.map(serviceArea => {
+                          return {
+                            value: serviceArea.serviceAreaId,
+                            name: `เขต ${serviceArea.code} ${serviceArea.name}`,
+                          };
+                        })}
+                        label="เขตส่งเสริม"
+                        value={collectExamForm.serviceAreaId}
+                        disabled={
+                          isCollected?.status !==
+                            SampleStatusEnum.DISTRIBUTED && isCollected
+                            ? true
+                            : false
+                        }
+                      />
+                    </div>
+                  </div>
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <GenFormSelect
-                    isRequired={true}
-                    id="serviceTypeId"
-                    name="serviceTypeId"
-                    onChange={handleChange}
-                    options={serviceTypes.map(serviceType => {
-                      return {
-                        value: Number(serviceType.serviceTypeId),
-                        name: serviceType.name,
-                      };
-                    })}
-                    label="ประเภทการให้บริการ"
-                    value={Number(collectExamForm.serviceTypeId)}
-                    disabled={
-                      isCollected?.status !== SampleStatusEnum.DISTRIBUTED &&
-                      isCollected
-                        ? true
-                        : false
-                    }
-                  />
-                </div>
-              </div>
+                  <div className="row mb-3">
+                    <div className="col-md-6">
+                      <GenFormSelect
+                        isRequired={true}
+                        id="serviceTypeId"
+                        name="serviceTypeId"
+                        onChange={handleChange}
+                        options={serviceTypes.map(serviceType => {
+                          return {
+                            value: Number(serviceType.serviceTypeId),
+                            name: serviceType.name,
+                          };
+                        })}
+                        label="ประเภทการให้บริการ"
+                        value={Number(collectExamForm.serviceTypeId)}
+                        disabled={
+                          isCollected?.status !==
+                            SampleStatusEnum.DISTRIBUTED && isCollected
+                            ? true
+                            : false
+                        }
+                      />
+                    </div>
+                  </div>
 
-              <div className="collect-sample-section-title">
-                <i className="fas fa-location-dot" />
-                พิกัดแปลง
-              </div>
+                  <div className="collect-sample-section-title">
+                    <i className="fas fa-location-dot" />
+                    พิกัดแปลง
+                  </div>
 
-              <div className="collect-sample-map-panel">
-                <LeafletMapPicker
-                  center={location}
-                  onChange={setLocation}
-                  height="460px"
-                />
-              </div>
+                  <div className="collect-sample-map-panel">
+                    <LeafletMapPicker
+                      center={location}
+                      onChange={setLocation}
+                      height="460px"
+                    />
+                  </div>
 
-              <div className="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                <button
-                  type="submit"
-                  className="btn btn-primary px-4 fw-semibold"
-                >
-                  บันทึกข้อมูล
-                </button>
-              </div>
+                  <div className="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button
+                      type="submit"
+                      className="btn btn-primary px-4 fw-semibold"
+                    >
+                      บันทึกข้อมูล
+                    </button>
+                  </div>
                 </>
               )}
             </form>
@@ -1165,5 +1169,3 @@ const CollectSample = () => {
 };
 
 export default CollectSample;
-
-

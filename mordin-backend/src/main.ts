@@ -1,11 +1,11 @@
-import { NestFactory, Reflector } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
-import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
-import { AllExceptionsFilter } from './common/filters/http-exception.filter';
-import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+
+import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -42,7 +42,7 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: false,
       transform: true,
-    }),
+    })
   );
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');

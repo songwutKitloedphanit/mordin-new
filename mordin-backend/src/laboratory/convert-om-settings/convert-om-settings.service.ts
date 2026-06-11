@@ -1,67 +1,77 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { ConvertOmSetting } from "./entities/convert-om-setting.entity";
-import { Repository } from "typeorm";
-import { CreateConvertOmSettingDto } from "./dto/create-convert-om-setting.dto";
-import { UpdateConvertOmSettingDto } from "./dto/update-convert-om-setting.dto";
-import { LaboratorySetting } from "../laboratory-settings/entities/laboratory-setting.entity";
-import { MachineTypeTypes } from "../enums/machine-type.enum";
-import { ConvertOmSettingLog } from "./entities/convert-om-setting.log.entity";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { LaboratorySetting } from '../laboratory-settings/entities/laboratory-setting.entity';
+
+import { CreateConvertOmSettingDto } from './dto/create-convert-om-setting.dto';
+import { UpdateConvertOmSettingDto } from './dto/update-convert-om-setting.dto';
+import { ConvertOmSetting } from './entities/convert-om-setting.entity';
+import { ConvertOmSettingLog } from './entities/convert-om-setting.log.entity';
 
 @Injectable()
 export class ConvertOmSettingService {
-    constructor(
+  constructor(
     @InjectRepository(ConvertOmSetting)
-        private convertOmSettingRepository: Repository<ConvertOmSetting>,
+    private convertOmSettingRepository: Repository<ConvertOmSetting>,
 
     @InjectRepository(LaboratorySetting)
-        private labSettingRepo: Repository<LaboratorySetting>,
-    
+    private labSettingRepo: Repository<LaboratorySetting>,
+
     @InjectRepository(ConvertOmSettingLog)
     private convertOmSettingLog: Repository<ConvertOmSettingLog>
-    ) {}
+  ) {}
 
-    create(createConvertOmSettingDto: CreateConvertOmSettingDto, Uid: number) {
-        const convertOm = this.convertOmSettingRepository.create(createConvertOmSettingDto);
-        return this.convertOmSettingRepository.save(convertOm);
-    }
-    
-    findAll() {
-        return this.convertOmSettingRepository.find({
-          relations: {
-            laboratorySetting: {
-                laboratory:true,
-                serviceCalendar: true,
-            }
-          }
-        });
-    }
+  create(createConvertOmSettingDto: CreateConvertOmSettingDto, Uid: number) {
+    const convertOm = this.convertOmSettingRepository.create(
+      createConvertOmSettingDto
+    );
+    return this.convertOmSettingRepository.save(convertOm);
+  }
 
-    findOne(id: number) {
-    return this.convertOmSettingRepository.findOne({
-        where: { convertOmSettingId: id }, 
-        relations: ['laboratorySetting'], 
+  findAll() {
+    return this.convertOmSettingRepository.find({
+      relations: {
+        laboratorySetting: {
+          laboratory: true,
+          serviceCalendar: true,
+        },
+      },
     });
+  }
+
+  findOne(id: number) {
+    return this.convertOmSettingRepository.findOne({
+      where: { convertOmSettingId: id },
+      relations: ['laboratorySetting'],
+    });
+  }
+
+  async update(
+    id: number,
+    updateConvertOmSettingDto: UpdateConvertOmSettingDto,
+    Uid: number
+  ) {
+    const existing = await this.convertOmSettingRepository.findOne({
+      where: { convertOmSettingId: id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`ConvertOmSetting with id ${id} not found`);
     }
 
-    async update(id: number, updateConvertOmSettingDto: UpdateConvertOmSettingDto, Uid: number) {
-        const existing = await this.convertOmSettingRepository.findOne({
-            where: { convertOmSettingId: id },
-        });
+    const updated = this.convertOmSettingRepository.merge(
+      existing,
+      updateConvertOmSettingDto
+    );
+    return this.convertOmSettingRepository.save(updated);
+  }
 
-        if (!existing) {
-            throw new NotFoundException(`ConvertOmSetting with id ${id} not found`);
-        }
+  remove(id: number) {
+    return `This action removes a #${id} shop`;
+  }
 
-        const updated = this.convertOmSettingRepository.merge(existing, updateConvertOmSettingDto);
-        return this.convertOmSettingRepository.save(updated);
-    }
-
-    remove(id: number) {
-        return `This action removes a #${id} shop`;
-    }
-
-    getLogs(){
-        return this.convertOmSettingLog.find();
-    }
+  getLogs() {
+    return this.convertOmSettingLog.find();
+  }
 }

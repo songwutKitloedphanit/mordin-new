@@ -35,23 +35,17 @@ export class SampleBlankResult {
   @Column({ name: 'recorded_uid', type: 'int' })
   recordedUid: number;
 
-  @Column({ name: 'post_value', type: 'float',  nullable: true })
+  @Column({ name: 'post_value', type: 'float', nullable: true })
   postValue: number;
 
-  @Column({ name: 'pre_value', type: 'float',  nullable: true })
+  @Column({ name: 'pre_value', type: 'float', nullable: true })
   preValue: number;
 
-  @Column({ name: 'certificate', type: 'float',  nullable: true })
+  @Column({ name: 'certificate', type: 'float', nullable: true })
   certificate: number;
 
   @Column({ name: 'laboratory_setting_id', type: 'int' })
   laboratorySettingId: number;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  setRecordedAt() {
-    this.recordedAt = Date.now();
-  }
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'recorded_uid' })
@@ -68,4 +62,10 @@ export class SampleBlankResult {
   })
   @JoinColumn({ name: 'laboratory_setting_id' })
   laboratorySetting: LaboratorySetting;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setRecordedAt() {
+    this.recordedAt = Date.now();
+  }
 }

@@ -2,8 +2,8 @@ import { IsNumber } from 'class-validator';
 
 export class FactorySummaryDTO {
   @IsNumber()
-  totalFactories : number;
+  totalFactories: number;
 
   @IsNumber()
-  totalServiceAres : number;
+  totalServiceAres: number;
 }

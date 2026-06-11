@@ -1,10 +1,5 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import {
-  Column,
-  Entity,
-  PrimaryColumn,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn, Unique } from 'typeorm';
 
 @Entity('units_logs')
 @Unique('unique_name_log', ['name'])
@@ -20,5 +15,4 @@ export class UnitLog extends BaseLogEntity {
 
   @Column({ name: 'update_uid', type: 'int' })
   updateUid: number;
-
 }

@@ -48,7 +48,9 @@ function FarmerCard() {
   if (isLoading) {
     return (
       <div className="row">
-        {[1, 2, 3].map(i => <GenCard1Skeleton key={i} />)}
+        {[1, 2, 3].map(i => (
+          <GenCard1Skeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -70,5 +72,3 @@ function FarmerCard() {
 }
 
 export default FarmerCard;
-
-

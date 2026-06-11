@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import { GenButtonCircle } from '../../../components/gui/GuiButton';
 import { GenFormSelect, GenFormText1 } from '../../../components/gui/GuiForm';
@@ -108,30 +108,30 @@ const LandEdit: React.FC = () => {
       }
 
       if (updateLand.provinceId) {
-      const districts = await getDistrictsByProvinceCode(
-        updateLand.provinceId
-      );
-      setDistrictsOptions([
-        { value: '', name: '-- กรุณาเลือกอำเภอ --' },
-        ...districts.map((d: { code: string; nameTh: string }) => ({
-          value: d.code,
-          name: d.nameTh,
-        })),
-      ]);
+        const districts = await getDistrictsByProvinceCode(
+          updateLand.provinceId
+        );
+        setDistrictsOptions([
+          { value: '', name: '-- กรุณาเลือกอำเภอ --' },
+          ...districts.map((d: { code: string; nameTh: string }) => ({
+            value: d.code,
+            name: d.nameTh,
+          })),
+        ]);
       }
 
       if (updateLand.districtId) {
-      const subdistricts = await getSubdistrictsByDistrictCode(
-        updateLand.districtId
-      );
-      setSubdistrict(subdistricts);
-      setSubdistrictOptions([
-        { value: '', name: '-- กรุณาเลือกตำบล --' },
-        ...subdistricts.map((s: { code: string; nameTh: string }) => ({
-          value: s.code,
-          name: s.nameTh,
-        })),
-      ]);
+        const subdistricts = await getSubdistrictsByDistrictCode(
+          updateLand.districtId
+        );
+        setSubdistrict(subdistricts);
+        setSubdistrictOptions([
+          { value: '', name: '-- กรุณาเลือกตำบล --' },
+          ...subdistricts.map((s: { code: string; nameTh: string }) => ({
+            value: s.code,
+            name: s.nameTh,
+          })),
+        ]);
       }
 
       isFirstLoadRef.current = false;
@@ -313,26 +313,12 @@ const LandEdit: React.FC = () => {
       const response = await updateLandById(Number(id), dataToSubmit);
       console.log('response Data');
       console.log(response);
-      Swal.fire({
-        title: 'สำเร็จ!',
-        text: 'แก้ไขข้อมูลพื้นที่เกษตรกรเสร็จสิ้น',
-        icon: 'success',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      }).then(() => {
+      swalSuccessTimer('สำเร็จ!', 'แก้ไขข้อมูลพื้นที่เกษตรกรเสร็จสิ้น').then(() => {
         navigate('/admin/land');
       });
     } catch (error) {
       console.log(error);
-      Swal.fire({
-        title: 'เกิดข้อผิดพลาด!',
-        text: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล กรุณาลองใหม่',
-        icon: 'error',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      });
+      swalError('เกิดข้อผิดพลาด!', 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล กรุณาลองใหม่');
       return;
     }
   };
@@ -384,7 +370,9 @@ const LandEdit: React.FC = () => {
                   className="col-md-4 col-sm-6 col-6"
                   style={{ textAlign: 'left' }}
                 >
-                  <h4 className="private-card-title">แก้ไขข้อมูลแปลง ({land.name})</h4>
+                  <h4 className="private-card-title">
+                    แก้ไขข้อมูลแปลง ({land.name})
+                  </h4>
                 </div>
                 <div
                   className="col-md-4 col-sm-6 col-6 ms-auto"
@@ -549,4 +537,3 @@ const LandEdit: React.FC = () => {
 };
 
 export default LandEdit;
-

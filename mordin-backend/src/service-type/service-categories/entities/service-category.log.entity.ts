@@ -14,5 +14,4 @@ export class ServiceCategoryLog extends BaseLogEntity {
 
   @Column({ name: 'is_display', type: 'boolean', default: true })
   isDisplay: boolean;
-
 }

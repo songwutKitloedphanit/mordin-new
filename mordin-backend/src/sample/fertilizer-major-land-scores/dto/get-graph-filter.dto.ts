@@ -1,25 +1,25 @@
 // src/fertilizer-major-land-scores/dto/get-graph-filter.dto.ts
 
-import { IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsOptional } from 'class-validator';
 
 export class GetGraphFilterDto {
   // --- Existing Geographical Filters ---
   @IsOptional()
   @Type(() => Number)
-  geographyId?: number; 
+  geographyId?: number;
 
   @IsOptional()
   @Type(() => Number)
-  provinceCode?: number; 
+  provinceCode?: number;
 
   @IsOptional()
   @Type(() => Number)
-  districtCode?: number; 
+  districtCode?: number;
 
   @IsOptional()
   @Type(() => Number)
-  subdistrictCode?: number; 
+  subdistrictCode?: number;
 
   @IsOptional()
   @Type(() => Number)

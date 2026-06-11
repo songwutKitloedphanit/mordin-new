@@ -3,8 +3,6 @@ import {
   IsDecimal,
   IsInt,
   IsNotEmpty,
-  IsNumber,
-  IsOptional,
   IsString,
   Length,
   MaxLength,
@@ -46,7 +44,7 @@ export class CreateServiceCalendarDto {
     {
       message:
         'latitude must be a decimal with up to 6 digits after the decimal point',
-    },
+    }
   )
   @IsNotEmpty()
   latitude: string;
@@ -56,7 +54,7 @@ export class CreateServiceCalendarDto {
     {
       message:
         'longitude must be a decimal with up to 6 digits after the decimal point',
-    },
+    }
   )
   @IsNotEmpty()
   longitude: string;

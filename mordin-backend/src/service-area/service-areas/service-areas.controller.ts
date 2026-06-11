@@ -1,21 +1,20 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
   ParseIntPipe,
   Patch,
-  Post,
   UseGuards,
-  Body,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { User } from 'src/auth/decorators/user.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UserRoles } from 'src/users/enums/user.enum';
+
 import { MoveServiceAreaDto } from './dto/move-service-area.dto';
-import { SupersedeServiceAreaDto } from './dto/supersede-service-area.dto';
 import { ServiceAreasService } from './service-areas.service';
 
 @Controller('service-areas')
@@ -56,34 +55,16 @@ export class ServiceAreasController {
   @Patch(':id/move')
   move(
     @Param('id', ParseIntPipe) id: number,
-    @Body() moveServiceAreaDto: MoveServiceAreaDto,
+    @Body() moveDto: MoveServiceAreaDto,
     @User('sub') userId: number
   ) {
-    return this.serviceAreasService.move(id, moveServiceAreaDto, userId);
-  }
-
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRoles.Admin)
-  @Post(':id/supersede')
-  supersede(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() supersedeServiceAreaDto: SupersedeServiceAreaDto,
-    @User('sub') userId: number
-  ) {
-    return this.serviceAreasService.supersede(
-      id,
-      supersedeServiceAreaDto,
-      userId
-    );
+    return this.serviceAreasService.move(id, moveDto.factoryId, userId);
   }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRoles.Admin)
   @Delete(':id')
-  remove(
-    @Param('id', ParseIntPipe) id: number,
-    @User('sub') userId: number
-  ) {
+  remove(@Param('id', ParseIntPipe) id: number, @User('sub') userId: number) {
     return this.serviceAreasService.remove(id, userId);
   }
 }

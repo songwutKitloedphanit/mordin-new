@@ -1,9 +1,10 @@
 import { PartialType } from '@nestjs/swagger';
+import { IsBoolean, IsNumber } from 'class-validator';
+
 import { CreateServiceLaboratoryDto } from './create-service-laboratory.dto';
-import { IsBoolean, IsNumber, IsString } from 'class-validator';
 
 export class UpdateServiceLaboratoryDto extends PartialType(
-  CreateServiceLaboratoryDto,
+  CreateServiceLaboratoryDto
 ) {
   @IsNumber()
   serviceTypeId: number;

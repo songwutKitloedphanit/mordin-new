@@ -1,11 +1,17 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
+import { Repository } from 'typeorm';
+
+import { ServiceFertilizerMinor } from '../service-fertilizer-minors/entities/service-fertilizer-minor.entity';
+
 import { CreateFertilizerMinorDto } from './dto/create-fertilizer-minor.dto';
 import { UpdateFertilizerMinorDto } from './dto/update-fertilizer-minor.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { FertilizerMinor } from './entities/fertilizer-minor.entity';
-import { Repository } from 'typeorm';
-import { ServiceFertilizerMinor } from '../service-fertilizer-minors/entities/service-fertilizer-minor.entity';
-import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
 import { FertilizerMinorLog } from './entities/fertilizer-minor.log.entity';
 
 @Injectable()
@@ -21,10 +27,13 @@ export class FertilizerMinorsService {
     private readonly serviceTypeRepo: Repository<ServiceType>,
 
     @InjectRepository(FertilizerMinorLog)
-    private readonly fertilizerMinorLog: Repository<FertilizerMinorLog>,
-  ) { }
+    private readonly fertilizerMinorLog: Repository<FertilizerMinorLog>
+  ) {}
 
-  async create(createFertilizerMinorDto: CreateFertilizerMinorDto, Uid: number) {
+  async create(
+    createFertilizerMinorDto: CreateFertilizerMinorDto,
+    Uid: number
+  ) {
     const fertilizerMinor = this.fertilizerMinorRepository.create({
       ...createFertilizerMinorDto,
       updateUid: Uid,
@@ -61,7 +70,11 @@ export class FertilizerMinorsService {
       .getOne();
   }
 
-  async update(id: number, updateFertilizerMinorDto: UpdateFertilizerMinorDto, Uid: number) {
+  async update(
+    id: number,
+    updateFertilizerMinorDto: UpdateFertilizerMinorDto,
+    Uid: number
+  ) {
     const fertilizerMinor = await this.fertilizerMinorRepository.findOneBy({
       fertilizerMinorId: id,
     });
@@ -81,7 +94,7 @@ export class FertilizerMinorsService {
     });
 
     const hasUsage = serviceMinors.some(
-      (sm) =>
+      sm =>
         sm.serviceFertilizerMinorUsages &&
         sm.serviceFertilizerMinorUsages.length > 0
     );

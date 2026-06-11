@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { Subdistrict } from 'src/address/subdistricts/entities/subdistrict.entity';
 import { Bus } from 'src/buses/entities/bus.entity';
 import { LaboratorySetting } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.entity';
@@ -8,14 +7,12 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   Unique,
-  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('service_calendars')
@@ -60,12 +57,6 @@ export class ServiceCalendar {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
   @ManyToOne(() => Bus)
   @JoinColumn({ name: 'bus_id' })
   bus: Bus;
@@ -78,14 +69,17 @@ export class ServiceCalendar {
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
 
-  @OneToMany(
-    () => LaboratorySetting,
-    (labSetting) => labSetting.serviceCalendar,
-  )
+  @OneToMany(() => LaboratorySetting, labSetting => labSetting.serviceCalendar)
   laboratorySettings: LaboratorySetting[];
 
-  @OneToMany(() => SampleBlank, (sampleBlank) => sampleBlank.serviceCalendar, {
+  @OneToMany(() => SampleBlank, sampleBlank => sampleBlank.serviceCalendar, {
     cascade: true,
   })
   sampleBlanks: SampleBlank[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

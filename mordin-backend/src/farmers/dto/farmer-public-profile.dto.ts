@@ -26,10 +26,17 @@ export class FarmerPublicProfileDto {
   firstName!: string;
   lastName!: string;
   phone!: string;
+  birthDate?: string;
   thaiFarmerId?: string;
   factory?: { factoryId: number; name: string; initial: string | null };
-  serviceArea?: { serviceAreaId: number; code: string | null; name: string | null };
+  serviceArea?: {
+    serviceAreaId: number;
+    code: string | null;
+    name: string | null;
+  };
+
   landCount?: number;
   landSizeSummary?: number;
   lands!: FarmerPublicLandDto[];
 }
+

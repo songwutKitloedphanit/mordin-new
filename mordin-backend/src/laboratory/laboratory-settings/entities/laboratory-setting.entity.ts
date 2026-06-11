@@ -1,5 +1,4 @@
 import { ConvertOmSetting } from 'src/laboratory/convert-om-settings/entities/convert-om-setting.entity';
-import { WorkingStandardAxisEnum } from 'src/laboratory/enums/working-standard.enum';
 import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
 import { LaboratorySettingDetail } from 'src/laboratory/laboratory-setting-details/entities/laboratory-setting-detail.entity';
 import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
@@ -80,21 +79,21 @@ export class LaboratorySetting {
 
   @OneToMany(
     () => LaboratorySettingDetail,
-    (labSettingDetail) => labSettingDetail.laboratorySetting,
+    labSettingDetail => labSettingDetail.laboratorySetting,
     {
       cascade: true,
       nullable: true,
-    },
+    }
   )
   laboratorySettingDetails: LaboratorySettingDetail[];
 
   @OneToMany(
     () => ConvertOmSetting,
-    (convertOmSetting) => convertOmSetting.laboratorySetting,
+    convertOmSetting => convertOmSetting.laboratorySetting,
     {
       cascade: true,
       nullable: true,
-    },
+    }
   )
   convertOmSettings: ConvertOmSetting[];
 

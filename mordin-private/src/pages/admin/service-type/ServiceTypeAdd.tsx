@@ -195,7 +195,9 @@ const ServiceTypeAdd = () => {
             <div className="private-card-header">
               <div className="row row-demo-grid">
                 <div className="col-md-8 col-sm-8 col-8 text-start">
-                  <h4 className="private-card-title">เพิ่มประเภทการให้บริการ</h4>
+                  <h4 className="private-card-title">
+                    เพิ่มประเภทการให้บริการ
+                  </h4>
                 </div>
                 <div className="col-md-4 col-sm-4 col-4 text-end">
                   <GenButtonCircle
@@ -372,7 +374,9 @@ const ServiceTypeAdd = () => {
         </div>
 
         <div className="col-md-3 ps-md-0">
-          <div className={`private-pricing-card private-pricing-card-${serviceType.color}`}>
+          <div
+            className={`private-pricing-card private-pricing-card-${serviceType.color}`}
+          >
             <div className="pricing-header position-relative">
               <h3 className="fw-bold mb-3 d-flex align-items-center">
                 <span style={{ flex: 1 }}>
@@ -547,4 +551,3 @@ const ServiceTypeAdd = () => {
 };
 
 export default ServiceTypeAdd;
-

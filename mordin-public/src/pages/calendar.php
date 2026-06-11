@@ -43,12 +43,58 @@ if (!empty($rawCalendars) && !isset($rawCalendars['error'])) {
         ]);
     }
 }
+
+$calendarSummary = [
+    'total' => count($upComingData),
+    'open' => 0,
+    'full' => 0,
+    'available' => 0,
+];
+
+foreach ($upComingData as $event) {
+    if ($event['isFull']) {
+        $calendarSummary['full']++;
+    } else {
+        $calendarSummary['open']++;
+    }
+    $calendarSummary['available'] += intval($event['available'] ?? 0);
+}
 ?>
 
 <link rel="stylesheet" href="/assets/css/leaflet.css" />
 
+<section class="section public-modern-page-hero public-calendar-hero">
+    <div class="container">
+        <div class="public-modern-hero-grid">
+            <div class="public-modern-hero-copy scroll-reveal">
+                <span class="public-modern-kicker"><i class="bi bi-calendar3"></i> Service Calendar</span>
+                <h1>ปฏิทินรอบบริการวิเคราะห์ดิน</h1>
+                <p>ดูตำแหน่งรถบริการ รอบที่เปิดรับ และจำนวนคิวคงเหลือจากข้อมูลระบบจริง ก่อนเข้าสู่ขั้นตอนการจองคิว</p>
+            </div>
+            <div class="public-modern-metrics scroll-reveal stagger-1">
+                <div class="public-modern-metric">
+                    <span><?= $calendarSummary['total'] ?></span>
+                    <p>รอบบริการ</p>
+                </div>
+                <div class="public-modern-metric">
+                    <span><?= $calendarSummary['available'] ?></span>
+                    <p>คิวว่าง</p>
+                </div>
+                <div class="public-modern-metric">
+                    <span><?= $calendarSummary['open'] ?></span>
+                    <p>รอบเปิด</p>
+                </div>
+                <div class="public-modern-metric">
+                    <span><?= $calendarSummary['full'] ?></span>
+                    <p>รอบเต็ม</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <?php if (empty($upComingData)) : ?>
-    <section class="section public-calendar-page">
+    <section class="section public-calendar-page pt-0">
         <div class="container">
             <div class="d-flex justify-content-center mb-4">
                 <div class="public-tab-toggle">
@@ -68,9 +114,9 @@ if (!empty($rawCalendars) && !isset($rawCalendars['error'])) {
     </section>
 <?php else: ?>
 
-<section class="section public-calendar-page pb-0">
+<section class="section public-calendar-page pt-0 pb-0">
     <div class="container">
-        <div class="d-flex justify-content-center mb-3" data-aos="fade-up">
+        <div class="d-flex justify-content-center mb-3 scroll-reveal">
             <div class="public-tab-toggle">
                 <a href="calendar" class="public-tab-toggle-item is-active">
                     <i class="bi bi-calendar3"></i> ปฏิทินให้บริการ
@@ -80,7 +126,7 @@ if (!empty($rawCalendars) && !isset($rawCalendars['error'])) {
                 </a>
             </div>
         </div>
-        <p class="public-cal-time-note" data-aos="fade-up">
+        <p class="public-cal-time-note scroll-reveal stagger-1">
             <i class="bi bi-clock"></i>
             เปิดรับตัวอย่างดิน <strong>9:00–9:30 น.</strong> (จองล่วงหน้า) และ <strong>9:30–10:00 น.</strong> (walk-in จำนวนจำกัด)
         </p>
@@ -89,7 +135,7 @@ if (!empty($rawCalendars) && !isset($rawCalendars['error'])) {
 
 <section id="map-section" class="section public-calendar-map-section pt-3">
     <div class="container">
-        <div class="public-calendar-map-card">
+        <div class="public-calendar-map-card saas-map-card">
             <h3><i class="bi bi-map"></i> แผนที่รอบบริการ</h3>
             <div id="map-container" class="public-calendar-map"></div>
         </div>
@@ -103,11 +149,11 @@ if (!empty($rawCalendars) && !isset($rawCalendars['error'])) {
                 $isFull      = $event['isFull'];
                 $statusText  = $isFull ? "เต็มแล้ว" : "ว่าง {$event['available']} / {$event['numberOfSamples']} คิว";
                 $bookingLink = $isPublicLoggedIn
-                    ? "services/book/farmer"
-                    : "services/book/login?action=booking&calendarId=" . $event['serviceCalendarId'];
+                    ? "/services/book/farmer"
+                    : "/services/book/login?next=" . urlencode('/services/book/farmer');
             ?>
-                <div class="col-xl-3 col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="<?= ($index + 1) * 80 ?>">
-                    <div class="public-cal-card <?= $isFull ? 'is-full' : 'is-open' ?> <?= ($index === 0) ? 'is-nearest' : '' ?>">
+                <div class="col-xl-3 col-lg-4 col-md-6 scroll-reveal stagger-<?= (($index % 5) + 1) ?>">
+                    <div class="public-cal-card public-modern-card <?= $isFull ? 'is-full' : 'is-open' ?> <?= ($index === 0) ? 'is-nearest' : '' ?>">
                         <div class="public-cal-card-header">
                             <span class="public-cal-date">
                                 <i class="bi bi-calendar-event"></i>

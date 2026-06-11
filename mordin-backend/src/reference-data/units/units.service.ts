@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Unit } from './entities/unit.entity';
-import { Repository } from 'typeorm';
 import { UnitLog } from './entities/unit.log.entity';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class UnitsService {
     @InjectRepository(UnitLog)
     private unitLog: Repository<UnitLog>
   ) {}
+
   create(createUnitDto: CreateUnitDto, Uid: number) {
     const unit = this.unitRepository.create({
       ...createUnitDto,
@@ -49,7 +51,7 @@ export class UnitsService {
       throw new NotFoundException('Unit not found');
     }
 
-    unit.removedBy = userId; 
+    (unit as any).removedBy = userId;
 
     await this.unitRepository.remove(unit);
   }

@@ -1,16 +1,18 @@
 import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateLaboratorySettingDto } from './dto/create-laboratory-setting.dto';
-import { UpdateLaboratorySettingDto } from './dto/update-laboratory-setting.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LaboratorySetting } from './entities/laboratory-setting.entity';
-import { MoreThanOrEqual, Repository } from 'typeorm';
-import { Laboratory } from '../laboratories/entities/laboratory.entity';
-import { MachineTypeTypes } from '../enums/machine-type.enum';
+import { CalculationService } from 'src/common/calculation/calculation.service';
 import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
+import { MoreThanOrEqual, Repository } from 'typeorm';
+
+import { ConvertOmSetting } from '../convert-om-settings/entities/convert-om-setting.entity';
+import { MachineTypeTypes } from '../enums/machine-type.enum';
+import { Laboratory } from '../laboratories/entities/laboratory.entity';
 import { UpdateLaboratorySettingDetailDto } from '../laboratory-setting-details/dto/update-laboratory-setting-detail.dto';
 import { LaboratorySettingDetail } from '../laboratory-setting-details/entities/laboratory-setting-detail.entity';
-import { CalculationService } from 'src/common/calculation/calculation.service';
-import { ConvertOmSetting } from '../convert-om-settings/entities/convert-om-setting.entity';
+
+import { CreateLaboratorySettingDto } from './dto/create-laboratory-setting.dto';
+import { UpdateLaboratorySettingDto } from './dto/update-laboratory-setting.dto';
+import { LaboratorySetting } from './entities/laboratory-setting.entity';
 import { LaboratorySettingLog } from './entities/laboratory-setting.log.entity';
 
 @Injectable()
@@ -35,8 +37,7 @@ export class LaboratorySettingsService {
 
     @InjectRepository(LaboratorySettingLog)
     private laboratorySettingLog: Repository<LaboratorySettingLog>
-
-  ) { }
+  ) {}
 
   create(createLaboratorySettingDto: CreateLaboratorySettingDto, Uid: number) {
     return 'This action adds a new laboratorySetting';
@@ -70,11 +71,11 @@ export class LaboratorySettingsService {
   }
 
   async update(updateDatas: UpdateLaboratorySettingDto[], Uid: number) {
-    let labSettings: LaboratorySetting[] = [];
+    const labSettings: LaboratorySetting[] = [];
     for (const updateData of updateDatas) {
       const { laboratorySettingId } = updateData;
       const labSetting = await this.labSettingRepo.findOne({
-        where: { laboratorySettingId: laboratorySettingId },
+        where: { laboratorySettingId },
       });
       if (!labSetting) {
         throw new NotFoundException('Laboratory setting not found');
@@ -85,7 +86,7 @@ export class LaboratorySettingsService {
         updateUid: Uid,
       };
       const updatedLabSetting = await this.labSettingRepo.save(
-        updatedLabSettingData,
+        updatedLabSettingData
       );
       labSettings.push(updatedLabSetting);
     }
@@ -97,11 +98,11 @@ export class LaboratorySettingsService {
   }
 
   /**
-     * [OPTIMIZED] ปรับปรุงให้สร้าง Lab Settings ทั้งหมดแบบ Bulk และเพิ่ม Logic การตั้งค่าเริ่มต้น
-     */
+   * [OPTIMIZED] ปรับปรุงให้สร้าง Lab Settings ทั้งหมดแบบ Bulk และเพิ่ม Logic การตั้งค่าเริ่มต้น
+   */
   async createAllFromServiceCalendarId(
     serviceCalendarId: number,
-    updateUid: number,
+    updateUid: number
   ) {
     // STEP 1: ดึงข้อมูล Lab ทั้งหมดที่จำเป็นในครั้งเดียว
     const labs = await this.labRepo.find({
@@ -115,9 +116,9 @@ export class LaboratorySettingsService {
 
     for (const lab of labs) {
       const setting: Partial<LaboratorySetting> = {
-        serviceCalendarId: serviceCalendarId,
+        serviceCalendarId,
         laboratoryId: lab.laboratoryId,
-        updateUid: updateUid,
+        updateUid,
       };
 
       // เพิ่ม Logic การกำหนดค่าเริ่มต้นตาม MachineType
@@ -132,18 +133,23 @@ export class LaboratorySettingsService {
     }
 
     // STEP 3: Bulk Save Lab Settings ทั้งหมดในครั้งเดียว
-    const savedLabSettings = await this.labSettingRepo.save(labSettingsToCreate);
+    const savedLabSettings =
+      await this.labSettingRepo.save(labSettingsToCreate);
 
     // STEP 4: เตรียมและ Bulk Save ConvertOmSettings (ถ้ามี)
     const convertOmSettingsToCreate: Partial<ConvertOmSetting>[] = [];
     for (const savedSetting of savedLabSettings) {
       // หา Lab เดิมจากที่ดึงมาตอนแรกเพื่อเช็ค machineType
-      const originalLab = labs.find(l => l.laboratoryId === savedSetting.laboratoryId);
+      const originalLab = labs.find(
+        l => l.laboratoryId === savedSetting.laboratoryId
+      );
       if (originalLab?.machineType?.type === MachineTypeTypes.REVERSE_LINEAR) {
-        convertOmSettingsToCreate.push(this.convertOmSettingRepository.create({
-          laboratorySettingId: savedSetting.laboratorySettingId,
-          updateUid: updateUid,
-        }));
+        convertOmSettingsToCreate.push(
+          this.convertOmSettingRepository.create({
+            laboratorySettingId: savedSetting.laboratorySettingId,
+            updateUid,
+          })
+        );
       }
     }
 
@@ -155,7 +161,7 @@ export class LaboratorySettingsService {
   // สร้าง lab-setting สำหรับ laboratoryId ใหม่สำหรับทุก service-calendar ที่กำลังจะมาถึง
   async createByNewLabIdForUpcomingCalendar(
     laboratoryId: number,
-    updateUid: number,
+    updateUid: number
   ) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -168,8 +174,8 @@ export class LaboratorySettingsService {
     for (const calendar of upcomingCalendars) {
       const labSetting = this.labSettingRepo.create({
         serviceCalendarId: calendar.serviceCalendarId,
-        laboratoryId: laboratoryId,
-        updateUid: updateUid,
+        laboratoryId,
+        updateUid,
       });
       await this.labSettingRepo.save(labSetting);
     }
@@ -197,7 +203,7 @@ export class LaboratorySettingsService {
       // Remove existing laboratory setting details
       if (labSetting.laboratorySettingDetails.length > 0) {
         await this.labSettingDetailRepo.remove(
-          labSetting.laboratorySettingDetails,
+          labSetting.laboratorySettingDetails
         );
         labSetting.laboratorySettingDetails = [];
       }
@@ -210,24 +216,24 @@ export class LaboratorySettingsService {
         });
         labSetting.laboratorySettingDetails.push(newDetail);
       }
-      const { rSquare, slope, intercept } = this.calculationService.calculateLinearRegression(labSetting);
+      const { rSquare, slope, intercept } =
+        this.calculationService.calculateLinearRegression(labSetting);
       const updatedLabSetting = {
         ...labSetting,
         rSquared: rSquare,
-        slope: slope,
-        intercept: intercept,
+        slope,
+        intercept,
       };
 
       // Save the updated laboratory setting with new details
       if (updatedLabSetting) {
         return this.labSettingRepo.save(updatedLabSetting);
-      } else {
-        throw new HttpException('Failed to calculate linear regression', 500);
       }
+      throw new HttpException('Failed to calculate linear regression', 500);
     } else {
       throw new HttpException(
         'Laboratory setting details must have at least 3 items',
-        400,
+        400
       );
     }
   }

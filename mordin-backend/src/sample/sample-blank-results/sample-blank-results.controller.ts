@@ -8,22 +8,29 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { SampleBlankResultsService } from './sample-blank-results.service';
-import { CreateSampleBlankResultDto } from './dto/create-sample-blank-result.dto';
-import { UpdateSampleBlankResultDto } from './dto/update-sample-blank-result.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateSampleBlankResultDto } from './dto/create-sample-blank-result.dto';
+import { UpdateSampleBlankResultDto } from './dto/update-sample-blank-result.dto';
+import { SampleBlankResultsService } from './sample-blank-results.service';
 
 @Controller('sample-blank-results')
 export class SampleBlankResultsController {
   constructor(
-    private readonly sampleBlankResultsService: SampleBlankResultsService,
+    private readonly sampleBlankResultsService: SampleBlankResultsService
   ) {}
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createSampleBlankResultDto: CreateSampleBlankResultDto, @User('sub')  userId: number) {
-    return this.sampleBlankResultsService.create(createSampleBlankResultDto, userId);
+  create(
+    @Body() createSampleBlankResultDto: CreateSampleBlankResultDto,
+    @User('sub') userId: number
+  ) {
+    return this.sampleBlankResultsService.create(
+      createSampleBlankResultDto,
+      userId
+    );
   }
 
   @Get()
@@ -46,7 +53,7 @@ export class SampleBlankResultsController {
   update(
     @Param('id') id: string,
     @Body() updateSampleBlankResultDto: UpdateSampleBlankResultDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.sampleBlankResultsService.update(
       +id,

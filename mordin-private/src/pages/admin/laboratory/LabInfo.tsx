@@ -351,4 +351,3 @@ const LabInfo = () => {
 };
 
 export default LabInfo;
-

@@ -1,5 +1,5 @@
-import { BaseLogEntity } from "src/common/entities/base.log.entity";
-import { Column, Entity, PrimaryColumn, Unique } from "typeorm";
+import { BaseLogEntity } from 'src/common/entities/base.log.entity';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('fertilizer_minor_land_usages_logs')
 export class FertilizerMinorLandUsageLog extends BaseLogEntity {
@@ -24,7 +24,12 @@ export class FertilizerMinorLandUsageLog extends BaseLogEntity {
   @Column({ name: 'result_value', type: 'float', nullable: true })
   resultValue: number;
 
-  @Column({ name: 'fertilizer_minor_name', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'fertilizer_minor_name',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   fertilizerMinorName: string;
 
   @Column({ name: 'use_rate_per_rai', type: 'float', nullable: true })

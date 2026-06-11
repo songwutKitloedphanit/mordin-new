@@ -7,9 +7,10 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { ProvincesService } from './provinces.service';
+
 import { CreateProvinceDto } from './dto/create-province.dto';
 import { UpdateProvinceDto } from './dto/update-province.dto';
+import { ProvincesService } from './provinces.service';
 
 @Controller('provinces')
 export class ProvincesController {
@@ -26,7 +27,7 @@ export class ProvincesController {
   }
 
   @Get('by-geography/:geographyId')
-  getProvincesByGeographyId(@Param('geographyId') geographyId:number) {
+  getProvincesByGeographyId(@Param('geographyId') geographyId: number) {
     return this.provincesService.getProvinceByGeographyId(geographyId);
   }
 
@@ -38,7 +39,7 @@ export class ProvincesController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() updateProvinceDto: UpdateProvinceDto,
+    @Body() updateProvinceDto: UpdateProvinceDto
   ) {
     return this.provincesService.update(+id, updateProvinceDto);
   }

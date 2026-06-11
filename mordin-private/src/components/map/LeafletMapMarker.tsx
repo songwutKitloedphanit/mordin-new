@@ -4,7 +4,13 @@ import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
 import iconMarker from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet';
 import Swal from 'sweetalert2';
 
 const DefaultIcon = L.icon({
@@ -31,11 +37,7 @@ interface LeafletMapPickerProps {
 }
 
 // Moves the map viewport whenever the parent location changes.
-const MapController = ({
-  center,
-}: {
-  center: LatLng | null | undefined;
-}) => {
+const MapController = ({ center }: { center: LatLng | null | undefined }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -169,9 +171,7 @@ const LeafletMapPicker = ({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {markerPos && (
-            <Marker position={[markerPos.lat, markerPos.lng]} />
-          )}
+          {markerPos && <Marker position={[markerPos.lat, markerPos.lng]} />}
           <MapController center={center} />
           <GeolocationController
             enableGeolocation={enableGeolocation}

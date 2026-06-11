@@ -1,9 +1,9 @@
-import { IsNumber } from "class-validator";
+import { IsNumber } from 'class-validator';
 
 export class InputResultDto {
-    @IsNumber()
-    resultId: number;
+  @IsNumber()
+  resultId: number;
 
-    @IsNumber()
-    preValue: number;
+  @IsNumber()
+  preValue: number;
 }

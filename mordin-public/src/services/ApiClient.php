@@ -57,7 +57,8 @@ class ApiClient
 
     private static function request($method, $path)
     {
-        $ch = curl_init(self::buildUrl($path));
+        $url = self::buildUrl($path);
+        $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 
@@ -70,6 +71,7 @@ class ApiClient
 
         if (curl_errno($ch)) {
             $message = curl_error($ch);
+            error_log("ApiClient Curl Error: URL=$url, Error=$message, HttpCode=$httpCode");
             curl_close($ch);
 
             return [
@@ -92,6 +94,7 @@ class ApiClient
             ];
         }
 
+        error_log("ApiClient API Error: URL=$url, HttpCode=$httpCode");
         return [
             'success' => false,
             'message' => $data['message'] ?? 'API request failed',

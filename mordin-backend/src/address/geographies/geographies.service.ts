@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateGeographyDto } from './dto/create-geography.dto';
 import { UpdateGeographyDto } from './dto/update-geography.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Geography } from './entities/geography.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class GeographiesService {
   constructor(
     @InjectRepository(Geography)
-    private geographyRepo: Repository<Geography>,
+    private geographyRepo: Repository<Geography>
   ) {}
 
   create(createGeographyDto: CreateGeographyDto) {

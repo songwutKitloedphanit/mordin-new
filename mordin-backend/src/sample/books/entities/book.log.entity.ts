@@ -1,9 +1,5 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import {
-  Column,
-  Entity,
-  PrimaryColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('books_logs')
 export class BookLog extends BaseLogEntity {
@@ -49,7 +45,13 @@ export class BookLog extends BaseLogEntity {
   @Column({ name: 'area_size', type: 'float', nullable: true, default: null })
   areaSize: number;
 
-  @Column({ type: 'varchar', name: 'subdistrict_code', length: 6, nullable: true, default: null })
+  @Column({
+    type: 'varchar',
+    name: 'subdistrict_code',
+    length: 6,
+    nullable: true,
+    default: null,
+  })
   subdistrictCode: string;
 
   @Column({ name: 'zip_code', type: 'int', nullable: true, default: null })
@@ -78,5 +80,4 @@ export class BookLog extends BaseLogEntity {
 
   @Column({ name: 'service_area_id', type: 'int', nullable: true })
   serviceAreaId: number;
-
 }

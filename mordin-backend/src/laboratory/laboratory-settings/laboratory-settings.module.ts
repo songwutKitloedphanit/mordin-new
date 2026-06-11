@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
-import { LaboratorySettingsService } from './laboratory-settings.service';
-import { LaboratorySettingsController } from './laboratory-settings.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { LaboratorySetting } from './entities/laboratory-setting.entity';
-import { Laboratory } from '../laboratories/entities/laboratory.entity';
-import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
-import { LaboratorySettingDetail } from '../laboratory-setting-details/entities/laboratory-setting-detail.entity';
 import { CalculationModule } from 'src/common/calculation/calculation.module';
+import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
+
 import { ConvertOmSetting } from '../convert-om-settings/entities/convert-om-setting.entity';
+import { Laboratory } from '../laboratories/entities/laboratory.entity';
+import { LaboratorySettingDetail } from '../laboratory-setting-details/entities/laboratory-setting-detail.entity';
+
+import { LaboratorySetting } from './entities/laboratory-setting.entity';
 import { LaboratorySettingLog } from './entities/laboratory-setting.log.entity';
+import { LaboratorySettingsController } from './laboratory-settings.controller';
+import { LaboratorySettingsService } from './laboratory-settings.service';
 
 @Module({
   imports: [
@@ -18,7 +20,7 @@ import { LaboratorySettingLog } from './entities/laboratory-setting.log.entity';
       Laboratory,
       ServiceCalendar,
       ConvertOmSetting,
-      LaboratorySettingLog
+      LaboratorySettingLog,
     ]),
     CalculationModule,
   ],

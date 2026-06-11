@@ -43,10 +43,22 @@ export class Shop {
   @Column({ name: 'zip_code', type: 'int' })
   zipCode: number;
 
-  @Column({ name: 'latitude', type: 'decimal', precision: 10, scale: 6, nullable: true })
+  @Column({
+    name: 'latitude',
+    type: 'decimal',
+    precision: 10,
+    scale: 6,
+    nullable: true,
+  })
   latitude: number;
 
-  @Column({ name: 'longitude', type: 'decimal', precision: 10, scale: 6, nullable: true })
+  @Column({
+    name: 'longitude',
+    type: 'decimal',
+    precision: 10,
+    scale: 6,
+    nullable: true,
+  })
   longitude: number;
 
   @Column({
@@ -66,6 +78,10 @@ export class Shop {
   @Column({ name: 'update_uid', type: 'int', nullable: true })
   updateUid: number;
 
+  @ManyToOne(() => Subdistrict)
+  @JoinColumn({ name: 'subdistrict_id' })
+  subdistrict: Subdistrict;
+
   @BeforeInsert()
   setCreateDate() {
     const now = Date.now();
@@ -78,8 +94,4 @@ export class Shop {
     const now = Date.now();
     this.updatedAt = now;
   }
-
-  @ManyToOne(() => Subdistrict)
-  @JoinColumn({ name: 'subdistrict_id' })
-  subdistrict: Subdistrict;
 }

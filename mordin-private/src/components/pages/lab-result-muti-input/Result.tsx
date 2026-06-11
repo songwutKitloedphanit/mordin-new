@@ -15,7 +15,7 @@ import { LabResult } from '@/types/result/Result';
 export const ResultComponent: React.FC<{
   onSubmit: () => void;
   onCancel: () => void;
-  data: LabResult[];   // รับข้อมูลทั้งหมดจาก GetResultComponent
+  data: LabResult[]; // รับข้อมูลทั้งหมดจาก GetResultComponent
   edited: LabResult[]; // รับข้อมูลที่ถูกแก้ไขจาก GetResultComponent
 }> = ({ onSubmit, onCancel, data, edited }) => {
   const [showConfirm, setShowConfirm] = useState<{
@@ -28,7 +28,7 @@ export const ResultComponent: React.FC<{
   const [editedData, setEditedData] = useState<LabResult[]>([]);
 
   useEffect(() => {
-    setLabResults(data);   // ใช้ data จาก prop เป็นข้อมูลเริ่มต้น
+    setLabResults(data); // ใช้ data จาก prop เป็นข้อมูลเริ่มต้น
     setEditedData(edited); // ใช้ edited จาก prop เป็นข้อมูลที่แก้ไข
   }, [data, edited]);
 
@@ -79,27 +79,45 @@ export const ResultComponent: React.FC<{
     // SAMPLE โ’ /results/input
     const samplePayload = allCells
       .filter((c: any) => typeof c.resultId === 'number')
-      .map((c: any) => ({ resultId: c.resultId, preValue: toNumber(c.preValue) }))
-      .filter(p => typeof p.preValue === 'number') as { resultId: number; preValue: number }[];
+      .map((c: any) => ({
+        resultId: c.resultId,
+        preValue: toNumber(c.preValue),
+      }))
+      .filter(p => typeof p.preValue === 'number') as {
+      resultId: number;
+      preValue: number;
+    }[];
 
     // BLANK โ’ /analysis-standard-results/input (resultId = "blank:<analysisStandardResultId>")
     const blankPayload = allCells
-      .filter((c: any) => typeof c.resultId === 'string' && String(c.resultId).startsWith('blank:'))
+      .filter(
+        (c: any) =>
+          typeof c.resultId === 'string' &&
+          String(c.resultId).startsWith('blank:')
+      )
       .map((c: any) => {
         const idStr = String(c.resultId);
         const m = idStr.match(/^blank:(\d+)$/);
         if (!m) return null;
         const analysisStandardResultId = Number(m[1]);
         const preValue = toNumber(c.preValue);
-        return Number.isFinite(analysisStandardResultId) && typeof preValue === 'number'
+        return Number.isFinite(analysisStandardResultId) &&
+          typeof preValue === 'number'
           ? { analysisStandardResultId, preValue }
           : null;
       })
-      .filter(Boolean) as { analysisStandardResultId: number; preValue: number }[];
+      .filter(Boolean) as {
+      analysisStandardResultId: number;
+      preValue: number;
+    }[];
 
     // CRM CERTIFICATE โ’ /standard-certificates/input (resultId = "crmcert:<standardId>:<laboratoryId>")
     const crmCertPayload = allCells
-      .filter((c: any) => typeof c.resultId === 'string' && String(c.resultId).startsWith('crmcert:'))
+      .filter(
+        (c: any) =>
+          typeof c.resultId === 'string' &&
+          String(c.resultId).startsWith('crmcert:')
+      )
       .map((c: any) => {
         const idStr = String(c.resultId);
         const m = idStr.match(/^crmcert:(\d+):(\d+)$/);
@@ -113,7 +131,11 @@ export const ResultComponent: React.FC<{
           ? { standardId, laboratoryId, certificateValue }
           : null;
       })
-      .filter(Boolean) as { standardId: number; laboratoryId: number; certificateValue: number }[];
+      .filter(Boolean) as {
+      standardId: number;
+      laboratoryId: number;
+      certificateValue: number;
+    }[];
 
     console.log('samplePayload:', samplePayload);
     console.log('blankPayload:', blankPayload);
@@ -121,9 +143,13 @@ export const ResultComponent: React.FC<{
 
     try {
       await Promise.all([
-        samplePayload.length   ? inputResult(samplePayload)                    : Promise.resolve(),
-        blankPayload.length    ? inputAnalysisStandardResults(blankPayload)   : Promise.resolve(),
-        crmCertPayload.length  ? inputStandardCertificates(crmCertPayload)    : Promise.resolve(),
+        samplePayload.length ? inputResult(samplePayload) : Promise.resolve(),
+        blankPayload.length
+          ? inputAnalysisStandardResults(blankPayload)
+          : Promise.resolve(),
+        crmCertPayload.length
+          ? inputStandardCertificates(crmCertPayload)
+          : Promise.resolve(),
       ]);
 
       localStorage.removeItem('LabResults');
@@ -134,7 +160,7 @@ export const ResultComponent: React.FC<{
         title: 'สำเร็จ',
         text: 'บันทึกข้อมูลเรียบร้อย',
         icon: 'success',
-        confirmButtonText: 'ตกลง'
+        confirmButtonText: 'ตกลง',
       }).then(() => onSubmit());
     } catch (error) {
       console.error('Error submitting data:', error);
@@ -142,7 +168,7 @@ export const ResultComponent: React.FC<{
         title: 'ผิดพลาด',
         text: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
         icon: 'error',
-        confirmButtonText: 'ตกลง'
+        confirmButtonText: 'ตกลง',
       });
     }
   };
@@ -155,7 +181,9 @@ export const ResultComponent: React.FC<{
           'id',
           'examId',
           ...new Set(
-            labResults.flatMap(r => (r.results || []).map(res => res.shortNameBefore))
+            labResults.flatMap(r =>
+              (r.results || []).map(res => res.shortNameBefore)
+            )
           ),
         ]
       : ['id', 'examId'];
@@ -197,7 +225,9 @@ export const ResultComponent: React.FC<{
                           );
                           return (
                             <td key={`cell:${index}:${header}`} align="center">
-                              {matchingResult ? (matchingResult as any).preValue : '-'}
+                              {matchingResult
+                                ? (matchingResult as any).preValue
+                                : '-'}
                             </td>
                           );
                         })}
@@ -258,7 +288,10 @@ export const ResultComponent: React.FC<{
           }
           action={showConfirm.type}
           onConfirm={() => {
-            if (showConfirm.type === 'delete' && showConfirm.index !== undefined) {
+            if (
+              showConfirm.type === 'delete' &&
+              showConfirm.index !== undefined
+            ) {
               handleDelete(showConfirm.index);
             } else {
               handleCancel();
@@ -271,4 +304,3 @@ export const ResultComponent: React.FC<{
     </div>
   );
 };
-

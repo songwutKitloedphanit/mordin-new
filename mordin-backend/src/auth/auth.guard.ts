@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+
 import { JWTPayload } from './interfaces/token';
 
 export interface RequestWithAuth extends Request {
@@ -31,10 +32,13 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new HttpException({
-        code: HttpStatus.UNAUTHORIZED,
-        message: 'No token provided',
-      }, HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        {
+          code: HttpStatus.UNAUTHORIZED,
+          message: 'No token provided',
+        },
+        HttpStatus.UNAUTHORIZED
+      );
     }
 
     try {
@@ -44,10 +48,13 @@ export class AuthGuard implements CanActivate {
 
       request.user = payload;
     } catch {
-      throw new HttpException({
-        code: HttpStatus.UNAUTHORIZED,
-        message: 'Invalid token',
-      }, HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        {
+          code: HttpStatus.UNAUTHORIZED,
+          message: 'Invalid token',
+        },
+        HttpStatus.UNAUTHORIZED
+      );
     }
     return true;
   }

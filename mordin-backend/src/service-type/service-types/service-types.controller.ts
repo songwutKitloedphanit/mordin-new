@@ -7,18 +7,19 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { ServiceTypesService } from './service-types.service';
-import { CreateServiceTypeDto } from './dto/create-service-type.dto';
-import { UpdateServiceTypeDto } from './dto/update-service-type.dto';
-import { ServiceTypesSummaryDTO } from './dto/service-types-summary.dto';
-import { ParseIntPipe } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
 
+import { CreateServiceTypeDto } from './dto/create-service-type.dto';
+import { ServiceTypesSummaryDTO } from './dto/service-types-summary.dto';
+import { UpdateServiceTypeDto } from './dto/update-service-type.dto';
+import { ServiceTypesService } from './service-types.service';
+
 @Controller('service-types')
 export class ServiceTypesController {
-  constructor(private readonly serviceTypesService: ServiceTypesService) { }
+  constructor(private readonly serviceTypesService: ServiceTypesService) {}
   @UseGuards(AuthGuard)
   @Post()
   create(
@@ -47,6 +48,7 @@ export class ServiceTypesController {
   findWithFertilizerUsagesById(@Param('id', ParseIntPipe) id: number) {
     return this.serviceTypesService.findOneWithFertilizerUsages(id);
   }
+
   @UseGuards(AuthGuard)
   @Patch(':id')
   update(
@@ -56,6 +58,7 @@ export class ServiceTypesController {
   ) {
     return this.serviceTypesService.update(id, updateServiceTypeDto, userId);
   }
+
   @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
@@ -66,10 +69,12 @@ export class ServiceTypesController {
   async getSummary(): Promise<ServiceTypesSummaryDTO> {
     return this.serviceTypesService.getSummary();
   }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.serviceTypesService.findOne(id);
   }
+
   @Get('/log')
   getLogs() {
     return this.serviceTypesService.getLogs();

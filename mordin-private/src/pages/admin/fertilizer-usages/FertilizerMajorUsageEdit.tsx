@@ -687,4 +687,3 @@ const FertilizerMajorUsageEdit = () => {
 };
 
 export default FertilizerMajorUsageEdit;
-

@@ -11,15 +11,16 @@ import {
   ParseIntPipe,
   Res,
 } from '@nestjs/common';
-import { FarmersService } from './farmers.service';
-import { CreateFarmerDto } from './dto/create-farmer.dto';
-import { UpdateFarmerDto } from './dto/update-farmer.dto';
-import { SearchFarmerDto } from './dto/search-farmer.dto';
+import { Response } from 'express';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateFarmerDto } from './dto/create-farmer.dto';
 import { FarmerPublicLoginDto } from './dto/farmer-public-login.dto';
 import { FarmerPublicNamePhoneDto } from './dto/farmer-public-name-phone.dto';
-import { Response } from 'express';
+import { SearchFarmerDto } from './dto/search-farmer.dto';
+import { UpdateFarmerDto } from './dto/update-farmer.dto';
+import { FarmersService } from './farmers.service';
 
 @Controller('farmers')
 export class FarmersController {
@@ -27,7 +28,10 @@ export class FarmersController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createFarmerDto: CreateFarmerDto , @User('sub')  userId: number) {
+  create(
+    @Body() createFarmerDto: CreateFarmerDto,
+    @User('sub') userId: number
+  ) {
     return this.farmersService.create(createFarmerDto, userId);
   }
 
@@ -40,6 +44,7 @@ export class FarmersController {
   getLogs() {
     return this.farmersService.getLogs();
   }
+
   // ✅ สมัครสำหรับ Public: เกษตรกรลงทะเบียนเอง ไม่ต้องใช้ JWT
   // ใช้ create() เดิม โดย Uid ตกเป็น default (system, userId=1) ตามคอลัมน์ update_uid
   @Post('public-register')
@@ -76,7 +81,7 @@ export class FarmersController {
   @Post('land-report/:landId/pdf')
   async generateLandReportPdf(
     @Param('landId', ParseIntPipe) landId: number,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
     return this.farmersService.generateLandReportPdf(landId, res);
   }
@@ -88,7 +93,11 @@ export class FarmersController {
 
   @UseGuards(AuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFarmerDto: UpdateFarmerDto, @User('sub')  userId: number) {
+  update(
+    @Param('id') id: string,
+    @Body() updateFarmerDto: UpdateFarmerDto,
+    @User('sub') userId: number
+  ) {
     return this.farmersService.update(+id, updateFarmerDto, userId);
   }
 
@@ -96,5 +105,5 @@ export class FarmersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.farmersService.remove(+id);
-  } 
+  }
 }

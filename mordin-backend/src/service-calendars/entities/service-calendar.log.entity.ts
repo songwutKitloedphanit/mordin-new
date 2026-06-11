@@ -1,24 +1,5 @@
-import { join } from 'path';
-import { Subdistrict } from 'src/address/subdistricts/entities/subdistrict.entity';
-import { Bus } from 'src/buses/entities/bus.entity';
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import { LaboratorySetting } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.entity';
-import { SampleBlank } from 'src/sample/sample-blanks/entities/sample-blank.entity';
-import { User } from 'src/users/entities/user.entity';
-import {
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  Unique,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('service_calendars_logs')
 export class ServiceCalendarLog extends BaseLogEntity {
@@ -57,5 +38,4 @@ export class ServiceCalendarLog extends BaseLogEntity {
 
   @Column({ name: 'update_uid', type: 'int' })
   updateUid: number;
-
 }

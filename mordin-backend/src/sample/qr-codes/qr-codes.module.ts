@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
-import { QrCodesService } from './qr-codes.service';
-import { QrCodesController } from './qr-codes.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { QrCode } from './entities/qr-code.entity';
-import { BooksModule } from '../books/books.module';
 import { CryptoModule } from 'src/common/crypto/crypto.module';
-import { Book } from '../books/entities/book.entity';
-import { Land } from 'src/lands/entities/land.entity';
-import { ResultsModule } from '../results/results.module';
-import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
 import { Farmer } from 'src/farmers/entities/farmer.entity';
+import { Land } from 'src/lands/entities/land.entity';
+import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
+
+import { BooksModule } from '../books/books.module';
+import { Book } from '../books/entities/book.entity';
+import { ResultsModule } from '../results/results.module';
+
+import { QrCode } from './entities/qr-code.entity';
 import { QrCodeLog } from './entities/qr-code.log.entity';
+import { QrCodesController } from './qr-codes.controller';
+import { QrCodesService } from './qr-codes.service';
 
 @Module({
   imports: [
@@ -20,11 +22,11 @@ import { QrCodeLog } from './entities/qr-code.log.entity';
       Land,
       ServiceCalendar,
       Farmer,
-      QrCodeLog
+      QrCodeLog,
     ]),
     BooksModule,
     CryptoModule,
-    ResultsModule
+    ResultsModule,
   ],
   controllers: [QrCodesController],
   providers: [QrCodesService],

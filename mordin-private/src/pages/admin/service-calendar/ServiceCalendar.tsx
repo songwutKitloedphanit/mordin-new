@@ -145,9 +145,7 @@ const ServiceCalendar = () => {
           timer: 1500,
         });
         setCalendars(
-          calendars.filter(
-            calendar => calendar.serviceCalendarId !== deleteId
-          )
+          calendars.filter(calendar => calendar.serviceCalendarId !== deleteId)
         );
         setShowDeleteModal(false);
       } catch (error: any) {
@@ -155,9 +153,7 @@ const ServiceCalendar = () => {
         Swal.fire({
           icon: 'error',
           title: 'ไม่สามารถลบได้',
-          text:
-            error.response?.data?.message ||
-            'เกิดข้อผิดพลาดในการลบปฏิทิน',
+          text: error.response?.data?.message || 'เกิดข้อผิดพลาดในการลบปฏิทิน',
         });
         setShowDeleteModal(false);
       }
@@ -384,4 +380,3 @@ const ServiceCalendar = () => {
 };
 
 export default ServiceCalendar;
-

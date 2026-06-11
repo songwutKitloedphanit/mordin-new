@@ -128,7 +128,9 @@ const FertilizerPricesManagement: React.FC = () => {
       ? secData
       : secData.filter(item => item.name === minorFilterType);
 
-  const minorTypeOptions = [...new Set(secData.map(item => item.name).filter(Boolean))];
+  const minorTypeOptions = [
+    ...new Set(secData.map(item => item.name).filter(Boolean)),
+  ];
 
   const hasMinorFilter = minorSearch || minorFilterType;
 
@@ -366,8 +368,7 @@ const FertilizerPricesManagement: React.FC = () => {
                   icon: 'error',
                   title: 'ไม่สามารถลบได้',
                   text:
-                    err.response?.data?.message ||
-                    'เกิดข้อผิดพลาดในการลบปุ๋ย',
+                    err.response?.data?.message || 'เกิดข้อผิดพลาดในการลบปุ๋ย',
                 });
               }
             } else {
@@ -386,8 +387,7 @@ const FertilizerPricesManagement: React.FC = () => {
                   icon: 'error',
                   title: 'ไม่สามารถลบได้',
                   text:
-                    err.response?.data?.message ||
-                    'เกิดข้อผิดพลาดในการลบปุ๋ย',
+                    err.response?.data?.message || 'เกิดข้อผิดพลาดในการลบปุ๋ย',
                 });
               }
             }
@@ -401,4 +401,3 @@ const FertilizerPricesManagement: React.FC = () => {
 };
 
 export default FertilizerPricesManagement;
-

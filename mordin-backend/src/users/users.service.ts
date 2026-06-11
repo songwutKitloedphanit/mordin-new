@@ -1,16 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { Department } from './entities/department.entity';
-import { CreateDepartmentDto } from './dto/create-department.dto';
-import { UserRoles } from './enums/user.enum';
 import { AuthenProfile } from 'src/auth/interfaces/authen.response';
-import { UserSummaryDTO } from './dto/user-summary.dto';
-import { UserLog } from './entities/user.log.entity';
+import { Repository } from 'typeorm';
+
+import { CreateDepartmentDto } from './dto/create-department.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UserSummaryDTO } from './dto/user-summary.dto';
+import { Department } from './entities/department.entity';
+import { User } from './entities/user.entity';
+import { UserLog } from './entities/user.log.entity';
+import { UserRoles } from './enums/user.enum';
 
 @Injectable()
 export class UsersService {
@@ -47,14 +48,12 @@ export class UsersService {
   async findOrCreateUser(
     username: string,
     profile: AuthenProfile,
-    role: UserRoles = UserRoles.Executive,
+    role: UserRoles = UserRoles.Executive
   ): Promise<User> {
     let user = await this.findByUsername(username);
     if (!user) {
       const [firstName, lastName] = profile.name.split(' ');
-      const department = await this.findOrCreateDepartment(
-        profile.department,
-      );
+      const department = await this.findOrCreateDepartment(profile.department);
 
       const newUser: CreateUserDto = {
         username,
@@ -165,10 +164,11 @@ export class UsersService {
   getLogs() {
     return this.userLog.find();
   }
+
   async findOne(id: number) {
-  return this.userRepo.findOne({
-    where: { userId: id },
-    relations: ['department'],
-  });
-}
+    return this.userRepo.findOne({
+      where: { userId: id },
+      relations: ['department'],
+    });
+  }
 }

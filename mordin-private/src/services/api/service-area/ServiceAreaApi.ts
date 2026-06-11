@@ -1,7 +1,4 @@
-import {
-  ServiceAreaInputInterface,
-  SupersedeServiceAreaInput,
-} from '../../../types/service-area/ServiceAreas';
+import { ServiceAreaInputInterface } from '../../../types/service-area/ServiceAreas';
 import api from '../../Axios';
 
 export async function getAllServiceAreas() {
@@ -46,27 +43,14 @@ export async function deleteServiceAreaById(id: number) {
   }
 }
 
-export async function moveServiceAreaById(id: number, targetFactoryId: number) {
+export async function moveServiceArea(id: number, factoryId: number) {
   try {
     const response = await api.patch(`/service-areas/${id}/move`, {
-      targetFactoryId,
+      factoryId,
     });
     return response.data;
   } catch (error) {
     console.error('cannot move service area: ', error);
-    throw error;
-  }
-}
-
-export async function supersedeServiceAreaById(
-  id: number,
-  payload: SupersedeServiceAreaInput
-) {
-  try {
-    const response = await api.post(`/service-areas/${id}/supersede`, payload);
-    return response.data;
-  } catch (error) {
-    console.error('cannot supersede service area: ', error);
     throw error;
   }
 }

@@ -22,9 +22,9 @@ export default {
       },
       colors: {
         mp: {
-          dark: '#004a8f',
+          dark: '#005092',
           light: '#7bd3f7',
-          blueDark: '#004a8f',
+          blueDark: '#005092',
           blueLight: '#7bd3f7',
           bgGray: '#F5F6F8',
           textGray: '#777777',

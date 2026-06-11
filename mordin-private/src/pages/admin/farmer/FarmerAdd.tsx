@@ -1,14 +1,16 @@
 import { ChangeEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
-import { GenFormDate1, GenFormSelect, GenFormText1, GenFormText2 } from '@/components/gui/GuiForm';
 import {
-  createFarmer,
-  getFarmerSummary,
-} from '@/services/api/FarmerApi';
+  GenFormDate1,
+  GenFormSelect,
+  GenFormText1,
+  GenFormText2,
+} from '@/components/gui/GuiForm';
+import { createFarmer, getFarmerSummary } from '@/services/api/FarmerApi';
 import { settingOwnerData } from '@/services/api/qr-code/BookApi';
 import {
   getAllFactories,
@@ -55,8 +57,10 @@ const FarmerAdd = () => {
   const [summary, setSummary] = useState<FarmerSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [factoryList, setFactoryList] = useState<FactoryInfoInterface[]>([]);
-  const [serviceAreaList, setServiceAreaList] = useState<ServiceAreaInterface[]>([]);
-  const [cardType, setCardtype] = useState('');
+  const [serviceAreaList, setServiceAreaList] = useState<
+    ServiceAreaInterface[]
+  >([]);
+  const [inputCardId, setInputCardId] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FarmerCreateInput>(
@@ -78,7 +82,8 @@ const FarmerAdd = () => {
       const factoryData = await getAllFactories();
       setFactoryList(factoryData);
 
-      const defaultFactoryId = factoryData.length > 0 ? factoryData[0].factoryId : null;
+      const defaultFactoryId =
+          factoryData.length > 0 ? factoryData[0].factoryId : null;
 
       if (state) {
         setFormData({
@@ -91,7 +96,7 @@ const FarmerAdd = () => {
           serviceAreaId: null,
           birthDate: '',
         });
-        setCardtype('2');
+        setInputCardId(formatIDCard(state.thaiNationalId || ''));
 
         if (state.serviceAreaId) {
           const servArea = await getServiceAreaById(state.serviceAreaId);
@@ -124,7 +129,7 @@ const FarmerAdd = () => {
               area.serviceAreaId === prev.serviceAreaId
           )
             ? prev.serviceAreaId
-            : factory.serviceAreas[0]?.serviceAreaId ?? null,
+            : (factory.serviceAreas[0]?.serviceAreaId ?? null),
         }));
       } else {
         setServiceAreaList([]);
@@ -165,15 +170,9 @@ const FarmerAdd = () => {
   ) => {
     const { name, value } = e.target;
 
-    if (name === 'cardType') {
-      setCardtype(value);
-    } else if (name === 'cardId') {
+    if (name === 'cardId') {
       const formatted = formatIDCard(value);
-      if (cardType === '1') {
-        setFormData(prev => ({ ...prev, thaiFarmerId: formatted }));
-      } else {
-        setFormData(prev => ({ ...prev, thaiNationalId: formatted }));
-      }
+      setInputCardId(formatted);
     } else if (name === 'name') {
       setFormData(prev => ({ ...prev, firstName: value }));
     } else if (name === 'factoryId' || name === 'serviceAreaId') {
@@ -190,7 +189,7 @@ const FarmerAdd = () => {
 
   const handleSubmit = async () => {
     const newErrors: typeof errors = {};
-    if (!formData.thaiFarmerId && !formData.thaiNationalId)
+    if (!inputCardId.trim())
       newErrors.cardId = 'กรุณาระบุหมายเลขบัตร';
     if (!formData.firstName?.trim()) newErrors.name = 'กรุณาระบุชื่อ';
     if (!formData.lastName?.trim()) newErrors.lastname = 'กรุณาระบุนามสกุล';
@@ -206,14 +205,13 @@ const FarmerAdd = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
+      const cleanedCardId = inputCardId.replace(/\D/g, '');
+      const isNationalId = cleanedCardId.length === 13;
+
       const payload = {
         ...formData,
-        thaiNationalId: formData.thaiNationalId
-          ? formData.thaiNationalId.replace(/-/g, '')
-          : '',
-        thaiFarmerId: formData.thaiFarmerId
-          ? formData.thaiFarmerId.replace(/-/g, '')
-          : '',
+        thaiNationalId: isNationalId ? cleanedCardId : '',
+        thaiFarmerId: !isNationalId ? cleanedCardId : '',
         phone: formData.phone ? formData.phone.replace(/-/g, '') : '',
       };
       const newFarmer = await createFarmer(payload);
@@ -222,14 +220,7 @@ const FarmerAdd = () => {
           farmerId: newFarmer.farmerId,
         });
       }
-      await Swal.fire({
-        title: 'สำเร็จ!',
-        text: 'เพิ่มข้อมูลเกษตรกรเรียบร้อยแล้ว',
-        icon: 'success',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      });
+      await swalSuccessTimer('สำเร็จ!', 'เพิ่มข้อมูลเกษตรกรเรียบร้อยแล้ว');
       navigate(-1);
     } catch (error: unknown) {
       console.error(error);
@@ -241,7 +232,7 @@ const FarmerAdd = () => {
       const errorMessage = Array.isArray(message)
         ? message.join(', ')
         : message;
-      await Swal.fire('เกิดข้อผิดพลาด', errorMessage, 'error');
+      await swalError('เกิดข้อผิดพลาด', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -343,45 +334,6 @@ const FarmerAdd = () => {
             </div>
             <div className="private-card-body">
               <div className="col-md-6 ms-auto me-auto">
-                {/* ประเภทบัตร */}
-                <div className="row mb-2">
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <label>ประเภทบัตร</label>
-                    </div>
-                  </div>
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <input
-                        type="radio"
-                        id="card-type-1"
-                        name="cardType"
-                        value="1"
-                        checked={cardType === '1'}
-                        onChange={handleChange}
-                      />
-                      <label htmlFor="card-type-1" className="ms-1">
-                        บัตรเกษตรกร
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <input
-                        type="radio"
-                        id="card-type-2"
-                        name="cardType"
-                        value="2"
-                        checked={cardType === '2'}
-                        onChange={handleChange}
-                      />
-                      <label htmlFor="card-type-2" className="ms-1">
-                        บัตรประชาชน
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
                 <GenFormText2
                   isRequired
                   id="card-id"
@@ -389,11 +341,7 @@ const FarmerAdd = () => {
                   label="บัตรเกษตรกร/ประชาชน"
                   placeholder="ระบุหมายเลขบัตรเกษตรกร/บัตรประชาชน"
                   desc="ใช้เพื่อยืนยันตัวตน"
-                  value={
-                    cardType === '1'
-                      ? formData.thaiFarmerId
-                      : formData.thaiNationalId
-                  }
+                  value={inputCardId}
                   onChange={handleChange}
                   errorMessage={errors.cardId}
                 />
@@ -512,4 +460,3 @@ const FarmerAdd = () => {
 };
 
 export default FarmerAdd;
-

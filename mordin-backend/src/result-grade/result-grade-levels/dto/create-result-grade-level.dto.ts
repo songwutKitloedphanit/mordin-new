@@ -1,18 +1,18 @@
-import { IsNumber, IsString } from "class-validator";
+import { IsNumber, IsString } from 'class-validator';
 
 export class CreateResultGradeLevelDto {
-    @IsNumber()
-    level: number;
+  @IsNumber()
+  level: number;
 
-    @IsString()
-    color: string;
+  @IsString()
+  color: string;
 
-    @IsNumber()
-    cutoffValue: number;
+  @IsNumber()
+  cutoffValue: number;
 
-    @IsString()
-    cutoffText: string;
+  @IsString()
+  cutoffText: string;
 
-    @IsString()
-    scoreName: string;
+  @IsString()
+  scoreName: string;
 }

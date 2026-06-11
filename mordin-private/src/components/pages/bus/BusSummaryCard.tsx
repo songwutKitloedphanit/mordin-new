@@ -56,5 +56,3 @@ function BusSummaryCard() {
 }
 
 export default BusSummaryCard;
-
-

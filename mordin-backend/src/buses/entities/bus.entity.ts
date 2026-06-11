@@ -1,19 +1,14 @@
 // bus.entity.ts
-import { ColdObservable } from 'rxjs/internal/testing/ColdObservable';
-import { User } from 'src/users/entities/user.entity';
 import { Province } from 'src/address/provinces/entities/province.entity';
+import { User } from 'src/users/entities/user.entity';
 import {
   Entity,
-  PrimaryColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   PrimaryGeneratedColumn,
   BeforeInsert,
   BeforeUpdate,
   ManyToOne,
   JoinColumn,
-  ManyToMany,
 } from 'typeorm';
 
 @Entity('buses')
@@ -55,12 +50,6 @@ export class Bus {
   @Column({ name: 'updated_uid', type: 'int', nullable: false })
   updatedUid: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  updateUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'updated_uid' })
   updateUser: User;
@@ -68,4 +57,10 @@ export class Bus {
   @ManyToOne(() => Province)
   @JoinColumn({ name: 'registration_province_code' })
   registrationProvince: Province;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  updateUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

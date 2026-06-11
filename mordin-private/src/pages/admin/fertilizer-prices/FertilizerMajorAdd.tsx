@@ -378,4 +378,3 @@ const FertilizerMajorAdd: React.FC = () => {
 };
 
 export default FertilizerMajorAdd;
-

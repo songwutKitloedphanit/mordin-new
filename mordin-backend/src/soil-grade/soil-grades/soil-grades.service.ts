@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
+import { SoilGradeLevel } from 'src/soil-grade/soil-grade-levels/entities/soil-grade-level.entity';
+import { Repository } from 'typeorm';
+
+import { SoilGradeLevelsService } from '../soil-grade-levels/soil-grade-levels.service';
+
 import { CreateSoilGradeDto } from './dto/create-soil-grade.dto';
 import { UpdateSoilGradeDto } from './dto/update-soil-grade.dto';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
 import { SoilGrade } from './entities/soil-grade.entity';
-import { SoilGradeLevel } from 'src/soil-grade/soil-grade-levels/entities/soil-grade-level.entity';
-import { SoilGradeLevelsService } from '../soil-grade-levels/soil-grade-levels.service';
-import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
 import { SoilGradeLog } from './entities/soil-grade.log.entity';
 
 @Injectable()
@@ -14,7 +16,7 @@ export class SoilGradesService {
   constructor(
     @InjectRepository(SoilGrade)
     private soilGradesRepository: Repository<SoilGrade>,
-    
+
     @InjectRepository(SoilGradeLevel)
     private soilGradeLevelsRepository: Repository<SoilGradeLevel>,
     @InjectRepository(SoilGradeLog)
@@ -128,7 +130,7 @@ export class SoilGradesService {
       if (updateData.soilGradeLevels && updateData.soilGradeLevels.length > 0) {
         for (const soilLevel of updateData.soilGradeLevels) {
           const soilGradeLevel = await this.soilGradeLevelsRepository.findOne({
-            where: { soilGradeId: soilGradeId, level: soilLevel.level },
+            where: { soilGradeId, level: soilLevel.level },
           });
           if (!soilGradeLevel) {
             throw new NotFoundException(
@@ -170,7 +172,7 @@ export class SoilGradesService {
     }
 
     // 2. แนบ userId เข้าไปใน property ที่เรานิยามไว้ใน .d.ts
-    soil_grade.removedBy = userId;
+    (soil_grade as any).removedBy = userId;
 
     // 3. ส่ง Entity object ที่แก้ไขแล้วไปให้ .remove()
     await this.soilGradesRepository.remove(soil_grade);
@@ -183,7 +185,7 @@ export class SoilGradesService {
     const soilGrade = this.soilGradesRepository.create({
       serviceTypeId,
       parameter: 'Total Score',
-      updateUid: updateUid,
+      updateUid,
     });
     return this.soilGradesRepository.save(soilGrade);
   }
@@ -200,7 +202,7 @@ export class SoilGradesService {
       serviceTypeId,
       laboratoryId,
       parameter: `${lab?.shortNameAfter} (${lab?.unitAfter})`,
-      updateUid: updateUid,
+      updateUid,
     });
 
     const savedSoilGrade = await this.soilGradesRepository.save(soilGrade);

@@ -27,41 +27,25 @@ export class ServiceArea {
   @Column({ name: 'note', type: 'text', nullable: true })
   note: string;
 
-  @Column({ name: 'is_active', type: 'boolean', default: true })
-  isActive: boolean;
-
-  @Column({ name: 'effective_from', type: 'date', nullable: true })
-  effectiveFrom: string | null;
-
-  @Column({ name: 'effective_to', type: 'date', nullable: true })
-  effectiveTo: string | null;
-
-  @Column({
-    name: 'superseded_by_service_area_id',
-    type: 'int',
-    nullable: true,
-  })
-  supersededByServiceAreaId: number | null;
-
   @Column({ name: 'update_uid', type: 'int' })
   updateUid: number;
 
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'update_uid' })
+  updateUser: User;
+
+  @ManyToOne(() => Factory, factory => factory.serviceAreas, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'factory_id' })
+  factory: Factory;
+
   @BeforeInsert()
   @BeforeUpdate()
   updateUpdatedAt() {
     this.updatedAt = Date.now();
   }
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'update_uid' })
-  updateUser: User;
-
-  @ManyToOne(() => Factory, (factory) => factory.serviceAreas, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'factory_id' })
-  factory: Factory;
 }

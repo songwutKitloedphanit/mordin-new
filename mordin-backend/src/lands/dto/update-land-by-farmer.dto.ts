@@ -1,4 +1,10 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+} from 'class-validator';
 
 // DTO
 // นี้จะคล้ายกับ
@@ -10,7 +16,7 @@ export class UpdateLandByFarmerDto {
   @IsInt()
   @IsNotEmpty()
   farmerId: number; //
-                    // เพื่อยืนยันความเป็นเจ้าของ
+  // เพื่อยืนยันความเป็นเจ้าของ
 
   @IsOptional()
   @IsString()

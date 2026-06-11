@@ -1,8 +1,9 @@
-import { IsNumber } from "class-validator";
+import { IsNumber } from 'class-validator';
 
 export class ServiceTypesSummaryDTO {
-    @IsNumber()
-    totalServiceTypes : number;
-    @IsNumber()
-    totalServiceLaboratories : number;
+  @IsNumber()
+  totalServiceTypes: number;
+
+  @IsNumber()
+  totalServiceLaboratories: number;
 }

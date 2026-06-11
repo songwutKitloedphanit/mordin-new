@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { FertilizerMinorsService } from '../fertilizer-minors/fertilizer-minors.service';
+import { ServiceFertilizerMinorUsage } from '../service-fertilizer-minor-usages/entities/service-fertilizer-minor-usage.entity';
+
 import { CreateServiceFertilizerMinorDto } from './dto/create-service-fertilizer-minor.dto';
 import { UpdateServiceFertilizerMinorDto } from './dto/update-service-fertilizer-minor.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { ServiceFertilizerMinor } from './entities/service-fertilizer-minor.entity';
-import { ServiceFertilizerMinorUsage } from '../service-fertilizer-minor-usages/entities/service-fertilizer-minor-usage.entity';
-import { Repository } from 'typeorm';
-import { FertilizerMinorsService } from '../fertilizer-minors/fertilizer-minors.service';
 import { ServiceFertilizerMinorLog } from './entities/service-fertilizer-minor.log.entity';
 
 @Injectable()
@@ -20,8 +22,8 @@ export class ServiceFertilizerMinorsService {
     @InjectRepository(ServiceFertilizerMinorLog)
     private readonly servFerMinorLog: Repository<ServiceFertilizerMinorLog>,
 
-    private readonly fertilizerMinorsService: FertilizerMinorsService,
-  ) { }
+    private readonly fertilizerMinorsService: FertilizerMinorsService
+  ) {}
 
   async create(
     createServiceFertilizerMinorDto: CreateServiceFertilizerMinorDto,
@@ -35,11 +37,11 @@ export class ServiceFertilizerMinorsService {
       updateUid: Uid,
     });
     const savedServiceFertilizerMinor = await this.servFerMinorRepo.save(
-      serviceFertilizerMinor,
+      serviceFertilizerMinor
     );
 
     // Create the ServiceFertilizerMinorUsage entities
-    const usageEntities = serviceFertilizerMinorUsages.map((usageDto) => {
+    const usageEntities = serviceFertilizerMinorUsages.map(usageDto => {
       return this.servFerMinorUsageRepo.create({
         ...usageDto,
         serviceFertilizerMinor: savedServiceFertilizerMinor,
@@ -77,23 +79,30 @@ export class ServiceFertilizerMinorsService {
     });
   }
 
-  async update(id: number, updateServiceFertilizerMinorDto: UpdateServiceFertilizerMinorDto, Uid: number) {
-    const { serviceFertilizerMinorUsages, ...minorData } = updateServiceFertilizerMinorDto;
+  async update(
+    id: number,
+    updateServiceFertilizerMinorDto: UpdateServiceFertilizerMinorDto,
+    Uid: number
+  ) {
+    const { serviceFertilizerMinorUsages, ...minorData } =
+      updateServiceFertilizerMinorDto;
 
     // Update the ServiceFertilizerMinor entity
     const serviceFertilizerMinor = await this.servFerMinorRepo.findOne({
       where: { serviceFertilizerMinorId: id },
     });
     if (!serviceFertilizerMinor) {
-      throw new NotFoundException(`ServiceFertilizerMinor with ID ${id} not found`);
+      throw new NotFoundException(
+        `ServiceFertilizerMinor with ID ${id} not found`
+      );
     }
     const updateServiceFertilizerMinor = {
       ...serviceFertilizerMinor,
       ...minorData,
       updateUid: Uid,
-    }
+    };
     const updatedServiceFertilizerMinor = await this.servFerMinorRepo.save(
-      updateServiceFertilizerMinor,
+      updateServiceFertilizerMinor
     );
     const usagesToRemove = await this.servFerMinorUsageRepo.find({
       where: {
@@ -110,13 +119,17 @@ export class ServiceFertilizerMinorsService {
     }
 
     // Create and save new ServiceFertilizerMinorUsage entities
-    if (!serviceFertilizerMinorUsages || serviceFertilizerMinorUsages.length === 0) {
+    if (
+      !serviceFertilizerMinorUsages ||
+      serviceFertilizerMinorUsages.length === 0
+    ) {
       return updatedServiceFertilizerMinor;
     }
-    const usageEntities = serviceFertilizerMinorUsages.map((usageDto) => {
+    const usageEntities = serviceFertilizerMinorUsages.map(usageDto => {
       return this.servFerMinorUsageRepo.create({
         ...usageDto,
-        serviceFertilizerMinorId: updatedServiceFertilizerMinor.serviceFertilizerMinorId,
+        serviceFertilizerMinorId:
+          updatedServiceFertilizerMinor.serviceFertilizerMinorId,
         updateUid: Uid,
       });
     });
@@ -153,7 +166,7 @@ export class ServiceFertilizerMinorsService {
       serviceFertilizerMinor: { serviceFertilizerMinorId: id },
     });
 
-    serviceFertilizerMinor.removedBy = userId;
+    (serviceFertilizerMinor as any).removedBy = userId;
 
     // Remove the ServiceFertilizerMinor entity
     await this.servFerMinorRepo.delete(id);
@@ -163,13 +176,13 @@ export class ServiceFertilizerMinorsService {
 
   async createAllServiceFromServiceTypeId(
     serviceTypeId: number,
-    update_uid: number,
+    update_uid: number
   ) {
     const ferMinors = await this.fertilizerMinorsService.findAll();
     for (const fer of ferMinors) {
       const serviceFertilizerMinor = this.servFerMinorRepo.create({
         fertilizerMinorId: fer.fertilizerMinorId,
-        serviceType: { serviceTypeId: serviceTypeId },
+        serviceType: { serviceTypeId },
         updateUid: update_uid,
         unitId: fer.unitId,
       });

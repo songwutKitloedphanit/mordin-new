@@ -8,30 +8,38 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { LaboratorySettingsService } from './laboratory-settings.service';
-import { CreateLaboratorySettingDto } from './dto/create-laboratory-setting.dto';
-import { UpdateLaboratorySettingDto } from './dto/update-laboratory-setting.dto';
-import { UpdateLaboratorySettingDetailDto } from '../laboratory-setting-details/dto/update-laboratory-setting-detail.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { UpdateLaboratorySettingDetailDto } from '../laboratory-setting-details/dto/update-laboratory-setting-detail.dto';
+
+import { CreateLaboratorySettingDto } from './dto/create-laboratory-setting.dto';
+import { UpdateLaboratorySettingDto } from './dto/update-laboratory-setting.dto';
+import { LaboratorySettingsService } from './laboratory-settings.service';
 
 @Controller('laboratory-settings')
 export class LaboratorySettingsController {
   constructor(
-    private readonly laboratorySettingsService: LaboratorySettingsService,
+    private readonly laboratorySettingsService: LaboratorySettingsService
   ) {}
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createLaboratorySettingDto: CreateLaboratorySettingDto, @User('sub')  userId: number) {
-    return this.laboratorySettingsService.create(createLaboratorySettingDto, userId);
+  create(
+    @Body() createLaboratorySettingDto: CreateLaboratorySettingDto,
+    @User('sub') userId: number
+  ) {
+    return this.laboratorySettingsService.create(
+      createLaboratorySettingDto,
+      userId
+    );
   }
 
   @Get('/logs')
   getLogs() {
     return this.laboratorySettingsService.getLogs();
   }
-  
+
   @Get()
   findAll() {
     return this.laboratorySettingsService.findAll();
@@ -48,7 +56,7 @@ export class LaboratorySettingsController {
     @Param('labSettingId') labSettingId: string,
     @Body()
     updateLaboratorySettingDetailDto: UpdateLaboratorySettingDetailDto[],
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.laboratorySettingsService.updateWorkingStandard(
       +labSettingId,
@@ -59,8 +67,14 @@ export class LaboratorySettingsController {
 
   @UseGuards(AuthGuard)
   @Patch()
-  update(@Body() updateLaboratorySettingDto: UpdateLaboratorySettingDto[], @User('sub')  userId: number) {
-    return this.laboratorySettingsService.update(updateLaboratorySettingDto, userId);
+  update(
+    @Body() updateLaboratorySettingDto: UpdateLaboratorySettingDto[],
+    @User('sub') userId: number
+  ) {
+    return this.laboratorySettingsService.update(
+      updateLaboratorySettingDto,
+      userId
+    );
   }
 
   @UseGuards(AuthGuard)

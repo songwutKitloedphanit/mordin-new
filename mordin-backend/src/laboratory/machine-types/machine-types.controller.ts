@@ -8,11 +8,12 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { MachineTypesService } from './machine-types.service';
-import { CreateMachineTypeDto } from './dto/create-machine-type.dto';
-import { UpdateMachineTypeDto } from './dto/update-machine-type.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateMachineTypeDto } from './dto/create-machine-type.dto';
+import { UpdateMachineTypeDto } from './dto/update-machine-type.dto';
+import { MachineTypesService } from './machine-types.service';
 
 @Controller('machine-types')
 export class MachineTypesController {
@@ -20,7 +21,10 @@ export class MachineTypesController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createMachineTypeDto: CreateMachineTypeDto, @User('sub')  userId: number) {
+  create(
+    @Body() createMachineTypeDto: CreateMachineTypeDto,
+    @User('sub') userId: number
+  ) {
     return this.machineTypesService.create(createMachineTypeDto, userId);
   }
 
@@ -44,7 +48,7 @@ export class MachineTypesController {
   update(
     @Param('id') id: string,
     @Body() updateMachineTypeDto: UpdateMachineTypeDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.machineTypesService.update(+id, updateMachineTypeDto, userId);
   }

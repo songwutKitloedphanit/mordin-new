@@ -1,5 +1,3 @@
-import { Bus } from '../entities/bus.entity';
-
 declare module '../entities/bus.entity' {
   // ขยาย interface ของ Class 'Bus'
   interface Bus {

@@ -34,9 +34,9 @@ const SoilGradeEdit: React.FC = () => {
   const [showConfirm, setShowConfirm] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
-  const [sliderValues, setSliderValues] = useState<
-    Map<number, number[]>
-  >(new Map());
+  const [sliderValues, setSliderValues] = useState<Map<number, number[]>>(
+    new Map()
+  );
 
   // useEffect(() => {
   //   const fetchMain = async () => {
@@ -103,14 +103,14 @@ const SoilGradeEdit: React.FC = () => {
   }, [serviceTypeId]);
 
   // Helper function to extract slider values from soil grade levels
-  const extractSliderValues = (
-    grade: SoilGradeUpdateInput
-  ): number[] => {
+  const extractSliderValues = (grade: SoilGradeUpdateInput): number[] => {
     const levels = grade.soilGradeLevels;
     if (!levels || levels.length === 0) return [];
 
     // Sort by level to ensure correct order
-    const sortedLevels = [...levels].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
+    const sortedLevels = [...levels].sort(
+      (a, b) => (a.level ?? 0) - (b.level ?? 0)
+    );
 
     // Extract cutoff values, filtering out null/undefined
     const values = sortedLevels
@@ -255,10 +255,16 @@ const SoilGradeEdit: React.FC = () => {
             zIndex: 9999,
           }}
         >
-          <div className="spinner-border text-light" role="status" style={{ width: '3rem', height: '3rem' }}>
+          <div
+            className="spinner-border text-light"
+            role="status"
+            style={{ width: '3rem', height: '3rem' }}
+          >
             <span className="visually-hidden">Saving...</span>
           </div>
-          <p className="text-light mt-3" style={{ fontSize: '1.1rem' }}>กำลังบันทึกข้อมูล...</p>
+          <p className="text-light mt-3" style={{ fontSize: '1.1rem' }}>
+            กำลังบันทึกข้อมูล...
+          </p>
         </div>
       )}
 
@@ -287,7 +293,10 @@ const SoilGradeEdit: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="private-card-body" style={{ position: 'relative', minHeight: '300px' }}>
+            <div
+              className="private-card-body"
+              style={{ position: 'relative', minHeight: '300px' }}
+            >
               {loading && (
                 <div
                   style={{
@@ -309,52 +318,56 @@ const SoilGradeEdit: React.FC = () => {
                 </div>
               )}
               <div className="col-md-12 ms-auto me-auto">
-                {!loading && serviceTypeData?.soilGrades?.map(grade => {
-                  const initialValues = sliderValues.get(grade.soilGradeId);
-                  return (
-                    <div className="row" key={grade.soilGradeId}>
-                      <div className="col-md-4 col-lg-4">
-                        <div className="form-group">
-                          <label>คะแนน {grade.parameter}</label>
+                {!loading &&
+                  serviceTypeData?.soilGrades?.map(grade => {
+                    const initialValues = sliderValues.get(grade.soilGradeId);
+                    return (
+                      <div className="row" key={grade.soilGradeId}>
+                        <div className="col-md-4 col-lg-4">
+                          <div className="form-group">
+                            <label>คะแนน {grade.parameter}</label>
+                          </div>
+                        </div>
+                        <div className="col-md-8 col-lg-8">
+                          {grade.laboratory?.shortNameAfter === 'pH' &&
+                          grade.laboratory != null ? (
+                            <MultiPointPHSlider
+                              min={grade.laboratory?.rangeMin}
+                              max={grade.laboratory?.rangeMax}
+                              pointsCount={3}
+                              initialValues={initialValues}
+                              onChange={values =>
+                                handleSliderChange(values, grade.soilGradeId)
+                              }
+                            />
+                          ) : (
+                            <DoubleRangeSlider
+                              min={grade.laboratory?.rangeMin ?? 0}
+                              max={grade.laboratory?.rangeMax ?? 10}
+                              step={
+                                // Safely access shortNameAfter with optional chaining
+                                grade.laboratory?.shortNameAfter?.toUpperCase() ===
+                                'EC'
+                                  ? 0.01
+                                  : 0.1
+                              }
+                              value={
+                                initialValues && initialValues.length >= 2
+                                  ? [
+                                      initialValues[0],
+                                      initialValues[initialValues.length - 1],
+                                    ]
+                                  : undefined
+                              }
+                              onChange={values =>
+                                handleSliderChange(values, grade.soilGradeId)
+                              }
+                            />
+                          )}
                         </div>
                       </div>
-                      <div className="col-md-8 col-lg-8">
-                        {grade.laboratory?.shortNameAfter === 'pH' &&
-                          grade.laboratory != null ? (
-                          <MultiPointPHSlider
-                            min={grade.laboratory?.rangeMin}
-                            max={grade.laboratory?.rangeMax}
-                            pointsCount={3}
-                            initialValues={initialValues}
-                            onChange={values =>
-                              handleSliderChange(values, grade.soilGradeId)
-                            }
-                          />
-                        ) : (
-                          <DoubleRangeSlider
-                            min={grade.laboratory?.rangeMin ?? 0}
-                            max={grade.laboratory?.rangeMax ?? 10}
-                            step={
-                              // Safely access shortNameAfter with optional chaining
-                              grade.laboratory?.shortNameAfter?.toUpperCase() ===
-                                'EC'
-                                ? 0.01
-                                : 0.1
-                            }
-                            value={
-                              initialValues && initialValues.length >= 2
-                                ? [initialValues[0], initialValues[initialValues.length - 1]]
-                                : undefined
-                            }
-                            onChange={values =>
-                              handleSliderChange(values, grade.soilGradeId)
-                            }
-                          />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
 
                 <div className="private-action-footer">
                   <div className="row row-demo-grid">
@@ -453,4 +466,3 @@ const SoilGradeEdit: React.FC = () => {
 };
 
 export default SoilGradeEdit;
-

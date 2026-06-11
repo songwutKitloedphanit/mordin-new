@@ -1,6 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 export class MapGradeDataDto {
-  @ApiProperty({ example: 'สูง', nullable: true, description: 'ชื่อเกรดที่ดีที่สุดในพื้นที่นั้น' })
+  @ApiProperty({
+    example: 'สูง',
+    nullable: true,
+    description: 'ชื่อเกรดที่ดีที่สุดในพื้นที่นั้น',
+  })
   gradeName: string | null;
 
   @ApiProperty({ example: '#ff6c6c', nullable: true, description: 'สีของเกรด' })
@@ -8,13 +12,19 @@ export class MapGradeDataDto {
 }
 
 export class ChoroplethMapDataDto {
-  @ApiProperty({ example: 'นครนายก', description: 'ชื่อสถานที่ (จังหวัด/อำเภอ/ตำบล)' })
+  @ApiProperty({
+    example: 'นครนายก',
+    description: 'ชื่อสถานที่ (จังหวัด/อำเภอ/ตำบล)',
+  })
   locationName: string;
 
   @ApiProperty({ example: 5, description: 'จำนวนตัวอย่างทั้งหมดในพื้นที่นี้' })
   totalCount: number;
 
-  @ApiProperty({ type: MapGradeDataDto, description: 'ข้อมูลเกรดที่เป็นตัวแทนของพื้นที่' })
+  @ApiProperty({
+    type: MapGradeDataDto,
+    description: 'ข้อมูลเกรดที่เป็นตัวแทนของพื้นที่',
+  })
   data: MapGradeDataDto;
 }
 
@@ -35,14 +45,20 @@ export class HorizontalBarChartDataDto {
   order: number;
 }
 
-export class SoilAnalysisDataDto { 
+export class SoilAnalysisDataDto {
   @ApiProperty({ example: 'Mg', description: 'ชื่อธาตุอาหาร' })
   elementName: string;
 
-  @ApiProperty({ type: [ChoroplethMapDataDto], description: 'ข้อมูลสำหรับทำแผนที่' })
+  @ApiProperty({
+    type: [ChoroplethMapDataDto],
+    description: 'ข้อมูลสำหรับทำแผนที่',
+  })
   ChoroplethMapData: ChoroplethMapDataDto[];
 
-  @ApiProperty({ type: [HorizontalBarChartDataDto], description: 'ข้อมูลสำหรับทำกราฟแท่งสรุป' })
+  @ApiProperty({
+    type: [HorizontalBarChartDataDto],
+    description: 'ข้อมูลสำหรับทำกราฟแท่งสรุป',
+  })
   HorizontalBarChartData: HorizontalBarChartDataDto[];
 }
 
@@ -58,13 +74,16 @@ export class PieChartItemDto {
 }
 
 export class PieChartDataDto {
-  @ApiProperty({ example: 'อ้อยปลูก', description: 'ประเภทบริการ (Service Category)' })
+  @ApiProperty({
+    example: 'อ้อยปลูก',
+    description: 'ประเภทบริการ (Service Category)',
+  })
   serviceCategoryName: string;
 
   @ApiProperty({ type: [PieChartItemDto], description: 'รายการสรุปสูตรปุ๋ย' })
   summary: {
-    usageTypeName: string,
-    PieChartItemDto: PieChartItemDto[],
+    usageTypeName: string;
+    PieChartItemDto: PieChartItemDto[];
   }[];
 }
 
@@ -86,17 +105,29 @@ export class PrepareDataDto {
 }
 
 export class FertilizerSummaryResponseDto {
-    @ApiProperty({ type: [PieChartDataDto], description: 'ข้อมูลกราฟวงกลม (Major Usage)' })
-    pieChartData: PieChartDataDto[];
+  @ApiProperty({
+    type: [PieChartDataDto],
+    description: 'ข้อมูลกราฟวงกลม (Major Usage)',
+  })
+  pieChartData: PieChartDataDto[];
 
-    @ApiProperty({ type: [PrepareDataDto], description: 'ข้อมูลการเตรียมดิน (Minor Usage)' })
-    prepareData: PrepareDataDto[];
+  @ApiProperty({
+    type: [PrepareDataDto],
+    description: 'ข้อมูลการเตรียมดิน (Minor Usage)',
+  })
+  prepareData: PrepareDataDto[];
 }
 
 export class DashboardResponseDto {
-  @ApiProperty({ type: [SoilAnalysisDataDto], description: 'ข้อมูลวิเคราะห์ดินแยกตามธาตุ (Map & Bar)' })
+  @ApiProperty({
+    type: [SoilAnalysisDataDto],
+    description: 'ข้อมูลวิเคราะห์ดินแยกตามธาตุ (Map & Bar)',
+  })
   soilAnalysis: SoilAnalysisDataDto[];
 
-  @ApiProperty({ type: FertilizerSummaryResponseDto, description: 'ข้อมูลสรุปการใช้ปุ๋ยและเตรียมดิน' })
+  @ApiProperty({
+    type: FertilizerSummaryResponseDto,
+    description: 'ข้อมูลสรุปการใช้ปุ๋ยและเตรียมดิน',
+  })
   fertilizerSummary: FertilizerSummaryResponseDto;
 }

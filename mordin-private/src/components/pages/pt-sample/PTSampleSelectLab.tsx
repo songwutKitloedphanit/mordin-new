@@ -115,4 +115,3 @@ const PTSampleSelectLab = ({
 };
 
 export default PTSampleSelectLab;
-

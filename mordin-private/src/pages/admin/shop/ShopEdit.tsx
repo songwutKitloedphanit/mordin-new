@@ -41,7 +41,9 @@ interface ShopResponse {
 }
 
 const getApiErrorMessage = (error: unknown, fallback: string) => {
-  const err = error as { response?: { data?: { message?: string | string[] } } };
+  const err = error as {
+    response?: { data?: { message?: string | string[] } };
+  };
   const message = err?.response?.data?.message || fallback;
 
   return Array.isArray(message) ? message.join(', ') : message;
@@ -157,9 +159,7 @@ const ShopEdit = () => {
             if (dist) {
               setSelectedDistrictId(String(dist.code));
               const subdistricts: Subdistrict[] =
-                await getSubdistrictsByDistrictCode(
-                  Number(dist.code)
-                );
+                await getSubdistrictsByDistrictCode(Number(dist.code));
               setSubdistrictOptions(
                 subdistricts.map(s => ({
                   value: String(s.code),
@@ -233,9 +233,7 @@ const ShopEdit = () => {
 
   const handleSubdistrictChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const subdistrictId = e.target.value;
-    const selectedSub = subdistrictOptions.find(
-      s => s.value === subdistrictId
-    );
+    const selectedSub = subdistrictOptions.find(s => s.value === subdistrictId);
     setSelectedSubdistrictId(subdistrictId);
 
     if (selectedSub) {
@@ -594,4 +592,3 @@ const ShopEdit = () => {
 };
 
 export default ShopEdit;
-

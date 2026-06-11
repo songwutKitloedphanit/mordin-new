@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MITR PHOL-SOIL — ตัวอย่าง Landing Page ใหม่ (Preview)</title>
+<style>
+/* ════════════════════════════════════════════════════════════
+   Landing V2 Preview — self-contained, ใช้ token สีเดิมของแบรนด์
+   เน้น: อ่านง่าย (18px base) / ปุ่มใหญ่ ≥48px / mobile-first
+   ════════════════════════════════════════════════════════════ */
+@font-face {
+  font-family: "Sarabun";
+  src: url("assets/fonts/sarabun/Sarabun-Regular.ttf") format("truetype");
+  font-weight: 400 600; font-display: swap;
+}
+@font-face {
+  font-family: "Sarabun";
+  src: url("assets/fonts/sarabun/Sarabun-Bold.ttf") format("truetype");
+  font-weight: 700 800; font-display: swap;
+}
+
+:root {
+  --blue: #005092;
+  --blue-dark: #003c70;
+  --blue-soft: #eaf4ff;
+  --green: #2e8b4a;
+  --green-soft: #e8f5ec;
+  --yellow: #ffc947;
+  --bg: #f6f9fc;
+  --surface: #ffffff;
+  --text: #1f2d3d;
+  --muted: #5b6b7d;
+  --heading: #10243f;
+  --border: rgba(0, 80, 146, 0.14);
+  --radius: 16px;
+  --radius-lg: 22px;
+  --shadow: 0 8px 24px rgba(15, 35, 65, 0.09);
+  --shadow-lg: 0 16px 40px rgba(0, 80, 146, 0.16);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "Sarabun", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 18px;                 /* ↑ จาก 16px เพื่อกลุ่มผู้ใช้สูงวัย */
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);           /* พื้นเรียบ ไม่มีลายจุด → อ่านสบายตา */
+}
+
+img { max-width: 100%; display: block; }
+a { color: var(--blue); text-decoration: none; }
+ul { list-style: none; }
+
+.container { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+h1, h2, h3 { color: var(--heading); line-height: 1.35; font-weight: 800; }
+h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); }
+
+.section { padding: 56px 0; }
+.section-head { text-align: center; max-width: 620px; margin: 0 auto 36px; }
+.section-head .tag {
+  display: inline-block; background: var(--blue-soft); color: var(--blue);
+  font-weight: 700; font-size: 0.95rem; padding: 6px 18px;
+  border-radius: 999px; margin-bottom: 12px;
+}
+.section-head p.sub { color: var(--muted); margin-top: 10px; }
+
+/* ── ปุ่มมาตรฐาน: สูง ≥52px กดง่ายบนมือถือ ───────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 12px 28px; border-radius: 999px;
+  font-size: 1.05rem; font-weight: 700; cursor: pointer;
+  border: 2px solid transparent; transition: transform .15s, box-shadow .15s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+.btn-primary { background: var(--green); color: #fff; box-shadow: 0 8px 20px rgba(46,139,74,.35); }
+.btn-primary:hover { background: #267a3f; color: #fff; }
+.btn-outline { background: #fff; color: var(--blue); border-color: var(--blue); }
+.btn-outline:hover { background: var(--blue-soft); }
+
+/* ════════ 1. HEADER — เมนูแบน ไม่มี dropdown ════════ */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--blue);
+  box-shadow: 0 2px 12px rgba(0,0,0,.18);
+}
+.header .container {
+  display: flex; align-items: center; gap: 16px; min-height: 68px;
+}
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.brand img { height: 40px; width: auto; background: #fff; border-radius: 8px; padding: 4px; }
+.brand span { color: #fff; font-weight: 800; font-size: 1.1rem; white-space: nowrap; }
+
+.nav { display: flex; gap: 4px; align-items: center; }
+.nav a {
+  color: rgba(255,255,255,.92); font-weight: 600; font-size: 1rem;
+  padding: 10px 14px; border-radius: 10px; min-height: 44px;
+  display: inline-flex; align-items: center;
+}
+.nav a:hover, .nav a.active { background: rgba(255,255,255,.16); color: #fff; }
+.header-cta {
+  background: var(--yellow); color: #5b4400 !important; font-weight: 800;
+  border-radius: 999px; padding: 10px 22px !important;
+}
+.header-cta:hover { background: #ffd76b; }
+
+.menu-btn {
+  display: none; background: none; border: none; color: #fff;
+  font-size: 2rem; min-width: 48px; min-height: 48px; cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .menu-btn { display: block; }
+  .nav {
+    display: none; position: absolute; top: 68px; left: 0; right: 0;
+    background: var(--blue-dark); flex-direction: column; align-items: stretch;
+    padding: 12px 20px 20px; gap: 6px;
+  }
+  .nav.open { display: flex; }
+  .nav a { font-size: 1.15rem; min-height: 52px; }   /* tap target ใหญ่บนมือถือ */
+  .header-cta { text-align: center; justify-content: center; margin-top: 8px; }
+}
+
+/* ════════ 2. HERO — 1 ข้อความหลัก + 2 ปุ่มใหญ่ ════════ */
+.hero {
+  background: linear-gradient(135deg, #002b50 0%, #00457e 55%, #0068ba 100%);
+  color: #fff; padding: 56px 0 64px;
+}
+.hero .container {
+  display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center;
+}
+.hero h1 {
+  color: #fff; font-size: clamp(1.8rem, 4.5vw, 2.7rem); margin-bottom: 16px;
+}
+.hero h1 em { font-style: normal; color: var(--yellow); }
+.hero p.lead {
+  font-size: 1.15rem; color: rgba(255,255,255,.92); margin-bottom: 28px; max-width: 32rem;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 26px; }
+.hero-actions .btn-outline { border-color: rgba(255,255,255,.85); background: rgba(255,255,255,.1); color: #fff; }
+.hero-actions .btn-outline:hover { background: rgba(255,255,255,.22); }
+
+.hero-trust { display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 1rem; color: rgba(255,255,255,.9); }
+.hero-trust span { display: inline-flex; align-items: center; gap: 8px; }
+.hero-trust b { color: var(--yellow); }
+
+.hero-img {
+  border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);
+  border: 4px solid rgba(255,255,255,.25);
+}
+.hero-img img { width: 100%; height: 340px; object-fit: cover; }
+
+@media (max-width: 900px) {
+  .hero .container { grid-template-columns: 1fr; gap: 28px; }
+  .hero-img img { height: 220px; }
+  .hero-actions .btn { flex: 1 1 100%; }   /* ปุ่มเต็มแถว กดง่าย */
+}
+
+/* ════════ 3. ทางลัด 4 การ์ด — "วันนี้มาทำอะไร" ════════ */
+.quick { margin-top: -34px; position: relative; z-index: 5; padding-bottom: 8px; }
+.quick-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+}
+.quick-card {
+  background: var(--surface); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 22px 18px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  border: 2px solid transparent; transition: border-color .15s, transform .15s;
+  color: var(--text);
+}
+.quick-card:hover { border-color: var(--blue); transform: translateY(-3px); }
+.quick-card .q-icon {
+  width: 52px; height: 52px; border-radius: 14px; font-size: 1.6rem;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--blue-soft); color: var(--blue);
+}
+.quick-card.green .q-icon { background: var(--green-soft); color: var(--green); }
+.quick-card b { font-size: 1.1rem; color: var(--heading); }
+.quick-card small { color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+.quick-card .go { margin-top: auto; font-weight: 700; color: var(--blue); font-size: 0.98rem; }
+
+@media (max-width: 900px) { .quick-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .quick-grid { grid-template-columns: 1fr; } }
+
+/* ════════ 4. รอบบริการใกล้คุณ — ลิสต์แทนแผนที่ ════════ */
+.rounds-list { display: grid; gap: 14px; max-width: 760px; margin: 0 auto; }
+.round-card {
+  display: flex; align-items: center; gap: 20px;
+  background: var(--surface); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 18px 22px;
+  border-left: 6px solid var(--green);
+}
+.round-date {
+  flex-shrink: 0; text-align: center; background: var(--green-soft);
+  border-radius: 12px; padding: 10px 16px; min-width: 92px;
+}
+.round-date .d { font-size: 1.7rem; font-weight: 800; color: var(--green); line-height: 1.1; }
+.round-date .m { font-weight: 700; color: var(--green); }
+.round-place b { font-size: 1.1rem; color: var(--heading); display: block; }
+.round-place span { color: var(--muted); font-size: 1rem; }
+.round-card .arrow { margin-left: auto; color: var(--blue); font-size: 1.4rem; }
+.rounds-more { text-align: center; margin-top: 26px; }
+
+@media (max-width: 520px) {
+  .round-card { gap: 14px; padding: 14px 16px; }
+  .round-date { min-width: 78px; padding: 8px 10px; }
+}
+
+/* ════════ 5. ขั้นตอนใช้บริการ 4 step ════════ */
+.steps { background: var(--surface); }
+.steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.step { text-align: center; padding: 10px; }
+.step .num {
+  width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 50%;
+  background: var(--blue); color: #fff; font-size: 1.5rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 16px rgba(0,80,146,.3);
+}
+.step b { display: block; font-size: 1.1rem; color: var(--heading); margin-bottom: 6px; }
+.step p { color: var(--muted); font-size: 0.98rem; }
+@media (max-width: 900px) { .steps-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .steps-grid { grid-template-columns: 1fr; } }
+
+/* ════════ 6. ทำไมต้องเรา — การ์ดแนวตั้งแทนตาราง ════════ */
+.compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.compare-card {
+  background: var(--surface); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 26px 22px; position: relative;
+}
+.compare-card.hero-card {
+  border: 3px solid var(--green);
+  box-shadow: 0 14px 36px rgba(46,139,74,.18);
+}
+.compare-card .ribbon {
+  position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+  background: var(--green); color: #fff; font-weight: 800; font-size: 0.9rem;
+  padding: 4px 18px; border-radius: 999px; white-space: nowrap;
+}
+.compare-card h3 { font-size: 1.15rem; margin-bottom: 16px; text-align: center; }
+.compare-card ul li {
+  display: flex; gap: 10px; padding: 9px 0; font-size: 1rem;
+  border-top: 1px dashed var(--border); align-items: baseline;
+}
+.compare-card ul li:first-child { border-top: 0; }
+.compare-card ul li .ic { flex-shrink: 0; }
+.compare-card ul li b.good { color: var(--green); }
+@media (max-width: 900px) {
+  .compare-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+  .compare-card.hero-card { order: -1; }   /* มือถือ: ตัวเด่นขึ้นก่อน */
+}
+
+/* ════════ 7. ติดต่อ ════════ */
+.contact-strip {
+  background: linear-gradient(135deg, #00457e, #0068ba);
+  border-radius: var(--radius-lg); color: #fff;
+  padding: 40px 30px; text-align: center; box-shadow: var(--shadow-lg);
+}
+.contact-strip h2 { color: #fff; margin-bottom: 8px; }
+.contact-strip p { color: rgba(255,255,255,.9); margin-bottom: 22px; }
+.contact-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; }
+.btn-phone { background: #fff; color: var(--blue); font-size: 1.25rem; }
+.btn-line { background: #06c755; color: #fff; }
+.btn-line:hover { background: #05b34c; color: #fff; }
+
+/* ════════ FOOTER ════════ */
+.footer { background: var(--blue-dark); color: rgba(255,255,255,.85); padding: 36px 0 28px; margin-top: 56px; }
+.footer .cols { display: flex; flex-wrap: wrap; gap: 28px; justify-content: space-between; }
+.footer b { color: #fff; font-size: 1.05rem; display: block; margin-bottom: 8px; }
+.footer a { color: rgba(255,255,255,.85); }
+.footer a:hover { color: #fff; }
+.footer .copy { border-top: 1px solid rgba(255,255,255,.2); margin-top: 26px; padding-top: 18px; font-size: .95rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ════════ 1. HEADER ════════ -->
+<header class="header">
+  <div class="container">
+    <a class="brand" href="#">
+      <img src="assets/img/logo-mitr-phol.png" alt="MITR PHOL">
+      <span>MITR PHOL-SOIL</span>
+    </a>
+    <button class="menu-btn" aria-label="เปิดเมนู" onclick="document.querySelector('.nav').classList.toggle('open')">☰</button>
+    <nav class="nav" aria-label="เมนูหลัก">
+      <a href="#" class="active">หน้าหลัก</a>
+      <a href="#rounds">ปฏิทินรถ</a>
+      <a href="#price">ราคา</a>
+      <a href="#report">ผลวิเคราะห์</a>
+      <a href="#contact">ติดต่อเรา</a>
+      <a href="#book" class="header-cta">จองคิวตรวจดิน</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ════════ 2. HERO ════════ -->
+<section class="hero">
+  <div class="container">
+    <div>
+      <h1>ตรวจดิน<em>ฟรี</em> ถึงไร่คุณ<br>รู้ผลใน <em>6 ชั่วโมง</em></h1>
+      <p class="lead">รถวิเคราะห์ดินเคลื่อนที่ของมิตรผล ออกให้บริการใกล้พื้นที่ของท่าน
+        พร้อมคำแนะนำการใส่ปุ๋ยที่เหมาะกับดินของท่านโดยเฉพาะ</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#book">📅 จองคิวตรวจดิน — ฟรี</a>
+        <a class="btn btn-outline" href="#report">📄 ดูผลวิเคราะห์ของฉัน</a>
+      </div>
+      <div class="hero-trust">
+        <span>✅ ฟรี <b>ปีแรก</b></span>
+        <span>⏱️ รู้ผลใน <b>6 ชม.</b></span>
+        <span>🧪 วิเคราะห์ <b>ครบทุกธาตุอาหาร</b></span>
+      </div>
+    </div>
+    <div class="hero-img">
+      <img src="assets/img/soil-car.jpg" alt="รถวิเคราะห์ดินเคลื่อนที่มิตรผล">
+    </div>
+  </div>
+</section>
+
+<!-- ════════ 3. ทางลัด 4 การ์ด ════════ -->
+<section class="quick">
+  <div class="container">
+    <div class="quick-grid">
+      <a class="quick-card green" href="#book">
+        <span class="q-icon">📅</span>
+        <b>จองคิวตรวจดิน</b>
+        <small>เลือกวันที่รถมาใกล้บ้านท่าน ใช้เวลาจองไม่ถึง 2 นาที</small>
+        <span class="go">จองเลย →</span>
+      </a>
+      <a class="quick-card" href="#report">
+        <span class="q-icon">📄</span>
+        <b>ดูผลวิเคราะห์ดิน</b>
+        <small>เข้าสู่ระบบด้วยรหัสเกษตรกร หรือเลขบัตรประชาชน</small>
+        <span class="go">ดูผล →</span>
+      </a>
+      <a class="quick-card" href="#rounds">
+        <span class="q-icon">🚌</span>
+        <b>รถมาเมื่อไหร่</b>
+        <small>ดูปฏิทินรอบให้บริการในตำบล/อำเภอของท่าน</small>
+        <span class="go">ดูปฏิทิน →</span>
+      </a>
+      <a class="quick-card" href="#price">
+        <span class="q-icon">💰</span>
+        <b>บริการและราคา</b>
+        <small>รายการตรวจวิเคราะห์ และเงื่อนไขการใช้บริการ</small>
+        <span class="go">ดูราคา →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ 4. รอบบริการใกล้คุณ ════════ -->
+<section class="section" id="rounds">
+  <div class="container">
+    <div class="section-head">
+      <span class="tag">รอบให้บริการ</span>
+      <h2>รถตรวจดินกำลังจะไปที่ไหนบ้าง</h2>
+      <p class="sub">ตัวอย่างข้อมูล — หน้าโปรดักชันดึงจากปฏิทินบริการจริงผ่าน API เดิม</p>
+    </div>
+    <div class="rounds-list">
+      <a class="round-card" href="#">
+        <div class="round-date"><div class="d">17</div><div class="m">มิ.ย. 69</div></div>
+        <div class="round-place">
+          <b>บ้านหนองแวง ต.โคกสะอาด</b>
+          <span>อ.ภูเขียว จ.ชัยภูมิ · 08:30 – 15:30 น.</span>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+      <a class="round-card" href="#">
+        <div class="round-date"><div class="d">19</div><div class="m">มิ.ย. 69</div></div>
+        <div class="round-place">
+          <b>บ้านโนนสะอาด ต.หนองตูม</b>
+          <span>อ.ภูเขียว จ.ชัยภูมิ · 08:30 – 15:30 น.</span>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+      <a class="round-card" href="#">
+        <div class="round-date"><div class="d">24</div><div class="m">มิ.ย. 69</div></div>
+        <div class="round-place">
+          <b>บ้านดอนจำปา ต.โอโล</b>
+          <span>อ.ภูเขียว จ.ชัยภูมิ · 08:30 – 15:30 น.</span>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+    </div>
+    <div class="rounds-more">
+      <a class="btn btn-outline" href="#">ดูปฏิทินทั้งหมด + แผนที่ →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ 5. ขั้นตอนใช้บริการ ════════ -->
+<section class="section steps">
+  <div class="container">
+    <div class="section-head">
+      <span class="tag">ใช้บริการอย่างไร</span>
+      <h2>แค่ 4 ขั้นตอน ง่าย ๆ</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="num">1</div>
+        <b>จองคิวล่วงหน้า</b>
+        <p>จองผ่านเว็บนี้ หรือแจ้งเจ้าหน้าที่ส่งเสริมในพื้นที่</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <b>เก็บตัวอย่างดิน</b>
+        <p>เก็บดินจากแปลงตามคำแนะนำ สแกน QR ติดถุงตัวอย่าง</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <b>นำดินมาที่จุดบริการ</b>
+        <p>รถวิเคราะห์ดินมาถึงตำบลของท่านตามวันที่จอง</p>
+      </div>
+      <div class="step">
+        <div class="num">4</div>
+        <b>รับผล + คำแนะนำปุ๋ย</b>
+        <p>รู้ผลภายใน 6 ชั่วโมง พร้อมสูตรปุ๋ยที่เหมาะกับดินของท่าน</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ 6. ทำไมต้องเรา ════════ -->
+<section class="section" id="price">
+  <div class="container">
+    <div class="section-head">
+      <span class="tag">เปรียบเทียบ</span>
+      <h2>เทียบกับวิธีตรวจดินแบบอื่น</h2>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h3>ห้องปฏิบัติการทั่วไป</h3>
+        <ul>
+          <li><span class="ic">💸</span><span>ค่าตรวจ <b>2,000 บาท</b>/ตัวอย่าง</span></li>
+          <li><span class="ic">🐢</span><span>รอผล <b>2–3 สัปดาห์</b></span></li>
+          <li><span class="ic">🧪</span><span>วิเคราะห์ได้ทุกธาตุอาหาร</span></li>
+          <li><span class="ic">📍</span><span>ต้องเดินทางไปส่งเอง อยู่ไกล</span></li>
+        </ul>
+      </div>
+      <div class="compare-card hero-card">
+        <span class="ribbon">⭐ บริการของเรา</span>
+        <h3>รถวิเคราะห์ดินเคลื่อนที่</h3>
+        <ul>
+          <li><span class="ic">✅</span><span><b class="good">ฟรี (ปีที่ 1)</b> ไม่มีค่าใช้จ่าย</span></li>
+          <li><span class="ic">⚡</span><span>รู้ผลใน <b class="good">6 ชั่วโมง</b></span></li>
+          <li><span class="ic">🧪</span><span>ธาตุอาหารจำเป็น<b class="good">ครบถ้วน</b></span></li>
+          <li><span class="ic">🚌</span><span><b class="good">รถไปหาท่าน</b>ถึงตำบล</span></li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <h3>ชุดทดสอบ Test kit</h3>
+        <ul>
+          <li><span class="ic">💵</span><span>ค่าชุด <b>70 บาท</b>/ตัวอย่าง</span></li>
+          <li><span class="ic">⏱️</span><span>รู้ผลใน 30 นาที</span></li>
+          <li><span class="ic">⚠️</span><span>ตรวจได้<b>เฉพาะ NPK</b></span></li>
+          <li><span class="ic">🙋</span><span>ต้องทำเองทุกขั้นตอน</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ 7. ติดต่อ ════════ -->
+<section class="section" id="contact">
+  <div class="container">
+    <div class="contact-strip">
+      <h2>มีข้อสงสัย? ติดต่อเราได้เลย</h2>
+      <p>เจ้าหน้าที่พร้อมให้คำแนะนำ จันทร์ – ศุกร์ เวลา 08:30 – 16:30 น.</p>
+      <div class="contact-actions">
+        <a class="btn btn-phone" href="tel:000000000">📞 โทร 0-0000-0000</a>
+        <a class="btn btn-line" href="#">💬 แอดไลน์สอบถาม</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ FOOTER ════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="cols">
+      <div style="max-width:420px">
+        <b>MITR PHOL-SOIL</b>
+        มิตรผลวิจัยพัฒนาอ้อยและน้ำตาล<br>
+        399 หมู่ที่ 1 ถ.ชุมแพ-ภูเขียว ต.โคกสะอาด อ.ภูเขียว จ.ชัยภูมิ 36110
+      </div>
+      <div>
+        <b>เมนูลัด</b>
+        <ul>
+          <li><a href="#book">จองคิวตรวจดิน</a></li>
+          <li><a href="#report">ดูผลวิเคราะห์ดิน</a></li>
+          <li><a href="#rounds">ปฏิทินให้บริการ</a></li>
+        </ul>
+      </div>
+      <div>
+        <b>ลิงก์ที่เกี่ยวข้อง</b>
+        <ul>
+          <li><a href="https://www.mitrphol.com/home">กลุ่มบริษัทมิตรผล</a></li>
+          <li><a href="https://www.mitrphol.com/research.php">ศูนย์นวัตกรรมและการวิจัย</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="copy">© MITR PHOL — All Rights Reserved · ตัวอย่างดีไซน์ Landing V2 (Preview)</div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,4 +1,3 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AxiosError } from 'axios';
 import React, {
   useCallback,
@@ -9,6 +8,7 @@ import React, {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { swalSuccessTimer, swalError, swalWarning, swalInfo, swalLoading, swalClose } from '@/utils/swal';
 
 import { GenButtonCircle } from '@/components/gui/GuiButton';
 import {
@@ -49,20 +49,28 @@ import {
   UpdateAnalysisStandardResultDto,
 } from '@/types/standard-sample/AnalysisStandards';
 
-
 const LabResult: React.FC = () => {
   const [laboratoryData, setLaboratoryData] = useState<Laboratory[]>();
   const [file, setFile] = useState<File | null>(null);
   const today = new Date().toISOString().split('T')[0];
   const [serviceDate, setServiceDate] = useState<string>(today);
-  const [serviceCalendars, setServiceCalendars] = useState<CalendarInfoInterface[]>([]);
-  const [matchCalendar, setMatchCalendar] = useState<CalendarInfoInterface[]>([]);
+  const [serviceCalendars, setServiceCalendars] = useState<
+    CalendarInfoInterface[]
+  >([]);
+  const [matchCalendar, setMatchCalendar] = useState<CalendarInfoInterface[]>(
+    []
+  );
   const [buses, setBuses] = useState<Bus[]>([]);
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null);
-  const [selectedServiceCalendar, setSelectedServiceCalendar] = useState<CalendarInfoInterface | null>(null);
+  const [selectedServiceCalendar, setSelectedServiceCalendar] =
+    useState<CalendarInfoInterface | null>(null);
   const [markedDates, setMarkedDates] = useState<MarkedDateStatus[]>([]);
-  const [modalServiceCalendars, setModalServiceCalendars] = useState<CalendarInfoInterface[]>([]);
-  const [markedDatesModal, setMarkedDatesModal] = useState<MarkedDateStatus[]>([]);
+  const [modalServiceCalendars, setModalServiceCalendars] = useState<
+    CalendarInfoInterface[]
+  >([]);
+  const [markedDatesModal, setMarkedDatesModal] = useState<MarkedDateStatus[]>(
+    []
+  );
 
   const [showModal, setShowModal] = useState<boolean>(false);
   const [analysisService, setAnalysisService] = useState<
@@ -71,11 +79,15 @@ const LabResult: React.FC = () => {
   const [analysisServiceRepeat, setAnalysisServiceRepeat] = useState<
     Array<{ qrCode: QrCode; result: sampleBlankResultInfo[] }>
   >([]);
-  const [receivedCalendar, setReceivedCalendar] = useState<CalendarInfoInterface[]>([]);
+  const [receivedCalendar, setReceivedCalendar] = useState<
+    CalendarInfoInterface[]
+  >([]);
   const [receivedService, setReceivedService] = useState<Book[]>([]);
   const [receivedDate, setReceivedDate] = useState<string>(today);
   const [receivedCar, setReceivedCar] = useState<number | null>(null);
-  const [receivedBusOption, setReceivedBusOption] = useState<{ value: number; name: string }[]>([]);
+  const [receivedBusOption, setReceivedBusOption] = useState<
+    { value: number; name: string }[]
+  >([]);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -87,12 +99,20 @@ const LabResult: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const [searchParam, setSearchParam] = useState<SearchServiceCalendar>({} as SearchServiceCalendar);
-  const [modalSearchParam, setModalSearchParam] = useState<SearchServiceCalendar>({} as SearchServiceCalendar);
+  const [searchParam, setSearchParam] = useState<SearchServiceCalendar>(
+    {} as SearchServiceCalendar
+  );
+  const [modalSearchParam, setModalSearchParam] =
+    useState<SearchServiceCalendar>({} as SearchServiceCalendar);
 
-  const [standardAnalysisData, setStandardAnalysisData] = useState<AnalysisStandardInterface[]>([]);
-  const [standardAnalysisData_blank, setStandardAnalysisData_blank] = useState<AnalysisStandardInterface | undefined>(undefined);
-  const [standardAnalysisData_standard, setStandardAnalysisData_standard] = useState<AnalysisStandardInterface[]>([]);
+  const [standardAnalysisData, setStandardAnalysisData] = useState<
+    AnalysisStandardInterface[]
+  >([]);
+  const [standardAnalysisData_blank, setStandardAnalysisData_blank] = useState<
+    AnalysisStandardInterface | undefined
+  >(undefined);
+  const [standardAnalysisData_standard, setStandardAnalysisData_standard] =
+    useState<AnalysisStandardInterface[]>([]);
 
   useEffect(() => {
     const fetchCalendar = async () => {
@@ -163,7 +183,9 @@ const LabResult: React.FC = () => {
         const response: Array<{
           qrCode: QrCode;
           result: sampleBlankResultInfo[];
-        }> = await getSampleResultsByServCalendarId(selectedServiceCalendar.serviceCalendarId);
+        }> = await getSampleResultsByServCalendarId(
+          selectedServiceCalendar.serviceCalendarId
+        );
         if (response) {
           const onlyExperiment = response.filter(
             object =>
@@ -233,8 +255,12 @@ const LabResult: React.FC = () => {
                 averageGroup?.map((result, index) => {
                   averageGroup[index] = {
                     ...result,
-                    preValue: result.preValue ? result?.preValue / repeatNumber : null,
-                    postValue: result.postValue ? result?.postValue / repeatNumber : null,
+                    preValue: result.preValue
+                      ? result?.preValue / repeatNumber
+                      : null,
+                    postValue: result.postValue
+                      ? result?.postValue / repeatNumber
+                      : null,
                   };
                 });
 
@@ -303,7 +329,9 @@ const LabResult: React.FC = () => {
       setLoading(true);
       const bus = receivedCalendar.find(item => item.busId === receivedCar);
       if (bus?.busId) {
-        const response: Book[] = await getReceivedBooksByServiceCalendarId(bus?.serviceCalendarId);
+        const response: Book[] = await getReceivedBooksByServiceCalendarId(
+          bus?.serviceCalendarId
+        );
         if (response) {
           const onlyReceived = response.filter(
             object => object.qrCode.status === SampleStatusEnum.RECEIVED
@@ -325,8 +353,12 @@ const LabResult: React.FC = () => {
         if (calendarId) {
           const data = await getAnalysisStandardsByCalendar(calendarId);
           setStandardAnalysisData(data);
-          setStandardAnalysisData_blank(data.find(item => item.type === 'blank'));
-          setStandardAnalysisData_standard(data.filter(item => item.type === 'crm'));
+          setStandardAnalysisData_blank(
+            data.find(item => item.type === 'blank')
+          );
+          setStandardAnalysisData_standard(
+            data.filter(item => item.type === 'crm')
+          );
         }
       } catch (error) {
         console.error('Error fetching standard analysis data:', error);
@@ -343,12 +375,7 @@ const LabResult: React.FC = () => {
 
   const handleSubmitPreValue = async (resultValue: ResultInput[]) => {
     if (!resultValue || resultValue.length === 0) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'ยังไม่มีค่าที่จะบันทึก',
-        text: 'กรุณากรอกค่าผลวิเคราะห์ก่อนกดบันทึก',
-        confirmButtonText: 'ตกลง',
-      });
+      await swalWarning('ยังไม่มีค่าที่จะบันทึก', 'กรุณากรอกค่าผลวิเคราะห์ก่อนกดบันทึก');
       return;
     }
 
@@ -365,20 +392,9 @@ const LabResult: React.FC = () => {
         : false;
 
       if (pendingCalculation) {
-        await Swal.fire({
-          icon: 'info',
-          title: 'บันทึกค่าดิบแล้ว',
-          text: 'ระบบยังไม่คำนวณค่าหลังแปลงสำหรับ OM/P เพราะยังไม่มีค่า Working Standard ครบถ้วน',
-          confirmButtonText: 'ตกลง',
-        });
+        await swalInfo('บันทึกค่าดิบแล้ว', 'ระบบยังไม่คำนวณค่าหลังแปลงสำหรับ OM/P เพราะยังไม่มีค่า Working Standard ครบถ้วน');
       } else {
-        await Swal.fire({
-          icon: 'success',
-          title: 'บันทึกผลวิเคราะห์สำเร็จ',
-          text: 'ระบบบันทึกและคำนวณผลเรียบร้อยแล้ว',
-          timer: 1500,
-          confirmButtonText: 'ตกลง',
-        });
+        await swalSuccessTimer('บันทึกผลวิเคราะห์สำเร็จ', 'ระบบบันทึกและคำนวณผลเรียบร้อยแล้ว', 1500);
       }
 
       fetchExperimentService();
@@ -391,46 +407,44 @@ const LabResult: React.FC = () => {
         errorMessage.includes('Step3-Analysis Setting') ||
         errorMessage.includes('ตั้งค่าใน Step3');
 
-      await Swal.fire({
-        icon: isAnalysisSettingError ? 'warning' : 'error',
-        title: isAnalysisSettingError
-          ? 'ยังบันทึกค่าจากตารางไม่ได้'
-          : 'บันทึกค่าจากตารางไม่สำเร็จ',
-        text: isAnalysisSettingError
-          ? 'ค่านี้ต้องใช้การตั้งค่า Working Standard ใน Analysis Setting ให้ครบก่อน ระบบจึงจะบันทึกและคำนวณผลได้'
-          : errorMessage || 'กรุณาตรวจสอบค่าที่กรอกแล้วลองใหม่อีกครั้ง',
-        confirmButtonText: 'ตกลง',
-      });
+      if (isAnalysisSettingError) {
+        await swalWarning(
+          'ยังบันทึกค่าจากตารางไม่ได้',
+          'ค่านี้ต้องใช้การตั้งค่า Working Standard ใน Analysis Setting ให้ครบก่อน ระบบจึงจะบันทึกและคำนวณผลได้'
+        );
+      } else {
+        await swalError(
+          'บันทึกค่าจากตารางไม่สำเร็จ',
+          errorMessage || 'กรุณาตรวจสอบค่าที่กรอกแล้วลองใหม่อีกครั้ง'
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmitStandardPreValue = async (resultValue: UpdateAnalysisStandardResultDto[]) => {
+  const handleSubmitStandardPreValue = async (
+    resultValue: UpdateAnalysisStandardResultDto[]
+  ) => {
     if (resultValue && resultValue.length > 0) {
       setLoading(true);
       try {
         await inputAnalysisStandardResults(resultValue);
-        Swal.fire({
-          icon: 'success',
-          title: 'บันทึกสำเร็จ',
-          text: 'บันทึกข้อมูล Standard/Blank เรียบร้อยแล้ว',
-          timer: 1500,
-        });
+        swalSuccessTimer('บันทึกสำเร็จ', 'บันทึกข้อมูล Standard/Blank เรียบร้อยแล้ว', 1500);
         const calendarId = selectedServiceCalendar?.serviceCalendarId;
         if (calendarId) {
           const data = await getAnalysisStandardsByCalendar(calendarId);
           setStandardAnalysisData(data);
-          setStandardAnalysisData_blank(data.find(item => item.type === 'blank'));
-          setStandardAnalysisData_standard(data.filter(item => item.type === 'crm'));
+          setStandardAnalysisData_blank(
+            data.find(item => item.type === 'blank')
+          );
+          setStandardAnalysisData_standard(
+            data.filter(item => item.type === 'crm')
+          );
         }
       } catch (error) {
         console.error('Error submitting standard result:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'เกิดข้อผิดพลาด',
-          text: 'ไม่สามารถบันทึกข้อมูลได้',
-        });
+        swalError('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้');
       }
       setLoading(false);
     }
@@ -452,7 +466,10 @@ const LabResult: React.FC = () => {
     return Array.from(new Set([...labelsFromAnalysis, ...labelsFromStandard]));
   }, [analysisService, standardAnalysisData]);
 
-  const csvHeaders = useMemo(() => ['sampleCode', 'type', ...allLabLabels], [allLabLabels]);
+  const csvHeaders = useMemo(
+    () => ['sampleCode', 'type', ...allLabLabels],
+    [allLabLabels]
+  );
 
   const csvRows = useMemo(() => {
     const rows: (string | number)[][] = [];
@@ -468,7 +485,9 @@ const LabResult: React.FC = () => {
 
     [...analysisService]
       .filter(item => !repeatBaseCodes.has(item.qrCode.book.sampleCode))
-      .sort((a, b) => a.qrCode.book.sampleCode.localeCompare(b.qrCode.book.sampleCode))
+      .sort((a, b) =>
+        a.qrCode.book.sampleCode.localeCompare(b.qrCode.book.sampleCode)
+      )
       .forEach(item => {
         const sampleCode = item.qrCode.book.sampleCode;
         const values = allLabLabels.map(label => {
@@ -476,13 +495,17 @@ const LabResult: React.FC = () => {
             const labLabel = `${r.laboratorySetting.laboratory.shortNameBefore} (${r.laboratorySetting.laboratory.unitBefore})`;
             return labLabel === label;
           });
-          return !match || match.preValue == null || match.preValue === 0 ? '' : match.preValue;
+          return !match || match.preValue == null || match.preValue === 0
+            ? ''
+            : match.preValue;
         });
         rows.push([sampleCode, 'sample', ...values]);
       });
 
     [...analysisServiceRepeat]
-      .sort((a, b) => a.qrCode.book.sampleCode.localeCompare(b.qrCode.book.sampleCode))
+      .sort((a, b) =>
+        a.qrCode.book.sampleCode.localeCompare(b.qrCode.book.sampleCode)
+      )
       .forEach(item => {
         const sampleCode = item.qrCode.book.sampleCode;
         const values = allLabLabels.map(label => {
@@ -490,7 +513,9 @@ const LabResult: React.FC = () => {
             const labLabel = `${r.laboratorySetting.laboratory.shortNameBefore} (${r.laboratorySetting.laboratory.unitBefore})`;
             return labLabel === label;
           });
-          return !match || match.preValue == null || match.preValue === 0 ? '' : match.preValue;
+          return !match || match.preValue == null || match.preValue === 0
+            ? ''
+            : match.preValue;
         });
         rows.push([sampleCode, 'sample', ...values]);
       });
@@ -508,36 +533,34 @@ const LabResult: React.FC = () => {
             const labLabel = `${r.laboratorySetting?.laboratory?.shortNameBefore ?? ''} (${r.laboratorySetting?.laboratory?.unitBefore ?? ''})`;
             return labLabel === label;
           });
-          return !match || match.preValue == null || match.preValue === 0 ? '' : match.preValue;
+          return !match || match.preValue == null || match.preValue === 0
+            ? ''
+            : match.preValue;
         });
         rows.push([`${item.name}/${rep}`, item.type, ...values]);
       });
     });
 
     return rows;
-  }, [analysisService, analysisServiceRepeat, standardAnalysisData, allLabLabels]);
+  }, [
+    analysisService,
+    analysisServiceRepeat,
+    standardAnalysisData,
+    allLabLabels,
+  ]);
 
   const csvFileName = `Labresult_${serviceDate}_${selectedBusId ?? 'unknown'}.csv`;
 
   const handleUploadCSV = async () => {
     if (!file) {
-      await Swal.fire({
-        title: 'ยังไม่ได้เลือกไฟล์',
-        text: 'กรุณาเลือกไฟล์ CSV ก่อนทำการอัปโหลด',
-        icon: 'warning',
-      });
+      await swalWarning('ยังไม่ได้เลือกไฟล์', 'กรุณาเลือกไฟล์ CSV ก่อนทำการอัปโหลด');
       return;
     }
-    Swal.fire({
-      title: 'กำลังอัปโหลด...',
-      text: 'ระบบกำลังประมวลผลข้อมูลจากไฟล์ กรุณารอสักครู่',
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading(),
-    });
+    swalLoading('กำลังอัปโหลด…');
     setLoading(true);
     try {
       const result = await uploadCsvFile(file);
-      Swal.close();
+      swalClose();
       const s = result.sample.summary;
       await Swal.fire({
         title: 'อัปโหลดสำเร็จ',
@@ -550,17 +573,20 @@ const LabResult: React.FC = () => {
         `,
         icon: 'success',
         confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#005092',
+        customClass: {
+          popup: 'swal-mordin-popup',
+          confirmButton: 'swal-mordin-confirm',
+          title: 'swal-mordin-title',
+          htmlContainer: 'swal-mordin-text',
+          icon: 'swal-mordin-icon',
+        }
       });
       fetchExperimentService();
     } catch (err) {
-      Swal.close();
+      swalClose();
       console.error('Upload error:', err);
-      await Swal.fire({
-        title: 'เกิดข้อผิดพลาด',
-        text: 'ไม่สามารถอัปโหลดไฟล์ได้ กรุณาตรวจสอบรูปแบบไฟล์หรือลองใหม่อีกครั้ง',
-        icon: 'error',
-        confirmButtonText: 'ตกลง',
-      });
+      await swalError('เกิดข้อผิดพลาด', 'ไม่สามารถอัปโหลดไฟล์ได้ กรุณาตรวจสอบรูปแบบไฟล์หรือลองใหม่อีกครั้ง');
     } finally {
       setLoading(false);
     }
@@ -571,31 +597,17 @@ const LabResult: React.FC = () => {
 
   const handleSave = async () => {
     if (selectedServiceCalendar) {
-      Swal.fire({
-        title: 'บันทึกข้อมูล...',
-        text: 'ระบบกำลังบันทึกตัวอย่าง กรุณารอสักครู่',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-      });
+      swalLoading('บันทึกข้อมูล…');
       try {
         await selectReceivedBooksByByServiceCalendarId(
           selectedServiceCalendar.serviceCalendarId,
           selectedRows
         );
-        Swal.fire({
-          icon: 'success',
-          title: 'บันทึกสำเร็จ',
-          text: 'ข้อมูลได้รับการบันทึกเรียบร้อยแล้ว',
-          timer: 1000,
-        });
+        swalSuccessTimer('บันทึกสำเร็จ', 'ข้อมูลได้รับการบันทึกเรียบร้อยแล้ว', 1000);
         fetchExperimentService();
       } catch (error) {
         console.error('Error:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'เกิดข้อผิดพลาด',
-          text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
-        });
+        swalError('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
       } finally {
         setSelectedRows([]);
         setShowModal(false);
@@ -609,14 +621,17 @@ const LabResult: React.FC = () => {
 
   const handleSetParameters = () => {
     if (selectedServiceCalendar) {
-      navigate(`/officer/lab-result/${selectedServiceCalendar.serviceCalendarId}/input-result`, {
-        state: {
-          serviceCalendarId: selectedServiceCalendar.serviceCalendarId,
-          busId: selectedBusId,
-          busName: selectedServiceCalendar.bus.busName,
-          analysisService,
-        },
-      });
+      navigate(
+        `/officer/lab-result/${selectedServiceCalendar.serviceCalendarId}/input-result`,
+        {
+          state: {
+            serviceCalendarId: selectedServiceCalendar.serviceCalendarId,
+            busId: selectedBusId,
+            busName: selectedServiceCalendar.bus.busName,
+            analysisService,
+          },
+        }
+      );
     } else {
       alert('No service calendar found for the selected date and bus.');
     }
@@ -643,6 +658,14 @@ const LabResult: React.FC = () => {
           confirmButtonText: 'ตกลง',
           timer: 2000,
           timerProgressBar: true,
+          confirmButtonColor: '#dc3545',
+          customClass: {
+            popup: 'swal-mordin-popup',
+            confirmButton: 'swal-mordin-confirm',
+            title: 'swal-mordin-title',
+            htmlContainer: 'swal-mordin-text',
+            icon: 'swal-mordin-icon',
+          }
         }).then(() => {
           alertedCodeRef.current = null;
         });
@@ -669,6 +692,14 @@ const LabResult: React.FC = () => {
           text: `ไม่พบผลวิเคราะห์ที่ repeat = ${Number(repeatCount)} และ shortNameBefore = ${shortNameBefore}`,
           confirmButtonText: 'ตกลง',
           timer: 1500,
+          confirmButtonColor: '#dc3545',
+          customClass: {
+            popup: 'swal-mordin-popup',
+            confirmButton: 'swal-mordin-confirm',
+            title: 'swal-mordin-title',
+            htmlContainer: 'swal-mordin-text',
+            icon: 'swal-mordin-icon',
+          }
         });
       }
       setSelectedResult(null);
@@ -682,51 +713,72 @@ const LabResult: React.FC = () => {
   };
 
   return (
-    <>
-      <div className="row">
-        <div className="col-md-4 col-lg-4">
-          <GenFormDate2
-            isRequired={false}
-            id="serviceDate"
-            name="serviceDate"
-            label="วันที่ให้บริการ"
-            value={serviceDate}
-            onChange={setServiceDate}
-            desc={`ค่าเริ่มต้น คือ วันนี้ (${new Date().toLocaleDateString('th-TH')})`}
-            markedDatesWithStatus={markedDates}
-            onMonthYearChange={(year, month) => setSearchParam({ year, month })}
-          />
+    <div className="private-page-transition">
+      {/* Page Header */}
+      <div className="page-header d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+        <div>
+          <h1 className="h3 fw-bold text-dark mb-1">
+            <i className="fas fa-vial me-2 text-primary" />
+            บันทึกผลการวิเคราะห์ดิน
+          </h1>
+          <p className="text-muted mb-0">
+            ระบุข้อมูลผลการวิเคราะห์ทางห้องปฏิบัติการ นำเข้าข้อมูลผ่านไฟล์
+            หรือสแกน QR Code เพื่อประมวลผล
+          </p>
         </div>
-        <div className="col-md-4 col-lg-4">
-          <GenFormSelect
-            isRequired={false}
-            id="carSelect"
-            name="carSelect"
-            label="รถที่ให้บริการ"
-            value={selectedBusId ?? undefined}
-            onChange={e => setSelectedBusId(Number(e.target.value))}
-            options={buses.map(bus => ({
-              value: bus.busId,
-              name: `${bus.busNumber}-${bus.busName} (${bus.licensePlate})`,
-            }))}
-          />
+      </div>
+
+      {/* Filter and Date Panel */}
+      <div className="private-card mb-4">
+        <div className="private-card-body p-4">
+          <div className="row g-3">
+            <div className="col-md-6 col-lg-4 text-start">
+              <GenFormDate2
+                isRequired={false}
+                id="serviceDate"
+                name="serviceDate"
+                label="วันที่ให้บริการ"
+                value={serviceDate}
+                onChange={setServiceDate}
+                desc={`ค่าเริ่มต้น คือ วันนี้ (${new Date().toLocaleDateString('th-TH')})`}
+                markedDatesWithStatus={markedDates}
+                onMonthYearChange={(year, month) =>
+                  setSearchParam({ year, month })
+                }
+              />
+            </div>
+            <div className="col-md-6 col-lg-4 text-start">
+              <GenFormSelect
+                isRequired={false}
+                id="carSelect"
+                name="carSelect"
+                label="รถที่ให้บริการ"
+                value={selectedBusId ?? undefined}
+                onChange={e => setSelectedBusId(Number(e.target.value))}
+                options={buses.map(bus => ({
+                  value: bus.busId,
+                  name: `${bus.busNumber}-${bus.busName} (${bus.licensePlate})`,
+                }))}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       {selectedServiceCalendar ? (
         <>
           {/* Tools row: Scanner | CSV | Online input */}
-          <div className="row mt-4">
+          <div className="row g-4 mt-2">
             <div className="col-md-6">
-              <div className="private-metric-card h-100">
-                <div className="private-card-header d-flex align-items-center justify-content-between">
-                  <h4 className="private-card-title mb-0">
-                    <i className="fas fa-qrcode me-2" />
-                    สแกน QR Code
-                  </h4>
+              <div className="private-card h-100 shadow-sm border-0">
+                <div className="private-card-header d-flex align-items-center justify-content-between bg-light py-3">
+                  <h5 className="mb-0 fw-bold text-dark">
+                    <i className="fas fa-qrcode me-2 text-primary" />
+                    สแกน QR Code ผลวิเคราะห์
+                  </h5>
                 </div>
-                <div className="private-card-body">
-                  <div className="row">
+                <div className="private-card-body p-4">
+                  <div className="row g-3 align-items-center">
                     <div className="col-md-6 d-flex justify-content-center">
                       <QrScanner
                         readerId="qr-reader"
@@ -744,43 +796,66 @@ const LabResult: React.FC = () => {
                               shortNameBefore = parts[4] || '';
                             }
                           }
-                          handleScanResult(sampleCode, repeatCount, shortNameBefore);
+                          handleScanResult(
+                            sampleCode,
+                            repeatCount,
+                            shortNameBefore
+                          );
                         }}
                         onScanError={() => {}}
                       />
                     </div>
                     <div className="col-md-6 d-flex flex-column justify-content-center gap-3">
                       <div className="d-flex align-items-center gap-2">
-                        <span className="fw-bold text-nowrap">รหัสตัวอย่าง:</span>
-                        <span>{selectedResult?.qrCode.book.sampleCode ?? '-'}</span>
+                        <span className="fw-bold text-nowrap">
+                          รหัสตัวอย่าง:
+                        </span>
+                        <span className="private-chip private-chip-gray">
+                          {selectedResult?.qrCode.book.sampleCode ?? '-'}
+                        </span>
                       </div>
                       <div className="d-flex align-items-center gap-2">
-                        <span className="text-nowrap">
-                          {selectedResult?.result.laboratorySetting.laboratory.shortNameBefore ?? ''}
+                        <span className="fw-semibold text-nowrap">
+                          {selectedResult?.result.laboratorySetting.laboratory
+                            .shortNameBefore ?? 'ยังไม่เลือก'}{' '}
+                          (
+                          {selectedResult?.result.laboratorySetting.laboratory
+                            .unitBefore ?? ''}
+                          ):
                         </span>
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder={
-                            selectedResult?.result.laboratorySetting.laboratory.shortNameBefore ?? ''
-                          }
-                          value={resultValue[0]?.preValue ?? ''}
-                          onChange={e => {
-                            const newPreValue = Number(e.target.value);
-                            setResultvalue(prev =>
-                              prev.length === 0
-                                ? [{ resultId: Number(selectedResult?.result?.resultId), preValue: newPreValue }]
-                                : [{ ...prev[0], preValue: newPreValue }]
-                            );
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-success text-nowrap"
-                          onClick={() => handleSubmitPreValue(resultValue)}
-                        >
-                          ส่งค่า
-                        </button>
+                        <div className="input-group">
+                          <input
+                            type="number"
+                            className="form-control"
+                            placeholder={
+                              selectedResult?.result.laboratorySetting
+                                .laboratory.shortNameBefore ?? ''
+                            }
+                            value={resultValue[0]?.preValue ?? ''}
+                            onChange={e => {
+                              const newPreValue = Number(e.target.value);
+                              setResultvalue(prev =>
+                                prev.length === 0
+                                  ? [
+                                      {
+                                        resultId: Number(
+                                          selectedResult?.result?.resultId
+                                        ),
+                                        preValue: newPreValue,
+                                      },
+                                    ]
+                                  : [{ ...prev[0], preValue: newPreValue }]
+                              );
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-success"
+                            onClick={() => handleSubmitPreValue(resultValue)}
+                          >
+                            ส่งค่า
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -789,15 +864,19 @@ const LabResult: React.FC = () => {
             </div>
 
             <div className="col-md-3">
-              <div className="private-metric-card h-100">
-                <div className="private-card-header d-flex align-items-center justify-content-between">
-                  <h4 className="private-card-title mb-0">
-                    <i className="fas fa-file-csv me-2" />
-                    นำเข้า CSV
-                  </h4>
+              <div className="private-card h-100 shadow-sm border-0">
+                <div className="private-card-header d-flex align-items-center justify-content-between bg-light py-3">
+                  <h5 className="mb-0 fw-bold text-dark">
+                    <i className="fas fa-file-csv me-2 text-success" />
+                    นำเข้าไฟล์ CSV
+                  </h5>
                 </div>
-                <div className="private-card-body d-flex flex-column gap-2">
-                  <CsvTemplateDownload headers={csvHeaders} rows={csvRows} fileName={csvFileName}>
+                <div className="private-card-body p-4 d-flex flex-column gap-3">
+                  <CsvTemplateDownload
+                    headers={csvHeaders}
+                    rows={csvRows}
+                    fileName={csvFileName}
+                  >
                     ดาวน์โหลด input.csv
                   </CsvTemplateDownload>
                   <input
@@ -806,7 +885,11 @@ const LabResult: React.FC = () => {
                     accept=".csv"
                     onChange={handleFileChange}
                   />
-                  <button type="button" className="btn btn-success" onClick={handleUploadCSV}>
+                  <button
+                    type="button"
+                    className="btn btn-success w-100"
+                    onClick={handleUploadCSV}
+                  >
                     <i className="fas fa-upload me-2" />
                     ส่งค่าไฟล์
                   </button>
@@ -815,24 +898,24 @@ const LabResult: React.FC = () => {
             </div>
 
             <div className="col-md-3">
-              <div className="private-metric-card h-100">
-                <div className="private-card-header d-flex align-items-center justify-content-between">
-                  <h4 className="private-card-title mb-0">
-                    <i className="fas fa-keyboard me-2" />
+              <div className="private-card h-100 shadow-sm border-0">
+                <div className="private-card-header d-flex align-items-center justify-content-between bg-light py-3">
+                  <h5 className="mb-0 fw-bold text-dark">
+                    <i className="fas fa-keyboard me-2 text-info" />
                     ป้อนค่าออนไลน์
-                  </h4>
+                  </h5>
                 </div>
-                <div className="private-card-body">
-                  <p className="text-muted mb-0">โปรดเลือกปฏิบัติการที่ต้องการดำเนินการ</p>
-                </div>
-                <div className="private-card-footer">
+                <div className="private-card-body p-4 d-flex flex-column justify-content-between">
+                  <p className="text-muted mb-3">
+                    ระบุค่าผลการทดลองทางแล็บหลายแถวพร้อมกันในหน้ารวมตารางแบบโต้ตอบ
+                  </p>
                   <button
                     type="button"
-                    className="btn btn-success w-100"
+                    className="btn btn-primary w-100 py-2 fw-semibold"
                     onClick={handleSetParameters}
                   >
                     <i className="fas fa-cogs me-2" />
-                    กำหนดค่า
+                    ไปหน้าบันทึกรวม
                   </button>
                 </div>
               </div>
@@ -865,7 +948,9 @@ const LabResult: React.FC = () => {
                   onChange={setReceivedDate}
                   desc={`ค่าเริ่มต้น คือ วันนี้ (${new Date().toLocaleDateString('th-TH')})`}
                   markedDatesWithStatus={markedDatesModal}
-                  onMonthYearChange={(year, month) => setModalSearchParam({ year, month })}
+                  onMonthYearChange={(year, month) =>
+                    setModalSearchParam({ year, month })
+                  }
                 />
               </div>
               <div className="col-md-4 col-lg-4">
@@ -944,9 +1029,8 @@ const LabResult: React.FC = () => {
           ไม่พบข้อมูลการให้บริการในวันนี้
         </div>
       )}
-    </>
+    </div>
   );
 };
 
 export default LabResult;
-

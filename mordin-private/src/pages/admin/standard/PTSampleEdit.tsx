@@ -134,7 +134,9 @@ const PTSampleEdit: React.FC = () => {
               />
             </div>
 
-            <h4 className="private-card-title mt-4 mb-0">ตารางบันทึกผลการทดลอง</h4>
+            <h4 className="private-card-title mt-4 mb-0">
+              ตารางบันทึกผลการทดลอง
+            </h4>
             <table className="table table-bordered mt-3">
               <thead>
                 <tr>
@@ -204,4 +206,3 @@ const PTSampleEdit: React.FC = () => {
 };
 
 export default PTSampleEdit;
-

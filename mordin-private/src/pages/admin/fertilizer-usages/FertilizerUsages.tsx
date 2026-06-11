@@ -100,9 +100,7 @@ const FertilizerUsages = () => {
                   Total score ={' '}
                   {serviceType?.soilGrades
                     ?.filter(item => item?.laboratory?.shortNameAfter)
-                    .map(
-                      item => `score( ${item.laboratory?.shortNameAfter} )`
-                    )
+                    .map(item => `score( ${item.laboratory?.shortNameAfter} )`)
                     .join(' + ')}
                 </small>
               </div>
@@ -210,4 +208,3 @@ const FertilizerUsages = () => {
 };
 
 export default FertilizerUsages;
-

@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateProvinceDto } from './dto/create-province.dto';
 import { UpdateProvinceDto } from './dto/update-province.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Province } from './entities/province.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class ProvincesService {
   constructor(
     @InjectRepository(Province)
-    private provinceRepo: Repository<Province>,
+    private provinceRepo: Repository<Province>
   ) {}
 
   create(createProvinceDto: CreateProvinceDto) {
@@ -18,7 +19,7 @@ export class ProvincesService {
 
   findAll() {
     return this.provinceRepo.find({
-      relations : ['geography']
+      relations: ['geography'],
     });
   }
 
@@ -36,8 +37,8 @@ export class ProvincesService {
 
   getProvinceByGeographyId(geographyId: number) {
     return this.provinceRepo.find({
-      where : { geographyId },
-      relations : ['geography']
-    })
+      where: { geographyId },
+      relations: ['geography'],
+    });
   }
 }

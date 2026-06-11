@@ -72,13 +72,17 @@ const StandardTableInfo: React.FC<StandardTableInfoProps> = ({
                         <div>
                           <strong>{standard.standardName}</strong>
                           {isExisting && (
-                            <span className="badge bg-secondary ms-2">บันทึกแล้ว</span>
+                            <span className="badge bg-secondary ms-2">
+                              บันทึกแล้ว
+                            </span>
                           )}
                         </div>
                         <div className="d-flex align-items-center">
                           {!isExisting && (
                             <>
-                              <small className="ms-2 text-muted">จำนวน repeat &nbsp;</small>
+                              <small className="ms-2 text-muted">
+                                จำนวน repeat &nbsp;
+                              </small>
                               <GenButtonCircle
                                 color="btn-outline-secondary btn-sm"
                                 icon="fa fa-minus"
@@ -110,7 +114,9 @@ const StandardTableInfo: React.FC<StandardTableInfoProps> = ({
                             icon="fa fa-trash"
                             onClick={() => {
                               if (isExisting && analysisStandard) {
-                                void onDelete(analysisStandard.analysisStandardId);
+                                void onDelete(
+                                  analysisStandard.analysisStandardId
+                                );
                               } else {
                                 onRemove(standard.standardId);
                               }

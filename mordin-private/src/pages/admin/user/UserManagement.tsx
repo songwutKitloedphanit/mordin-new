@@ -1,4 +1,4 @@
-﻿import 'datatables.net-bs5';
+import 'datatables.net-bs5';
 
 import $ from 'jquery';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -12,14 +12,19 @@ import {
 import { Department } from '../../../types/Department';
 import { User, UserRole, UserSummary } from '../../../types/User';
 
+import { ManagementKpiRow } from '@/components/gui/ManagementKpiCard';
+import RowAvatar from '@/components/gui/RowAvatar';
 import { TableSkeleton } from '@/components/gui/Skeleton';
 
 const TABLE_ID = 'user-management-table';
 
 const ROLE_BADGE: Record<UserRole, { label: string; cls: string }> = {
-  [UserRole.Admin]: { label: 'Admin', cls: 'badge bg-danger' },
-  [UserRole.Staff]: { label: 'Staff', cls: 'badge bg-info' },
-  [UserRole.Executive]: { label: 'Executive', cls: 'badge bg-success' },
+  [UserRole.Admin]: { label: 'Admin', cls: 'private-chip private-chip-red' },
+  [UserRole.Staff]: { label: 'Staff', cls: 'private-chip private-chip-blue' },
+  [UserRole.Executive]: {
+    label: 'Executive',
+    cls: 'private-chip private-chip-green',
+  },
 };
 
 const KPI_CONFIG = [
@@ -27,28 +32,28 @@ const KPI_CONFIG = [
     key: 'totalUsers' as keyof UserSummary,
     label: 'ผู้ใช้ทั้งหมด',
     icon: 'fas fa-users',
-    accent: '#3b9bd9',
+    accentColor: '#3b9bd9',
     unit: 'คน',
   },
   {
     key: 'adminAmount' as keyof UserSummary,
     label: 'Admin',
     icon: 'fas fa-user-shield',
-    accent: '#e05252',
+    accentColor: '#e05252',
     unit: 'คน',
   },
   {
     key: 'staffAmount' as keyof UserSummary,
     label: 'Staff',
     icon: 'fas fa-user-tie',
-    accent: '#17a2b8',
+    accentColor: '#17a2b8',
     unit: 'คน',
   },
   {
     key: 'executiveAmount' as keyof UserSummary,
     label: 'Executive',
     icon: 'fas fa-user-check',
-    accent: '#4caf7d',
+    accentColor: '#4caf7d',
     unit: 'คน',
   },
 ];
@@ -123,7 +128,12 @@ const UserManagement = () => {
         { targets: 1, width: '15%', className: 'private-user-table-name' },
         { targets: 2, width: '27%', className: 'private-user-table-dept' },
         { targets: 3, width: '11%', className: 'private-user-table-role' },
-        { targets: 4, width: '10%', orderable: false, className: 'private-user-table-actions' },
+        {
+          targets: 4,
+          width: '10%',
+          orderable: false,
+          className: 'private-user-table-actions',
+        },
         { targets: 5, width: '16%', className: 'private-user-table-date' },
       ],
     }) as DataTables.Api;
@@ -149,9 +159,13 @@ const UserManagement = () => {
     // Column 2 = department, Column 3 = role badge text
     dt.search(search);
     dt.column(3).search(filterRole || '', false, false);
-    dt.column(2).search(filterDeptId ? deptMap[Number(filterDeptId)] ?? '' : '', false, false);
+    dt.column(2).search(
+      filterDeptId ? (deptMap[Number(filterDeptId)] ?? '') : '',
+      false,
+      false
+    );
     dt.draw();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, filterRole, filterDeptId]);
 
   const deptMap = useMemo(
@@ -170,96 +184,12 @@ const UserManagement = () => {
   return (
     <>
       {/* KPI Cards */}
-      <div className="row g-3 mb-4">
-        {KPI_CONFIG.map(cfg => {
-          const value = summary?.[cfg.key] ?? 0;
-          return (
-            <div key={cfg.key} className="col-sm-6 col-lg-3">
-              {loading ? (
-                <div
-                  className="private-metric-card h-100"
-                  style={{ borderLeft: '4px solid rgba(128,128,128,0.2)' }}
-                >
-                  <div className="private-card-body py-3 px-4">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div className="flex-fill">
-                        <div className="placeholder-glow mb-2">
-                          <span
-                            className="placeholder d-block rounded"
-                            style={{ height: 11, width: '55%' }}
-                          />
-                        </div>
-                        <div className="placeholder-glow">
-                          <span
-                            className="placeholder d-block rounded"
-                            style={{ height: 40, width: '45%' }}
-                          />
-                        </div>
-                      </div>
-                      <div
-                        className="rounded-circle flex-shrink-0"
-                        style={{
-                          width: 64,
-                          height: 64,
-                          backgroundColor: 'rgba(128,128,128,0.1)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="private-metric-card h-100"
-                  style={{ borderLeft: `4px solid ${cfg.accent}` }}
-                >
-                  <div className="private-card-body py-3 px-4">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div>
-                        <div
-                          className="text-muted fw-semibold text-uppercase mb-2"
-                          style={{
-                            fontSize: '0.85rem',
-                            letterSpacing: '0.6px',
-                          }}
-                        >
-                          {cfg.label}
-                        </div>
-                        <div className="d-flex align-items-baseline gap-1">
-                          <span
-                            className="fw-bold"
-                            style={{ fontSize: '3.5rem', lineHeight: 1 }}
-                          >
-                            {value}
-                          </span>
-                          <span
-                            className="text-muted"
-                            style={{ fontSize: '1rem' }}
-                          >
-                            {cfg.unit}
-                          </span>
-                        </div>
-                      </div>
-                      <div
-                        className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                        style={{
-                          width: 64,
-                          height: 64,
-                          backgroundColor: `${cfg.accent}1a`,
-                        }}
-                      >
-                        <i
-                          className={cfg.icon}
-                          style={{ color: cfg.accent, fontSize: '1.8rem' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      <ManagementKpiRow
+        configs={KPI_CONFIG}
+        data={summary as Record<keyof UserSummary, number>}
+        loading={loading}
+        colClass="col-sm-6 col-lg-3"
+      />
 
       {/* Table Card */}
       <div className="row">
@@ -307,7 +237,11 @@ const UserManagement = () => {
                 ))}
               </select>
               {hasFilter && (
-                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={clearFilters}>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={clearFilters}
+                >
                   <i className="fas fa-times me-1" />
                   ล้างตัวกรอง
                 </button>
@@ -340,10 +274,16 @@ const UserManagement = () => {
                         return (
                           <tr key={user.userId}>
                             <td>{user.email}</td>
-                            <td>{user.firstName} {user.lastName}</td>
+                            <td>
+                              <RowAvatar
+                                name={`${user.firstName} ${user.lastName}`.trim()}
+                              />
+                            </td>
                             <td>{deptMap[user.departmentId] ?? '-'}</td>
                             <td data-search={user.role}>
-                              {badge && <span className={badge.cls}>{badge.label}</span>}
+                              {badge && (
+                                <span className={badge.cls}>{badge.label}</span>
+                              )}
                             </td>
                             <td>
                               <GenButtonCircle
@@ -369,4 +309,3 @@ const UserManagement = () => {
 };
 
 export default UserManagement;
-

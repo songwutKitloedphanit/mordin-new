@@ -6,11 +6,11 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
 } from '@nestjs/common';
-import { SubdistrictsService } from './subdistricts.service';
+
 import { CreateSubdistrictDto } from './dto/create-subdistrict.dto';
 import { UpdateSubdistrictDto } from './dto/update-subdistrict.dto';
+import { SubdistrictsService } from './subdistricts.service';
 
 @Controller('subdistricts')
 export class SubdistrictsController {
@@ -29,7 +29,7 @@ export class SubdistrictsController {
   @Get('by-district/:districtCode')
   getSubdistrictsByDistrictCode(@Param('districtCode') districtCode: number) {
     return this.subdistrictsService.getSubdistrictsByDistrictCode(
-      +districtCode,
+      +districtCode
     );
   }
 
@@ -41,7 +41,7 @@ export class SubdistrictsController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() updateSubdistrictDto: UpdateSubdistrictDto,
+    @Body() updateSubdistrictDto: UpdateSubdistrictDto
   ) {
     return this.subdistrictsService.update(+id, updateSubdistrictDto);
   }

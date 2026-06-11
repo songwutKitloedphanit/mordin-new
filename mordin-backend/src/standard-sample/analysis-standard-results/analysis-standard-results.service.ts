@@ -1,17 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AnalysisStandardResult } from './entities/analysis-standard-result.entity';
-import { Repository } from 'typeorm';
+import * as Papa from 'papaparse';
+import { LaboratorySetting } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.entity';
+import { RecordTypeEnum } from 'src/sample/enums/recode-type.enum';
+import { Repository, In } from 'typeorm';
+
 import {
   AnalysisStandard,
   StandardType,
 } from '../analysis-standards/entities/analysis-standard.entity';
-import { LaboratorySetting } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.entity';
 import { Standard } from '../standards/entities/standard.entity';
+
 import { UpdateAnalysisStandardResultFromFileDto } from './dto/update-analysis-standard-result-file.dto';
-import { In } from 'typeorm';
-import * as Papa from 'papaparse';
-import { RecordTypeEnum } from 'src/sample/enums/recode-type.enum';
+import { AnalysisStandardResult } from './entities/analysis-standard-result.entity';
 import { AnalysisStandardResultLog } from './entities/analysis-standard-result.log.entity';
 import { StandardCalculationService } from './standard-calculation.service';
 @Injectable()
@@ -30,8 +31,8 @@ export class AnalysisStandardResultsService {
     private standardRepo: Repository<Standard>,
     @InjectRepository(AnalysisStandardResultLog)
     private readonly analysisStandardResultLog: Repository<AnalysisStandardResultLog>,
-    private readonly standardCalculationService: StandardCalculationService,
-  ) { }
+    private readonly standardCalculationService: StandardCalculationService
+  ) {}
 
   async createWithAnalysisStandard(analysisStandard: AnalysisStandard) {
     if (analysisStandard.type === StandardType.CRM) {
@@ -94,12 +95,13 @@ export class AnalysisStandardResultsService {
       }
     }
   }
+
   async processBlankCsv(
     csvBuffer: Buffer,
     serviceCalendarId: number
   ): Promise<{ updatedCount: number; errors: any[] }> {
     const text = csvBuffer.toString('utf8');
-    const { data } = Papa.parse<{ sampleCode: string;[hdr: string]: string }>(
+    const { data } = Papa.parse<{ sampleCode: string; [hdr: string]: string }>(
       text,
       {
         header: true,
@@ -164,7 +166,7 @@ export class AnalysisStandardResultsService {
     serviceCalendarId: number
   ): Promise<{ updatedCount: number; errors: any[] }> {
     const text = csvBuffer.toString('utf8');
-    const { data } = Papa.parse<{ sampleCode: string;[hdr: string]: string }>(
+    const { data } = Papa.parse<{ sampleCode: string; [hdr: string]: string }>(
       text,
       {
         header: true,
@@ -176,7 +178,7 @@ export class AnalysisStandardResultsService {
     const all = await this.analysisStandardRepo.find({
       where: {
         serviceCalendarId,
-        type: StandardType.CRM
+        type: StandardType.CRM,
       },
       relations: [
         'analysisStandardResults',
@@ -228,6 +230,7 @@ export class AnalysisStandardResultsService {
     await this.updatePreValueFromFile(inputs);
     return { updatedCount: inputs.length, errors: [] };
   }
+
   async updatePreValueFromInput(
     inputs: UpdateAnalysisStandardResultFromFileDto[],
     uid: number
@@ -243,9 +246,9 @@ export class AnalysisStandardResultsService {
         laboratorySetting: {
           laboratory: {
             machineType: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (entities.length !== ids.length) {
@@ -278,9 +281,9 @@ export class AnalysisStandardResultsService {
         laboratorySetting: {
           laboratory: {
             machineType: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (entities.length !== ids.length) {

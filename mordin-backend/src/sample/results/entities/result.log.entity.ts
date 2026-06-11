@@ -1,16 +1,7 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
 import { DecimalTransformer } from 'src/common/transformers/decimal.tranformer';
-import { LaboratorySetting } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.entity';
 import { RecordTypeEnum } from 'src/sample/enums/recode-type.enum';
-import { User } from 'src/users/entities/user.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryColumn,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('results_logs')
 export class ResultLog extends BaseLogEntity {
@@ -32,7 +23,12 @@ export class ResultLog extends BaseLogEntity {
   @Column({ name: 'recorded_at', type: 'bigint', nullable: true })
   recordedAt: number;
 
-  @Column({ name: 'recorded_type', enum: RecordTypeEnum, type: 'enum', nullable: true })
+  @Column({
+    name: 'recorded_type',
+    enum: RecordTypeEnum,
+    type: 'enum',
+    nullable: true,
+  })
   recordedType: RecordTypeEnum;
 
   @Column({ name: 'recorded_uid', type: 'int', nullable: true })

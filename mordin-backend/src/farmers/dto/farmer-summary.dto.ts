@@ -2,11 +2,11 @@ import { IsNumber } from 'class-validator';
 
 export class FarmerSummaryDTO {
   @IsNumber()
-  totalFarmers : number;
+  totalFarmers: number;
 
   @IsNumber()
-  totalLands : number;
+  totalLands: number;
 
   @IsNumber()
-  totalSpaces : number;
+  totalSpaces: number;
 }

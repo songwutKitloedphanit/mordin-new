@@ -90,10 +90,7 @@ export default function ServiceTypeCard() {
                       >
                         {summary[cfg.key]}
                       </span>
-                      <span
-                        className="text-muted"
-                        style={{ fontSize: '1rem' }}
-                      >
+                      <span className="text-muted" style={{ fontSize: '1rem' }}>
                         {cfg.unit}
                       </span>
                     </div>
@@ -120,4 +117,3 @@ export default function ServiceTypeCard() {
     </div>
   );
 }
-

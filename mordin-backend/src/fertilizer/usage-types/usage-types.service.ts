@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateUsageTypeDto } from './dto/create-usage-type.dto';
 import { UpdateUsageTypeDto } from './dto/update-usage-type.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UsageType } from './entities/usage-type.entity';
-import { Repository } from 'typeorm';
 import { UsageTypeLog } from './entities/usage-type.log.entity';
 
 @Injectable()
@@ -13,9 +14,10 @@ export class UsageTypesService {
     private readonly usageTypeRepository: Repository<UsageType>,
 
     @InjectRepository(UsageTypeLog)
-    private readonly usageTypeLog: Repository<UsageTypeLog>,
-  ) { }
-  create(createUsageTypeDto: CreateUsageTypeDto , Uid: number) {
+    private readonly usageTypeLog: Repository<UsageTypeLog>
+  ) {}
+
+  create(createUsageTypeDto: CreateUsageTypeDto, Uid: number) {
     const usageType = this.usageTypeRepository.create({
       ...createUsageTypeDto,
       updateUid: Uid,
@@ -36,7 +38,11 @@ export class UsageTypesService {
     });
   }
 
-  async update(id: number, updateUsageTypeDto: UpdateUsageTypeDto, Uid: number) {
+  async update(
+    id: number,
+    updateUsageTypeDto: UpdateUsageTypeDto,
+    Uid: number
+  ) {
     const usageType = await this.usageTypeRepository.findOneBy({
       usageTypeId: id,
     });
@@ -58,7 +64,7 @@ export class UsageTypesService {
       throw new NotFoundException('UsageType not found');
     }
 
-    usageType.removedBy = userId;
+    (usageType as any).removedBy = userId;
 
     await this.usageTypeRepository.remove(usageType);
   }

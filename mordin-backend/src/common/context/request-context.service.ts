@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getNamespace, createNamespace } from 'cls-hooked';
+import { createNamespace } from 'cls-hooked';
 
 @Injectable()
 export class RequestContext {

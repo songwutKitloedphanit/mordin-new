@@ -22,6 +22,7 @@ $farmerProfile = $_SESSION['farmer_profile'];
 $farmerId = $farmerProfile['farmerId'];
 $error = null;
 $success = null;
+$showWelcome = ($_GET['welcome'] ?? '') === '1';
 
 // [!!] ดึงข้อมูลจังหวัดสำหรับ
 // Dropdown
@@ -83,7 +84,17 @@ include_once COMPONENT_PATH . 'lib_header.php';
             </div>
           <?php endif; ?>
 
-          <div class="card shadow border-0">
+          <?php if ($showWelcome): ?>
+            <div class="alert alert-success d-flex align-items-start gap-2 ag-slide-down">
+              <i class="bi bi-stars flex-shrink-0 mt-1"></i>
+              <div>
+                <strong>ยินดีต้อนรับ!</strong>
+                เพิ่มแปลงปลูกแรกของคุณเพื่อเริ่มจองคิววิเคราะห์ดิน
+              </div>
+            </div>
+          <?php endif; ?>
+
+          <div class="card shadow border-0 scroll-reveal stagger-1">
             <div class="card-header bg-white py-3">
               <h5 class="mb-0 fw-bold"><i class="bi bi-pin-map-fill me-2"></i> กรอกรายละเอียดแปลง</h5>
             </div>

@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateServiceFertilizerMinorUsageDto } from './dto/create-service-fertilizer-minor-usage.dto';
 import { UpdateServiceFertilizerMinorUsageDto } from './dto/update-service-fertilizer-minor-usage.dto';
 import { ServiceFertilizerMinorUsage } from './entities/service-fertilizer-minor-usage.entity';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
 import { ServiceFertilizerMinorUsageLog } from './entities/service-fertilizer-minor-usage.log.entity';
 
 @Injectable()
@@ -13,8 +14,9 @@ export class ServiceFertilizerMinorUsagesService {
     private readonly serviceFertilizerMinorUsageRepository: Repository<ServiceFertilizerMinorUsage>,
 
     @InjectRepository(ServiceFertilizerMinorUsageLog)
-    private readonly serviceFertilizerMinorUsageLog: Repository<ServiceFertilizerMinorUsageLog>,
+    private readonly serviceFertilizerMinorUsageLog: Repository<ServiceFertilizerMinorUsageLog>
   ) {}
+
   create(
     createServiceFertilizerMinorUsageDto: CreateServiceFertilizerMinorUsageDto,
     Uid: number

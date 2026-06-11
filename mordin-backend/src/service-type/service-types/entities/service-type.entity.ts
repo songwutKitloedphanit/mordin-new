@@ -42,46 +42,46 @@ export class ServiceType {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
 
-  @OneToMany(() => SoilGrade, (soilGrade) => soilGrade.serviceType, {
+  @OneToMany(() => SoilGrade, soilGrade => soilGrade.serviceType, {
     cascade: true,
   })
   soilGrades: SoilGrade[];
 
   @OneToMany(
     () => ServiceCategory,
-    (serviceCategory) => serviceCategory.serviceType,
+    serviceCategory => serviceCategory.serviceType,
     {
       cascade: true,
-    },
+    }
   )
   serviceCategories: ServiceCategory[];
 
-  @OneToMany(() => ServiceLaboratory, (servLab) => servLab.serviceType, {
+  @OneToMany(() => ServiceLaboratory, servLab => servLab.serviceType, {
     cascade: true,
   })
   serviceLaboratories: ServiceLaboratory[];
 
   @OneToMany(
     () => ServiceFertilizerMinor,
-    (servFerMinor) => servFerMinor.serviceType,
+    servFerMinor => servFerMinor.serviceType,
     {
       cascade: true,
-    },
+    }
   )
   serviceFertilizerMinors: ServiceFertilizerMinor[];
 
-  @OneToMany(() => ResultGrade, (resultGrade) => resultGrade.serviceType, {
+  @OneToMany(() => ResultGrade, resultGrade => resultGrade.serviceType, {
     cascade: true,
   })
   resultGrades: ResultGrade[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

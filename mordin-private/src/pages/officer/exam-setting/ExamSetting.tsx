@@ -132,7 +132,9 @@ const ExamSetting: React.FC = () => {
   const handleModalSave = async () => {
     if (!selectedServiceCalendarId) return;
     const savedStandardIds = new Set(
-      analysisStandards.filter(a => a.standardId != null).map(a => a.standardId!)
+      analysisStandards
+        .filter(a => a.standardId != null)
+        .map(a => a.standardId!)
     );
     const visibleCRM = selectedStandards.filter(
       (s): s is StandardInfo => s != null && s.type === StandardType.CRM
@@ -161,7 +163,9 @@ const ExamSetting: React.FC = () => {
       await fetchAnalysisStandards(selectedServiceCalendarId);
       await Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ' });
     } catch (err) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'บันทึกไม่สำเร็จ';
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? 'บันทึกไม่สำเร็จ';
       Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ', text: msg });
     } finally {
       setIsSaving(false);
@@ -300,7 +304,6 @@ const ExamSetting: React.FC = () => {
     machineType === MachineTypeTypes.REVERSE_LINEAR;
   const isP = (machineType: string) =>
     machineType === MachineTypeTypes.P_COMPLEX;
-
 
   return (
     <>
@@ -517,9 +520,7 @@ const ExamSetting: React.FC = () => {
                                       Repeat {idx + 1}
                                     </th>
                                     {labIds.map(labId => {
-                                      const entry = groupedResults[
-                                        labId
-                                      ]?.find(
+                                      const entry = groupedResults[labId]?.find(
                                         r => r.repeatNumber === idx + 1
                                       );
                                       return (
@@ -636,10 +637,7 @@ const ExamSetting: React.FC = () => {
           <div className="row g-3">
             {selectedServiceCalendar.laboratorySettings?.map(
               (labSetting: LaboratorySettingInfo) => (
-                <div
-                  className="col-md-6"
-                  key={labSetting.laboratorySettingId}
-                >
+                <div className="col-md-6" key={labSetting.laboratorySettingId}>
                   <div className="private-metric-card h-100">
                     <div className="private-card-header d-flex align-items-center justify-content-between">
                       {isOM(labSetting.laboratory.machineType.type) ||
@@ -647,7 +645,8 @@ const ExamSetting: React.FC = () => {
                         <>
                           <h4 className="private-card-title mb-0">
                             <i className="fas fa-chart-line me-2" />
-                            Working Standard ({labSetting.laboratory.shortNameBefore})
+                            Working Standard (
+                            {labSetting.laboratory.shortNameBefore})
                           </h4>
                           <GenButtonCircle
                             color={B_LIST.edit.color}
@@ -823,7 +822,8 @@ const ExamSetting: React.FC = () => {
                               ${labSetting.laboratory.shortNameBefore} (\\text{${labSetting.laboratory.unitBefore}}) \\times
                               \\frac{${labSetting.extractAmount || '\\text{ปริมาณสารสกัด (mL)}'}}{${labSetting.dirtWeight || '\\text{น้ำหนักดิน (g)}'}}
                               ${
-                                labSetting.dirtWeight && labSetting.extractAmount
+                                labSetting.dirtWeight &&
+                                labSetting.extractAmount
                                   ? `= ${labSetting.laboratory.shortNameBefore} (\\text{${labSetting.laboratory.unitBefore}}) \\times ${getDivided(labSetting.extractAmount, labSetting.dirtWeight)}`
                                   : ''
                               }
@@ -871,7 +871,9 @@ const ExamSetting: React.FC = () => {
           />
           <StandardTableInfo
             selectedStandards={selectedStandards}
-            existingAnalysisStandards={analysisStandards.filter(a => a.type === 'crm')}
+            existingAnalysisStandards={analysisStandards.filter(
+              a => a.type === 'crm'
+            )}
             onRemove={handleRemove}
             onDelete={handleDeleteStandard}
             onRepeatChange={handleRepeatChange}
@@ -888,4 +890,3 @@ const ExamSetting: React.FC = () => {
 };
 
 export default ExamSetting;
-

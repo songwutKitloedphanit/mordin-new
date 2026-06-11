@@ -55,13 +55,6 @@ export class FertilizerMajor {
   @Column({ name: 'update_uid', type: 'int', nullable: true })
   updateUid: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-    this.pricePerUnit = this.price / this.quantity;
-  }
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
@@ -69,4 +62,11 @@ export class FertilizerMajor {
   @ManyToOne(() => Unit)
   @JoinColumn({ name: 'unit_id' })
   unit: Unit;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+    this.pricePerUnit = this.price / this.quantity;
+  }
 }

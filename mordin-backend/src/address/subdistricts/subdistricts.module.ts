@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { SubdistrictsService } from './subdistricts.service';
-import { SubdistrictsController } from './subdistricts.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { Subdistrict } from './entities/subdistrict.entity';
+import { SubdistrictsController } from './subdistricts.controller';
+import { SubdistrictsService } from './subdistricts.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Subdistrict])],

@@ -1,5 +1,5 @@
-import { IsArray, IsNumber, IsString, IsUrl, Length, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsNumber, IsString, IsUrl, Length, IsOptional } from 'class-validator';
 
 export class CreateShopDto {
   @IsString()
@@ -51,4 +51,3 @@ export class CreateShopDto {
   @IsOptional()
   imageUrl?: string;
 }
-

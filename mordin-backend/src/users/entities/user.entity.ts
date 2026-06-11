@@ -7,7 +7,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import { UserRoles } from '../enums/user.enum';
+
 import { Department } from './department.entity';
 
 @Entity('users')
@@ -38,13 +40,8 @@ export class User {
 
   @Column({ name: 'updated_at', type: 'bigint', nullable: false })
   updatedAt: number;
-  removedBy: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
+  removedBy: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
@@ -53,4 +50,10 @@ export class User {
   @ManyToOne(() => Department)
   @JoinColumn({ name: 'department_id' })
   department: Department;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

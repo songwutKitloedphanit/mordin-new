@@ -50,9 +50,7 @@ const AnalysisResultTable: React.FC<AnalysisResultProps> = ({
   const handleSubmitPreValue = async () => {
     const changedResults: ResultInput[] = selectedResult
       .filter(edited => {
-        const original = resultData?.find(
-          o => o.resultId === edited.resultId
-        );
+        const original = resultData?.find(o => o.resultId === edited.resultId);
         return original && edited.preValue !== original.preValue;
       })
       .map(edited => ({
@@ -177,7 +175,8 @@ const AnalysisResultTable: React.FC<AnalysisResultProps> = ({
                             <td key={`pre-${repeat}-${lab.laboratoryId}`}>
                               {formatNumber(lab?.preValue ?? null)}
                               {lab?.laboratorySetting?.laboratory?.unitBefore &&
-                                lab?.laboratorySetting?.laboratory?.unitBefore !== '-'
+                              lab?.laboratorySetting?.laboratory?.unitBefore !==
+                                '-'
                                 ? ` ${lab?.laboratorySetting?.laboratory?.unitBefore}`
                                 : ''}
                             </td>
@@ -201,7 +200,8 @@ const AnalysisResultTable: React.FC<AnalysisResultProps> = ({
                             <td key={`post-${repeat}-${lab.laboratoryId}`}>
                               {formatNumber(lab?.postValue ?? null)}
                               {lab?.laboratorySetting?.laboratory?.unitAfter &&
-                                lab?.laboratorySetting?.laboratory?.unitAfter !== '-'
+                              lab?.laboratorySetting?.laboratory?.unitAfter !==
+                                '-'
                                 ? ` ${lab?.laboratorySetting?.laboratory?.unitAfter}`
                                 : ''}
                             </td>
@@ -307,9 +307,9 @@ const AnalysisResultTable: React.FC<AnalysisResultProps> = ({
                                     prev.map(r =>
                                       r.resultId === result.resultId
                                         ? {
-                                          ...r,
-                                          preValue: val,
-                                        }
+                                            ...r,
+                                            preValue: val,
+                                          }
                                         : r
                                     )
                                   );
@@ -382,4 +382,3 @@ const AnalysisResultTable: React.FC<AnalysisResultProps> = ({
 };
 
 export default AnalysisResultTable;
-

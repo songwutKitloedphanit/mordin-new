@@ -56,5 +56,3 @@ function ShopSummaryCard() {
 }
 
 export default ShopSummaryCard;
-
-

@@ -1,9 +1,9 @@
 // src/database/database.module.ts
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { LoggingSubscriber } from 'src/common/subscribers/logging.subscriber';
 import { join } from 'path';
+
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -20,10 +20,16 @@ import { join } from 'path';
         username: config.get('POSTGRES_USER'),
         password: config.get('POSTGRES_PASSWORD'),
         database: config.get('POSTGRES_DB'),
-        ssl: process.env.POSTGRES_SSL === 'true' ? { rejectUnauthorized: false } : false,
+        ssl:
+          process.env.POSTGRES_SSL === 'true'
+            ? { rejectUnauthorized: false }
+            : false,
         // บอกให้หาเฉพาะไฟล์ที่ลงท้ายด้วย .entity.ts (หรือ .js ตอน build)
         // และต้องไม่ใช่ .log.entity.ts
-        entities: [join(__dirname, '/../**/*.entity{.ts,.js}'), '!' + join(__dirname, '/../**/*.log.entity{.ts,.js}')],
+        entities: [
+          join(__dirname, '/../**/*.entity{.ts,.js}'),
+          '!' + join(__dirname, '/../**/*.log.entity{.ts,.js}'),
+        ],
         synchronize: config.get('NODE_ENV') === 'test',
         extra: {
           max: 5,
@@ -46,7 +52,10 @@ import { join } from 'path';
         username: config.get('POSTGRES_LOGS_USER'),
         password: config.get('POSTGRES_LOGS_PASSWORD'),
         database: config.get('POSTGRES_LOGS_DB'),
-        ssl: process.env.POSTGRES_LOGS_SSL === 'true' ? { rejectUnauthorized: false } : false,
+        ssl:
+          process.env.POSTGRES_LOGS_SSL === 'true'
+            ? { rejectUnauthorized: false }
+            : false,
         // บอกให้หาเฉพาะไฟล์ที่ลงท้ายด้วย .log.entity.ts (หรือ .js ตอน build)
         entities: [join(__dirname, '/../**/*.log.entity{.ts,.js}')],
         entitySkipConstructor: true,
@@ -56,4 +65,4 @@ import { join } from 'path';
     }),
   ],
 })
-export class DatabaseModule { }
+export class DatabaseModule {}

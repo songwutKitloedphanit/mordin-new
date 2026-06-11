@@ -61,13 +61,12 @@ export async function getServiceTypeWithFertilizerUsagesById(id: number) {
 
 export async function getServiceTypeForSoilGradeEdit(id: number) {
   try {
-    const response = await api.get(`/service-types/fertilizer-usages/soil-grade/${id}`);
+    const response = await api.get(
+      `/service-types/fertilizer-usages/soil-grade/${id}`
+    );
     return response.data;
   } catch (error) {
-    console.error(
-      'Cannot get service type for soil grade edit: ',
-      error
-    );
+    console.error('Cannot get service type for soil grade edit: ', error);
     throw error;
   }
 }

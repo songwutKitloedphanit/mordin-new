@@ -1,5 +1,4 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { CreateSoilGradeLevelDto } from './create-soil-grade-level.dto';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsString } from 'class-validator';
 
 export class UpdateSoilGradeLevelDto {

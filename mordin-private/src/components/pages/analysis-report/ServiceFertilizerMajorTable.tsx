@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 import { PrintReportInterface } from '@/types/qr-code/Report';
 import { TimeStampToDate } from '@/utils/Date';
@@ -30,13 +30,76 @@ const ServiceFertilizerMajorTable: React.FC<
           </div>
         ) : reportData.ferMajorLandUsages?.length > 0 ? (
           <>
-            <p className="text-muted">
-              แก้ไขข้อมูการให้ธาตุอาหารล่าสุด:{' '}
-              {reportData.ferMajorLandUsages &&
-                TimeStampToDate(
-                  reportData.ferMajorLandUsages[0]?.updatedAt
-                )}{' '}
-            </p>
+            {/* Visual Recommendation Cards */}
+            <div className="mb-4 text-start">
+              <h5 className="fw-bold text-dark mb-3">
+                <i className="fas fa-seedling me-2 text-success" />
+                คำแนะนำการใส่ปุ๋ยเคมี (ธาตุอาหารหลัก)
+              </h5>
+              <div className="d-flex flex-column gap-2 mb-4">
+                {reportData.ferMajorLandUsages?.map(fertilizer => {
+                  const usageName =
+                    fertilizer.serviceFertilizerMajorUsage.usageType?.name ||
+                    'ปุ๋ย';
+                  const formular =
+                    fertilizer.serviceFertilizerMajorUsage.fertilizerMajor
+                      .formular;
+                  const useRate = fertilizer.useRate;
+                  const unit =
+                    fertilizer.serviceFertilizerMajorUsage.fertilizerMajor.unit
+                      .name;
+                  const totalUse = useRate * reportData.areaSize;
+                  const desc =
+                    fertilizer.serviceFertilizerMajorUsage.fertilizerMajor
+                      .note || '';
+
+                  return (
+                    <div
+                      key={fertilizer.fertilizerMajorLandUsageId}
+                      className="d-flex gap-3 align-items-center rounded-3 p-3"
+                      style={{
+                        backgroundColor: 'rgba(24, 160, 92, 0.06)',
+                        borderLeft: '4px solid #18a05c',
+                      }}
+                    >
+                      <div
+                        className="rounded-circle p-2 bg-success-subtle text-success d-flex align-items-center justify-content-center"
+                        style={{ width: '40px', height: '40px' }}
+                      >
+                        <i className="fas fa-seedling fs-5 text-success" />
+                      </div>
+                      <div className="flex-grow-1">
+                        <span className="fw-bold text-dark">
+                          {usageName} สูตร {formular}
+                        </span>
+                        <div className="text-muted small mt-1">
+                          อัตรา {formatNumber(useRate)} {unit}/ไร่{' '}
+                          {desc ? `(${desc})` : ''}
+                        </div>
+                      </div>
+                      <div className="text-end">
+                        <span className="fs-5 fw-bold text-success">
+                          {formatNumber(totalUse)} {unit}
+                        </span>
+                        <div className="text-muted small mt-0.5">
+                          รวมทั้งหมด ({formatNumber(reportData.areaSize)} ไร่)
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <hr className="my-4 opacity-25" />
+
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <span className="text-muted small">
+                แก้ไขล่าสุด:{' '}
+                {reportData.ferMajorLandUsages &&
+                  TimeStampToDate(reportData.ferMajorLandUsages[0]?.updatedAt)}
+              </span>
+            </div>
 
             <div className="table-responsive">
               <table className="table table-bordered">
@@ -241,4 +304,3 @@ const ServiceFertilizerMajorTable: React.FC<
 };
 
 export default ServiceFertilizerMajorTable;
-

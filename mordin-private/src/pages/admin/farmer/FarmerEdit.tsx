@@ -1,7 +1,7 @@
 // D:\mitrpol\mordin-private\src\pages\admin\farmer\FarmerAdd.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import { GenButtonCircle, B_LIST } from '../../../components/gui/GuiButton';
 import {
@@ -38,7 +38,7 @@ const FarmerEdit = () => {
     ServiceAreaInterface[]
   >([]);
   const [farmer, setFarmer] = useState<Farmer>({} as Farmer);
-  const [cardType, setCardtype] = useState('');
+  const [inputCardId, setInputCardId] = useState('');
 
   const [formData, setFormData] = useState<FarmerCreateInput>({
     thaiNationalId: '',
@@ -57,7 +57,8 @@ const FarmerEdit = () => {
       const farmerData = await getFarmerById(Number(id));
 
       setFormData(farmerData);
-      setCardtype(farmerData.thaiNationalId ? '2' : '1');
+      const initialCardId = farmerData.thaiNationalId || farmerData.thaiFarmerId || '';
+      setInputCardId(formatIDCard(initialCardId));
       setFarmer(farmerData);
     };
     fetchFarmer();
@@ -101,7 +102,7 @@ const FarmerEdit = () => {
               area.serviceAreaId === prev.serviceAreaId
           )
             ? prev.serviceAreaId
-            : factory.serviceAreas[0]?.serviceAreaId ?? null,
+            : (factory.serviceAreas[0]?.serviceAreaId ?? null),
         }));
       } else {
         setServiceAreaList([]);
@@ -147,15 +148,9 @@ const FarmerEdit = () => {
   ) => {
     const { name, value } = e.target;
 
-    if (name === 'cardType') {
-      setCardtype(value);
-    } else if (name === 'cardId') {
+    if (name === 'cardId') {
       const formatted = formatIDCard(value);
-      if (cardType === '1') {
-        setFormData(prev => ({ ...prev, thaiFarmerId: formatted }));
-      } else {
-        setFormData(prev => ({ ...prev, thaiNationalId: formatted }));
-      }
+      setInputCardId(formatted);
     } else if (name === 'name') {
       setFormData(prev => ({ ...prev, firstName: value }));
     } else if (name === 'lastname') {
@@ -174,7 +169,7 @@ const FarmerEdit = () => {
     const newErrors: typeof errors = {};
 
     // ตรวจเช็คความถูกต้อง
-    if (!formData.thaiFarmerId && !formData.thaiNationalId)
+    if (!inputCardId.trim())
       newErrors.cardId = 'กรุณาระบุหมายเลขบัตร';
     if (!formData.firstName.trim()) newErrors.name = 'กรุณาระบุชื่อ';
     if (!formData.lastName.trim()) newErrors.lastname = 'กรุณาระบุนามสกุล';
@@ -188,39 +183,24 @@ const FarmerEdit = () => {
     }
 
     try {
+      const cleanedCardId = inputCardId.replace(/\D/g, '');
+      const isNationalId = cleanedCardId.length === 13;
+
       // Clean data before sending
       const payload = {
         ...formData,
-        thaiNationalId: formData.thaiNationalId
-          ? formData.thaiNationalId.replace(/-/g, '')
-          : '',
-        thaiFarmerId: formData.thaiFarmerId
-          ? formData.thaiFarmerId.replace(/-/g, '')
-          : '',
+        thaiNationalId: isNationalId ? cleanedCardId : '',
+        thaiFarmerId: !isNationalId ? cleanedCardId : '',
         phone: formData.phone ? formData.phone.replace(/-/g, '') : '',
       };
 
       await updateFarmerById(Number(id), payload);
-      Swal.fire({
-        title: 'สำเร็จ!',
-        text: 'เพิ่มข้อมูลเกษตรกรเรียบร้อยแล้ว',
-        icon: 'success',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      }).then(() => {
+      swalSuccessTimer('สำเร็จ!', 'แก้ไขข้อมูลเกษตรกรเรียบร้อยแล้ว').then(() => {
         navigate('/admin/farmer');
       });
     } catch (error) {
       console.error(error);
-      Swal.fire({
-        title: 'เกิดข้อผิดพลาด!',
-        text: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล กรุณาลองใหม่',
-        icon: 'error',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      });
+      swalError('เกิดข้อผิดพลาด!', 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล กรุณาลองใหม่');
     }
   };
 
@@ -237,7 +217,9 @@ const FarmerEdit = () => {
                 className="col-md-4 col-sm-6 col-6"
                 style={{ textAlign: 'left' }}
               >
-                <h4 className="private-card-title">แก้ไขเกษตรกร ({farmer.phone})</h4>
+                <h4 className="private-card-title">
+                  แก้ไขเกษตรกร ({farmer.phone})
+                </h4>
               </div>
               <div
                 className="col-md-4 col-sm-6 col-6 ms-auto"
@@ -259,40 +241,6 @@ const FarmerEdit = () => {
           </div>
           <div className="private-card-body">
             <div className="col-md-6 ms-auto me-auto">
-              <div className="row">
-                <div className="col-md-3 col-lg-3">
-                  <div className="form-group">
-                    <label>ประเภทบัตร</label>
-                  </div>
-                </div>
-                <div className="col-md-3 col-lg-3">
-                  <div className="form-group">
-                    <input
-                      type="radio"
-                      id="card-type-1"
-                      name="cardType"
-                      value="1"
-                      checked={cardType === '1'}
-                      onChange={handleChange}
-                    />
-                    <label htmlFor="card-type-1">บัตรเกษตรกร</label>
-                  </div>
-                </div>
-                <div className="col-md-3 col-lg-3">
-                  <div className="form-group">
-                    <input
-                      type="radio"
-                      id="card-type-2"
-                      name="cardType"
-                      value="2"
-                      checked={cardType === '2'}
-                      onChange={handleChange}
-                    />
-                    <label htmlFor="card-type-2">บัตรประชาชน</label>
-                  </div>
-                </div>
-              </div>
-
               <GenFormText2
                 isRequired={true}
                 id="card-id"
@@ -300,11 +248,7 @@ const FarmerEdit = () => {
                 label="บัตรเกษตรกร/ประชาชน"
                 placeholder="ระบุหมายเลขบัตรเกษตรกร/บัตรประชาชน"
                 desc="ใช้เพื่อยืนยันตัวตน"
-                value={
-                  cardType === '1'
-                    ? formData.thaiFarmerId
-                    : formData.thaiNationalId
-                }
+                value={inputCardId}
                 onChange={handleChange}
                 errorMessage={errors.cardId}
               />
@@ -406,4 +350,3 @@ const FarmerEdit = () => {
   );
 };
 export default FarmerEdit;
-

@@ -8,11 +8,12 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { QrCodeLabsService } from './qr-code-labs.service';
-import { CreateQrCodeLabDto } from './dto/create-qr-code-lab.dto';
-import { UpdateQrCodeLabDto } from './dto/update-qr-code-lab.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateQrCodeLabDto } from './dto/create-qr-code-lab.dto';
+import { UpdateQrCodeLabDto } from './dto/update-qr-code-lab.dto';
+import { QrCodeLabsService } from './qr-code-labs.service';
 
 @Controller('qr-code-labs')
 export class QrCodeLabsController {
@@ -20,7 +21,10 @@ export class QrCodeLabsController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createQrCodeLabDto: CreateQrCodeLabDto, @User('sub')  userId: number) {
+  create(
+    @Body() createQrCodeLabDto: CreateQrCodeLabDto,
+    @User('sub') userId: number
+  ) {
     return this.qrCodeLabsService.create(createQrCodeLabDto, userId);
   }
 
@@ -44,7 +48,7 @@ export class QrCodeLabsController {
   update(
     @Param('id') id: string,
     @Body() updateQrCodeLabDto: UpdateQrCodeLabDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.qrCodeLabsService.update(+id, updateQrCodeLabDto, userId);
   }

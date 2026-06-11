@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['farmer_profile'])) {
-    header('Location: /services/report/login');
+    header('Location: /services/book/login?next=report');
     exit;
 }
 
@@ -93,8 +93,8 @@ include_once COMPONENT_PATH . 'lib_header.php';
 <div class="public-farmer-toolbar">
   <div class="container-fluid container-xl">
     <div class="public-segment-tabs" role="navigation" aria-label="เมนูจองและผลวิเคราะห์ดิน">
-      <a href="services/book/farmer" class="public-segment-tab">จองวิเคราะห์ดิน</a>
-      <a href="services/report/land" class="public-segment-tab is-active">ผลวิเคราะห์ดิน</a>
+      <a href="/services/book/farmer" class="public-segment-tab">จองวิเคราะห์ดิน</a>
+      <a href="/services/report/land" class="public-segment-tab is-active">ผลวิเคราะห์ดิน</a>
     </div>
   </div>
 </div>
@@ -102,7 +102,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
 <section class="section public-report-page">
   <div class="container">
 
-    <div class="mp-report-header">
+    <div class="mp-report-header scroll-reveal">
       <div>
         <h2 class="mp-report-title">รายงานผลการวิเคราะห์</h2>
         <p class="mp-report-sub">
@@ -125,7 +125,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
       </div>
     </div>
 
-    <div class="mp-table-card">
+    <div class="mp-table-card scroll-reveal stagger-1">
       <?php if (empty($allRows)): ?>
         <div class="mp-empty-state">
           <i class="bi bi-clipboard-data mp-empty-icon"></i>
@@ -157,7 +157,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
                 <td class="text-muted"><?= formatThaiDate($row['collectSampleAt']) ?></td>
                 <td><?= statusPill($row['statusText']) ?></td>
                 <td class="text-end">
-                  <a href="services/report/pdf?sampleCode=<?= urlencode($row['sampleCode']) ?>"
+                  <a href="/services/report/pdf?sampleCode=<?= urlencode($row['sampleCode']) ?>"
                      target="_blank"
                      class="mp-pdf-link">
                     <i class="bi bi-file-earmark-pdf-fill text-danger"></i> ดูรายงาน

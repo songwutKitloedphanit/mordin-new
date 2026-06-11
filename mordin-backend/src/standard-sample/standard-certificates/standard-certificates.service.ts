@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { CreateStandardCertificateDto } from './dto/create-standard-certificate.dto';
-import { UpdateStandardCertificateDto } from './dto/update-standard-certificate.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { StandardCertificate } from './entities/standard-certificate.entity';
-import { In, Repository } from 'typeorm';
-import { UpdateStandardCertificateValueFromFileDto } from './dto/update-standard-certificate-value-file.dto';
 import * as Papa from 'papaparse';
-import { Standard } from '../standards/entities/standard.entity';
 import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
+import { In, Repository } from 'typeorm';
+
+import { Standard } from '../standards/entities/standard.entity';
+
+import { CreateStandardCertificateDto } from './dto/create-standard-certificate.dto';
+import { UpdateStandardCertificateValueFromFileDto } from './dto/update-standard-certificate-value-file.dto';
+import { StandardCertificate } from './entities/standard-certificate.entity';
 import { StandardCertificateLog } from './entities/standard-certificate.log.entity';
 
 @Injectable()
@@ -20,10 +21,13 @@ export class StandardCertificatesService {
     @InjectRepository(Laboratory)
     private readonly laboratoryRepo: Repository<Laboratory>,
     @InjectRepository(StandardCertificateLog)
-    private standardCertificateLog: Repository<StandardCertificateLog>,
-  ) { }
+    private standardCertificateLog: Repository<StandardCertificateLog>
+  ) {}
 
-  create(createStandardCertificateDto: CreateStandardCertificateDto,Uid : number) {
+  create(
+    createStandardCertificateDto: CreateStandardCertificateDto,
+    Uid: number
+  ) {
     return 'This action adds a new standardCertificate';
   }
 
@@ -34,14 +38,18 @@ export class StandardCertificatesService {
   findOne(id: number) {
     return `This action returns a #${id} standardCertificate`;
   }
+
   async processCrmCsv(
     csvBuffer: Buffer
   ): Promise<{ updatedCount: number; errors: any[] }> {
     const text = csvBuffer.toString('utf8');
-    const { data } = Papa.parse<{ sampleCode: string;[hdr: string]: string }>(text, {
-      header: true,
-      skipEmptyLines: true,
-    });
+    const { data } = Papa.parse<{ sampleCode: string; [hdr: string]: string }>(
+      text,
+      {
+        header: true,
+        skipEmptyLines: true,
+      }
+    );
 
     // load all Standards + all Labs
     const [allStd, allLab] = await Promise.all([
@@ -82,7 +90,11 @@ export class StandardCertificatesService {
         } else {
           const v = parseFloat(cell);
           if (!isNaN(v)) {
-            inputs.push({ standardId: stdId, laboratoryId: labId, certificateValue: v });
+            inputs.push({
+              standardId: stdId,
+              laboratoryId: labId,
+              certificateValue: v,
+            });
           }
         }
       });
@@ -94,7 +106,9 @@ export class StandardCertificatesService {
     return { updatedCount: inputs.length, errors: [] };
   }
 
-  async updateCertificateValueFromFile(inputs: UpdateStandardCertificateValueFromFileDto[]): Promise<void> {
+  async updateCertificateValueFromFile(
+    inputs: UpdateStandardCertificateValueFromFileDto[]
+  ): Promise<void> {
     const map = new Map(
       inputs.map(i => [`${i.standardId}-${i.laboratoryId}`, i.certificateValue])
     );
@@ -120,10 +134,10 @@ export class StandardCertificatesService {
     await this.standardCertificateRepo.save(entities);
   }
 
-
   remove(id: number) {
     return `This action removes a #${id} standardCertificate`;
   }
+
   getLogs() {
     return this.standardCertificateLog.find();
   }

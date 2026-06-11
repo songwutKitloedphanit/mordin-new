@@ -204,7 +204,9 @@ const LandInfo = () => {
                   className="col-md-8 col-sm-8 col-8"
                   style={{ textAlign: 'left' }}
                 >
-                  <h4 className="private-card-title">ข้อมูลแปลง({lands.name})</h4>
+                  <h4 className="private-card-title">
+                    ข้อมูลแปลง({lands.name})
+                  </h4>
                 </div>
                 <div
                   className="col-md-4 col-sm-4 col-4 ms-auto"
@@ -302,4 +304,3 @@ const LandInfo = () => {
 };
 
 export default LandInfo;
-

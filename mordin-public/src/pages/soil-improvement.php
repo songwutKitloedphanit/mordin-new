@@ -8,16 +8,19 @@
         include_once COMPONENT_PATH . 'lib_header.php';
 ?>
 
+<div class="ag-page-banner">
+  <div class="container-xl ag-page-banner-inner">
+    <div class="ag-kicker"><i class="bi bi-book-fill me-1"></i>Knowledge</div>
+    <h1>ความรู้ด้านการจัดการดิน</h1>
+    <p>แนะนำสารปรับปรุงดิน วิธีเก็บตัวอย่างดิน และเทคนิคการดูแลดินเพื่อเพิ่มผลผลิต</p>
+  </div>
+</div>
+
 <section class="section public-knowledge-page">
   <div class="container">
 
-    <div class="public-section-heading" data-aos="fade-up">
-      <p>ข่าวสารและความรู้</p>
-      <h2>ความรู้ด้านการจัดการดิน</h2>
-    </div>
-
     <!-- Topic Cards -->
-    <div class="public-knowledge-grid" data-aos="fade-up" data-aos-delay="80">
+    <div class="public-knowledge-grid scroll-reveal stagger-1">
 
       <button class="public-knowledge-topic-card" data-topic="vinasses" aria-expanded="false">
         <div class="public-knowledge-card-icon"><i class="bi bi-droplet-fill"></i></div>

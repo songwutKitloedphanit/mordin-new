@@ -9,12 +9,13 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import { FertilizerMajorLandScoresService } from './fertilizer-major-land-scores.service';
-import { CreateFertilizerMajorLandScoreDto } from './dto/create-fertilizer-major-land-score.dto';
-import { UpdateFertilizerMajorLandScoreDto } from './dto/update-fertilizer-major-land-score.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateFertilizerMajorLandScoreDto } from './dto/create-fertilizer-major-land-score.dto';
 import { GetGraphFilterDto } from './dto/get-graph-filter.dto';
+import { UpdateFertilizerMajorLandScoreDto } from './dto/update-fertilizer-major-land-score.dto';
+import { FertilizerMajorLandScoresService } from './fertilizer-major-land-scores.service';
 
 @Controller('fertilizer-major-land-scores')
 export class FertilizerMajorLandScoresController {

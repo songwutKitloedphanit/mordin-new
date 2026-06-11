@@ -273,4 +273,3 @@ const FertilizerMionorEdit: React.FC = () => {
 };
 
 export default FertilizerMionorEdit;
-

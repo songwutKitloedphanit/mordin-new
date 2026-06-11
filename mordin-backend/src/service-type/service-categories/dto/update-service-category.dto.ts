@@ -1,5 +1,3 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateServiceCategoryDto } from './create-service-category.dto';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateServiceCategoryDto {

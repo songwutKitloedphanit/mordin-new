@@ -1,4 +1,3 @@
-import { Collection } from 'mongoose';
 import { District } from 'src/address/districts/entities/district.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 

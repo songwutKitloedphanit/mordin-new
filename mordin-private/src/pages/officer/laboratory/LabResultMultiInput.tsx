@@ -10,21 +10,30 @@ import { Laboratory } from '@/types/Laboratory';
 import { QrCode } from '@/types/qr-code/QrCode';
 import { LabResult } from '@/types/result/Result';
 import { sampleBlankResultInfo } from '@/types/sample-blank/sampleBlankResult';
-import { StandardType, AnalysisStandardInterface } from '@/types/standard-sample/AnalysisStandards';
+import {
+  StandardType,
+  AnalysisStandardInterface,
+} from '@/types/standard-sample/AnalysisStandards';
 
 const LabResultMultiInput: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState(1);
-  const [serviceCalendarId, setServiceCalendarId] = useState<number | null>(null);
+  const [serviceCalendarId, setServiceCalendarId] = useState<number | null>(
+    null
+  );
   const [analysisService, setAnalysisService] = useState<
     Array<{
       qrCode: QrCode;
       result: sampleBlankResultInfo[];
     }>
   >([]);
-  const [blankService, setBlankService] = useState<Array<{ code: string; result: any[] }>>([]);
-  const [crmService, setCrmService] = useState<Array<{ code: string; result: any[] }>>([]);
+  const [blankService, setBlankService] = useState<
+    Array<{ code: string; result: any[] }>
+  >([]);
+  const [crmService, setCrmService] = useState<
+    Array<{ code: string; result: any[] }>
+  >([]);
   const [laboratories, setLaboratories] = useState<Laboratory[]>([]);
 
   // โหลดครั้งเดียว
@@ -40,7 +49,8 @@ const LabResultMultiInput: React.FC = () => {
   }, []);
   // ทำ map id -> lab
   const labById = useMemo(
-    () => new Map<number, Laboratory>(laboratories.map(l => [l.laboratoryId, l])),
+    () =>
+      new Map<number, Laboratory>(laboratories.map(l => [l.laboratoryId, l])),
     [laboratories]
   );
 
@@ -54,7 +64,8 @@ const LabResultMultiInput: React.FC = () => {
   };
 
   useEffect(() => {
-    const { serviceCalendarId: id, analysisService: data } = location.state || {};
+    const { serviceCalendarId: id, analysisService: data } =
+      location.state || {};
     if (id) {
       setServiceCalendarId(id);
       setAnalysisService(data || []); // Set analysisService from location.state
@@ -90,9 +101,14 @@ const LabResultMultiInput: React.FC = () => {
           const stdId = s.standardId ?? s.standard?.standardId;
           const certs = s.standard?.standardCertificates ?? [];
           return {
-            code: s.standard?.standardName ?? s.name ?? `CRM-${s.analysisStandardId}`,
+            code:
+              s.standard?.standardName ??
+              s.name ??
+              `CRM-${s.analysisStandardId}`,
             result: s.analysisStandardResults.map(r => {
-              const matchedCert = certs.find((c: any) => c.laboratoryId === r.laboratoryId);
+              const matchedCert = certs.find(
+                (c: any) => c.laboratoryId === r.laboratoryId
+              );
               return {
                 analysisStandardResultId: r.analysisStandardResultId, // ยังส่งมาเผื่อใช้ในขั้นรายงาน
                 certificateValue: matchedCert?.certificateValue ?? null, // ✅ ใช้ค่านี้ใน UI
@@ -144,6 +160,12 @@ const LabResultMultiInput: React.FC = () => {
 
   return (
     <div>
+      {/* โหมดตาราง (Handsontable) ออกแบบมาสำหรับจอใหญ่ — แจ้งผู้ใช้มือถือให้ใช้จอใหญ่แทน */}
+      <div className="alert alert-info d-lg-none" role="alert">
+        <i className="fas fa-desktop me-2" />
+        หน้ากรอกผลแบบตารางเหมาะกับจอคอมพิวเตอร์/แท็บเล็ตแนวนอน
+        หากใช้มือถืออาจกรอกไม่สะดวก
+      </div>
       {/* Cards Section */}
       <LabResultSummaryCard />
       {serviceCalendarId && (

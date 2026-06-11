@@ -56,7 +56,19 @@ export class Land {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
+  @ManyToOne(() => Farmer, farmer => farmer.lands)
+  @JoinColumn({ name: 'farmer_id' })
+  farmer: Farmer;
+
+@ManyToOne(() => Subdistrict)
+  @JoinColumn({ name: 'subdistrict_code', referencedColumnName: 'code' })
+  subdistrict: Subdistrict;
+
+@ManyToOne(() => User)
+  @JoinColumn({ name: 'update_uid' })
+  updateUser: User;
+
+@BeforeInsert()
   setCreatUpdateAt() {
     const now = Date.now();
     this.updatedAt = now;
@@ -68,15 +80,9 @@ export class Land {
     this.updatedAt = now;
   }
 
-  @ManyToOne(() => Farmer, farmer => farmer.lands)
-  @JoinColumn({ name: 'farmer_id' })
-  farmer: Farmer;
+  
 
-  @ManyToOne(() => Subdistrict)
-  @JoinColumn({ name: 'subdistrict_code', referencedColumnName: 'code' })
-  subdistrict: Subdistrict;
+  
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'update_uid' })
-  updateUser: User;
+  
 }

@@ -46,7 +46,9 @@ export async function inputAnalysisStandardResults(
 export const inputBlankResults = inputAnalysisStandardResults;
 
 export async function deleteAnalysisStandard(analysisStandardId: number) {
-  const { data } = await api.delete(`/analysis-standards/${analysisStandardId}`);
+  const { data } = await api.delete(
+    `/analysis-standards/${analysisStandardId}`
+  );
   return data;
 }
 

@@ -8,6 +8,8 @@ interface Column<T> {
   sortable?: boolean;
   sortKey?: string;
   filterable?: boolean; // แสดง dropdown filter ใน filter bar
+  /** ข้อความสำหรับค้นหา/กรองฝั่ง client เมื่อ accessor คืน ReactNode (เช่นเซลล์ avatar) */
+  searchText?: (row: T) => string;
 }
 
 interface FetchParams {
@@ -57,7 +59,9 @@ function SearchAndPaginationTable<T extends object>({
   const [totalEntries, setTotalEntries] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [columnFilters, setColumnFilters] = useState<Record<number, string>>({});
+  const [columnFilters, setColumnFilters] = useState<Record<number, string>>(
+    {}
+  );
   const fetchPage = clientSideFilters ? 1 : page;
 
   useEffect(() => {
@@ -81,7 +85,29 @@ function SearchAndPaginationTable<T extends object>({
       }
     };
     load();
-  }, [search, fetchPage, limit, sortBy, order, fetchData, refreshKey, clientSideFilters]);
+  }, [
+    search,
+    fetchPage,
+    limit,
+    sortBy,
+    order,
+    fetchData,
+    refreshKey,
+    clientSideFilters,
+  ]);
+
+  // ข้อความของเซลล์สำหรับค้นหา/กรอง — ใช้ searchText ก่อนถ้ามี (เซลล์ ReactNode)
+  const cellText = useCallback((col: Column<T>, row: T): string => {
+    if (col.searchText) return col.searchText(row);
+    if (typeof col.accessor === 'function') {
+      const cell = col.accessor(row);
+      return typeof cell === 'string' || typeof cell === 'number'
+        ? String(cell)
+        : '';
+    }
+    const cell = row[col.accessor];
+    return cell != null ? String(cell) : '';
+  }, []);
 
   // unique dropdown options for filterable columns only
   const columnOptions = useMemo(() => {
@@ -90,20 +116,13 @@ function SearchAndPaginationTable<T extends object>({
       if (!col.filterable) return;
       const setVals = new Set<string>();
       data.forEach(row => {
-        let txt = '';
-        if (typeof col.accessor === 'function') {
-          const cell = col.accessor(row);
-          if (typeof cell === 'string' || typeof cell === 'number') txt = String(cell).trim();
-        } else {
-          const cell = row[col.accessor];
-          txt = cell != null ? String(cell).trim() : '';
-        }
+        const txt = cellText(col, row).trim();
         if (txt) setVals.add(txt);
       });
       opts[idx] = Array.from(setVals).sort();
     });
     return opts;
-  }, [data, columns]);
+  }, [data, columns, cellText]);
 
   // client-side filter: text search + column dropdowns
   const filteredData = useMemo(() => {
@@ -112,16 +131,7 @@ function SearchAndPaginationTable<T extends object>({
       // text search across all columns
       if (needle) {
         const rowText = columns
-          .map(col => {
-            if (typeof col.accessor === 'function') {
-              const cell = col.accessor(row);
-              return typeof cell === 'string' || typeof cell === 'number'
-                ? String(cell)
-                : '';
-            }
-            const cell = row[col.accessor];
-            return cell != null ? String(cell) : '';
-          })
+          .map(col => cellText(col, row))
           .join(' ')
           .toLowerCase();
         if (!rowText.includes(needle)) return false;
@@ -130,18 +140,10 @@ function SearchAndPaginationTable<T extends object>({
       return columns.every((col, idx) => {
         const val = columnFilters[idx];
         if (!val) return true;
-        let txt = '';
-        if (typeof col.accessor === 'function') {
-          const cell = col.accessor(row);
-          if (typeof cell === 'string' || typeof cell === 'number') txt = String(cell);
-        } else {
-          const cell = row[col.accessor];
-          txt = cell != null ? String(cell) : '';
-        }
-        return txt === val;
+        return cellText(col, row).trim() === val;
       });
     });
-  }, [data, columns, columnFilters, search, clientSideFilters]);
+  }, [data, columns, columnFilters, search, clientSideFilters, cellText]);
 
   const pageData = useMemo(() => {
     if (!clientSideFilters) return filteredData;
@@ -149,7 +151,9 @@ function SearchAndPaginationTable<T extends object>({
     return filteredData.slice(start, start + limit);
   }, [clientSideFilters, filteredData, limit, page]);
 
-  const effectiveTotalEntries = clientSideFilters ? filteredData.length : totalEntries;
+  const effectiveTotalEntries = clientSideFilters
+    ? filteredData.length
+    : totalEntries;
   const effectiveTotalPages = clientSideFilters
     ? Math.ceil(filteredData.length / limit)
     : totalPages;
@@ -161,11 +165,15 @@ function SearchAndPaginationTable<T extends object>({
   }, [effectiveTotalPages, page]);
 
   const handleSort = (col: Column<T>) => {
-    const key = typeof col.accessor === 'string' ? col.accessor : col.sortKey || '';
+    const key =
+      typeof col.accessor === 'string' ? col.accessor : col.sortKey || '';
     if (!key) return;
     if (sortBy === key) {
       setOrder(prev => (prev === 'ASC' ? 'DESC' : 'ASC'));
-      if (order === 'DESC') { setSortBy(''); setOrder('ASC'); }
+      if (order === 'DESC') {
+        setSortBy('');
+        setOrder('ASC');
+      }
     } else {
       setSortBy(key);
       setOrder('ASC');
@@ -204,16 +212,18 @@ function SearchAndPaginationTable<T extends object>({
 
   return (
     <div className="spt-wrapper">
-
-      {/* Filter bar */}
+      {/* Toolbar แถวเดียว (mockup .tbl-toolbar): ค้นหา + ฟิลเตอร์ ซ้าย / จำนวนต่อหน้า ขวา */}
       <div className="spt-filter-bar d-flex flex-wrap gap-2 align-items-center pb-3 mb-3 border-bottom">
         <input
           type="text"
-          className="form-control form-control-sm"
-          style={{ maxWidth: 220 }}
+          className="form-control form-control-sm spt-search"
+          style={{ maxWidth: 240 }}
           placeholder="ค้นหา..."
           value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
+          onChange={e => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
         />
         {filterableColumns.map(({ col, idx }) => {
           const opts = columnOptions[idx] || [];
@@ -230,31 +240,50 @@ function SearchAndPaginationTable<T extends object>({
             >
               <option value="">ทุก{col.header}</option>
               {opts.map(val => (
-                <option key={val} value={val}>{val}</option>
+                <option key={val} value={val}>
+                  {val}
+                </option>
               ))}
             </select>
           );
         })}
         {hasFilter && (
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={clearFilters}>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={clearFilters}
+          >
             <i className="fas fa-times me-1" />
             ล้างตัวกรอง
           </button>
         )}
-      </div>
-
-      {/* Length selector */}
-      <div className="d-flex justify-content-end align-items-center mb-2">
-        <div className="d-flex align-items-center gap-2">
-          <span className="text-muted text-nowrap" style={{ fontSize: '0.82rem' }}>แสดง</span>
+        <div className="d-flex align-items-center gap-2 ms-auto">
+          <span
+            className="text-muted text-nowrap"
+            style={{ fontSize: '0.82rem' }}
+          >
+            แสดง
+          </span>
           <select
             className="form-select form-select-sm w-auto"
             value={limit}
-            onChange={e => { setLimit(+e.target.value); setPage(1); }}
+            onChange={e => {
+              setLimit(+e.target.value);
+              setPage(1);
+            }}
           >
-            {limitOptions.map(n => <option key={n} value={n}>{n}</option>)}
+            {limitOptions.map(n => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
           </select>
-          <span className="text-muted text-nowrap" style={{ fontSize: '0.82rem' }}>รายการ</span>
+          <span
+            className="text-muted text-nowrap"
+            style={{ fontSize: '0.82rem' }}
+          >
+            รายการ
+          </span>
         </div>
       </div>
 
@@ -264,10 +293,13 @@ function SearchAndPaginationTable<T extends object>({
           <thead>
             <tr>
               {columns.map((col, idx) => {
-                const key = typeof col.accessor === 'string' ? col.accessor : col.sortKey;
+                const key =
+                  typeof col.accessor === 'string' ? col.accessor : col.sortKey;
                 const isSorted = key === sortBy;
                 const thClass = [
-                  col.sortable ? 'dt-orderable dt-orderable-asc dt-orderable-desc' : '',
+                  col.sortable
+                    ? 'dt-orderable dt-orderable-asc dt-orderable-desc'
+                    : '',
                   isSorted ? `dt-ordering-${order.toLowerCase()}` : '',
                 ].join(' ');
                 return (
@@ -290,7 +322,10 @@ function SearchAndPaginationTable<T extends object>({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={columns.length} style={{ padding: 0, border: 'none' }}>
+                <td
+                  colSpan={columns.length}
+                  style={{ padding: 0, border: 'none' }}
+                >
                   <TableSkeleton rows={5} cols={columns.length} />
                 </td>
               </tr>
@@ -309,7 +344,10 @@ function SearchAndPaginationTable<T extends object>({
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="text-center py-4 text-muted">
+                <td
+                  colSpan={columns.length}
+                  className="text-center py-4 text-muted"
+                >
                   ไม่มีข้อมูลในตาราง
                 </td>
               </tr>
@@ -326,10 +364,22 @@ function SearchAndPaginationTable<T extends object>({
         <nav>
           <ul className="pagination mb-0">
             <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-              <button type="button" className="page-link" onClick={() => setPage(1)}>&laquo;</button>
+              <button
+                type="button"
+                className="page-link"
+                onClick={() => setPage(1)}
+              >
+                &laquo;
+              </button>
             </li>
             <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-              <button type="button" className="page-link" onClick={() => setPage(page - 1)}>&lsaquo;</button>
+              <button
+                type="button"
+                className="page-link"
+                onClick={() => setPage(page - 1)}
+              >
+                &lsaquo;
+              </button>
             </li>
             {pages.map((p, idx) => (
               <li
@@ -346,16 +396,31 @@ function SearchAndPaginationTable<T extends object>({
                 </button>
               </li>
             ))}
-            <li className={`page-item ${page === effectiveTotalPages || effectiveTotalPages < 1 ? 'disabled' : ''}`}>
-              <button type="button" className="page-link" onClick={() => setPage(page + 1)}>&rsaquo;</button>
+            <li
+              className={`page-item ${page === effectiveTotalPages || effectiveTotalPages < 1 ? 'disabled' : ''}`}
+            >
+              <button
+                type="button"
+                className="page-link"
+                onClick={() => setPage(page + 1)}
+              >
+                &rsaquo;
+              </button>
             </li>
-            <li className={`page-item ${page === effectiveTotalPages || effectiveTotalPages < 1 ? 'disabled' : ''}`}>
-              <button type="button" className="page-link" onClick={() => setPage(effectiveTotalPages)}>&raquo;</button>
+            <li
+              className={`page-item ${page === effectiveTotalPages || effectiveTotalPages < 1 ? 'disabled' : ''}`}
+            >
+              <button
+                type="button"
+                className="page-link"
+                onClick={() => setPage(effectiveTotalPages)}
+              >
+                &raquo;
+              </button>
             </li>
           </ul>
         </nav>
       </div>
-
     </div>
   );
 }

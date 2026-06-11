@@ -1,5 +1,4 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateLaboratoryDto } from './create-laboratory.dto';
 import {
   IsBoolean,
   IsNotEmpty,
@@ -8,6 +7,8 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
+
+import { CreateLaboratoryDto } from './create-laboratory.dto';
 
 export class UpdateLaboratoryDto extends PartialType(CreateLaboratoryDto) {
   @IsString()

@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSubdistrictDto } from './dto/create-subdistrict.dto';
-import { UpdateSubdistrictDto } from './dto/update-subdistrict.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
+import { CreateSubdistrictDto } from './dto/create-subdistrict.dto';
+import { UpdateSubdistrictDto } from './dto/update-subdistrict.dto';
 import { Subdistrict } from './entities/subdistrict.entity';
 
 @Injectable()
 export class SubdistrictsService {
   constructor(
     @InjectRepository(Subdistrict)
-    private subdistrictRepo: Repository<Subdistrict>,
+    private subdistrictRepo: Repository<Subdistrict>
   ) {}
 
   create(createSubdistrictDto: CreateSubdistrictDto) {

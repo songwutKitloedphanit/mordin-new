@@ -11,11 +11,6 @@ export interface ServiceAreaInterface {
   note?: string;
   updateUid?: number;
   updatedAt?: number;
-  isActive?: boolean;
-  isUsed?: boolean;
-  effectiveFrom?: string | null;
-  effectiveTo?: string | null;
-  supersededByServiceAreaId?: number | null;
 }
 
 export interface ServiceAreaInfo extends ServiceAreaInterface {
@@ -29,17 +24,4 @@ export interface ServiceAreaInputInterface {
   name: string;
   note?: string;
   clientKey?: string;
-  isActive?: boolean;
-  isUsed?: boolean;
-  effectiveFrom?: string | null;
-  effectiveTo?: string | null;
-  supersededByServiceAreaId?: number | null;
-}
-
-export interface SupersedeServiceAreaInput {
-  targetFactoryId: number;
-  effectiveFrom: string;
-  code?: string;
-  name?: string;
-  note?: string;
 }

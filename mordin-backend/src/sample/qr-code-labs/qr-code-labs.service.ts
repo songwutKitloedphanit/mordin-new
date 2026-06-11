@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateQrCodeLabDto } from './dto/create-qr-code-lab.dto';
 import { UpdateQrCodeLabDto } from './dto/update-qr-code-lab.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { QrCodeLabLog } from './entities/qr-code-lab.log.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class QrCodeLabsService {
   constructor(
-      @InjectRepository(QrCodeLabLog)
-      private readonly qrCodeLabLog: Repository<QrCodeLabLog>,
-    ) { }
+    @InjectRepository(QrCodeLabLog)
+    private readonly qrCodeLabLog: Repository<QrCodeLabLog>
+  ) {}
 
   create(createQrCodeLabDto: CreateQrCodeLabDto, Uid: number) {
     return 'This action adds a new qrCodeLab';

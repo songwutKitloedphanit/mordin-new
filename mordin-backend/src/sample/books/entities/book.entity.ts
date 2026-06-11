@@ -1,3 +1,4 @@
+import { Subdistrict } from 'src/address/subdistricts/entities/subdistrict.entity';
 import { Farmer } from 'src/farmers/entities/farmer.entity';
 import { Land } from 'src/lands/entities/land.entity';
 import { FertilizerMajorLandScore } from 'src/sample/fertilizer-major-land-scores/entities/fertilizer-major-land-score.entity';
@@ -9,7 +10,6 @@ import { ServiceArea } from 'src/service-area/service-areas/entities/service-are
 import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
 import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
 import { User } from 'src/users/entities/user.entity';
-import { Subdistrict } from 'src/address/subdistricts/entities/subdistrict.entity';
 import {
   Column,
   Entity,
@@ -17,7 +17,6 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -65,7 +64,13 @@ export class Book {
   @Column({ name: 'area_size', type: 'float', nullable: true, default: null })
   areaSize: number;
 
-  @Column({ type: 'varchar', name: 'subdistrict_code', length: 6, nullable: true, default: null })
+  @Column({
+    type: 'varchar',
+    name: 'subdistrict_code',
+    length: 6,
+    nullable: true,
+    default: null,
+  })
   subdistrictCode: string;
 
   @Column({ name: 'zip_code', type: 'int', nullable: true, default: null })
@@ -95,8 +100,8 @@ export class Book {
   @Column({ name: 'service_area_id', type: 'int', nullable: true })
   serviceAreaId: number;
 
-  @OneToOne(() => QrCode, (qrCode) => qrCode.book, { 
-    nullable: true
+  @OneToOne(() => QrCode, qrCode => qrCode.book, {
+    nullable: true,
   })
   @JoinColumn({ name: 'qr_code_id' })
   qrCode: QrCode;
@@ -127,21 +132,21 @@ export class Book {
 
   @ManyToOne(() => Farmer, { nullable: true })
   @JoinColumn({ name: 'farmer_id' })
-  farmer: Farmer; 
+  farmer: Farmer;
 
   @ManyToOne(() => Subdistrict, { nullable: true })
   @JoinColumn({ name: 'subdistrict_code', referencedColumnName: 'code' })
   subdistrict: Subdistrict;
 
-  @OneToMany(() => FertilizerMajorLandScore, (score) => score.book)
+  @OneToMany(() => FertilizerMajorLandScore, score => score.book)
   ferMajorLandScore: FertilizerMajorLandScore[];
 
-  @OneToMany(() => FertilizerMajorLandUsage, (usage) => usage.book)
+  @OneToMany(() => FertilizerMajorLandUsage, usage => usage.book)
   ferMajorLandUsages: FertilizerMajorLandUsage[];
 
-  @OneToMany(() => FertilizerMinorLandUsage, (usage) => usage.book)
+  @OneToMany(() => FertilizerMinorLandUsage, usage => usage.book)
   ferMinorLandUsages: FertilizerMinorLandUsage[];
-  
-  @OneToMany(() => Result, (result) => result.book)
+
+  @OneToMany(() => Result, result => result.book)
   results: Result[];
 }

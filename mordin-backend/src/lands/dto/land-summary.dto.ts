@@ -2,14 +2,14 @@ import { IsNumber } from 'class-validator';
 
 export class LandSummaryDTO {
   @IsNumber()
-  totalLands : number;
+  totalLands: number;
 
   @IsNumber()
-  needsImprovementCount : number;
+  needsImprovementCount: number;
 
   @IsNumber()
-  normalSoilCount : number;
+  normalSoilCount: number;
 
   @IsNumber()
-  fertileSoilCount : number;
+  fertileSoilCount: number;
 }

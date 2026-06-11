@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateLaboratorySettingDetailDto } from './dto/create-laboratory-setting-detail.dto';
 import { UpdateLaboratorySettingDetailDto } from './dto/update-laboratory-setting-detail.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { LaboratorySettingDetailLog } from './entities/laboratory-setting-detail.log.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class LaboratorySettingDetailsService {
   constructor(
     @InjectRepository(LaboratorySettingDetailLog)
     private laboratorySettingDetailLog: Repository<LaboratorySettingDetailLog>
-  ){}
-  create(createLaboratorySettingDetailDto: CreateLaboratorySettingDetailDto, Uid: number) {
+  ) {}
+
+  create(
+    createLaboratorySettingDetailDto: CreateLaboratorySettingDetailDto,
+    Uid: number
+  ) {
     return 'This action adds a new laboratorySettingDetail';
   }
 
@@ -38,5 +43,4 @@ export class LaboratorySettingDetailsService {
   getLogs() {
     return this.laboratorySettingDetailLog.find();
   }
-
 }

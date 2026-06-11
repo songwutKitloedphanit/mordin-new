@@ -1,10 +1,5 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import {
-  Column,
-  Entity,
-  PrimaryColumn,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('laboratories_logs')
 export class LaboratoryLog extends BaseLogEntity {
@@ -39,8 +34,6 @@ export class LaboratoryLog extends BaseLogEntity {
   machineTypeId: number;
 
   @Column({ name: 'is_main', type: 'bool', default: false })
-
   @Column({ name: 'update_uid', type: 'int' })
   updateUid: number;
-
 }

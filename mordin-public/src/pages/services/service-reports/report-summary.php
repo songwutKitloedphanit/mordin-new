@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['farmer_profile'])) {
-        header('Location: /services/report/login');
+        header('Location: /services/book/login?next=report');
         exit;
 }
 
@@ -142,7 +142,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
   <div class="container">
 
     <!-- Header -->
-    <div class="mp-report-header mb-4">
+    <div class="mp-report-header mb-4 scroll-reveal">
       <div>
         <button type="button" class="public-back-button mb-2" onclick="history.back()">
           <i class="bi bi-arrow-left" aria-hidden="true"></i> ย้อนกลับ
@@ -157,7 +157,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
 
     <!-- Report history mini-table -->
     <?php if (!empty($approvedReports)): ?>
-    <div class="mp-table-card mb-4">
+    <div class="mp-table-card mb-4 scroll-reveal stagger-1">
       <div class="table-responsive">
         <table class="table mp-report-tbl">
           <thead>
@@ -197,7 +197,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
     <?php endif; ?>
 
     <!-- Summary PDF iframe -->
-    <div class="public-pdf-card">
+    <div class="public-pdf-card scroll-reveal stagger-2">
       <div class="public-pdf-header">
         <h4>รายงานสรุป &nbsp;<?= htmlspecialchars($summaryData['land']['name'] ?? '-') ?></h4>
         <p><?= htmlspecialchars($latestDate) ?> ถึง <?= htmlspecialchars($earliestDate) ?></p>

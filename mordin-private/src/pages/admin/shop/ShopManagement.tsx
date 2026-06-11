@@ -1,8 +1,9 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
+import { ManagementKpiRow } from '@/components/gui/ManagementKpiCard';
 import SearchAndPaginationTable from '@/components/gui/SearchAndPaginationTable';
 import LeafletMap, { MapMarkerData } from '@/components/map/LeafletMap';
 import {
@@ -11,16 +12,6 @@ import {
   deleteShop as apiDeleteShop,
 } from '@/services/api/ShopApi';
 import { Shop, ShopSummary } from '@/types/Shop';
-
-const KPI_CONFIG = [
-  {
-    key: 'totalShops' as keyof ShopSummary,
-    label: 'ร้านค้าทั้งหมด',
-    icon: 'fas fa-store',
-    accent: '#31CE36',
-    unit: 'ร้าน',
-  },
-];
 
 interface RawShop {
   shopId: number;
@@ -72,6 +63,16 @@ const hasValidCoordinate = (lat?: number | string, lng?: number | string) => {
     parsedLng !== 0
   );
 };
+
+const KPI_CONFIG = [
+  {
+    key: 'totalShops' as keyof ShopSummary,
+    label: 'ร้านค้าทั้งหมด',
+    icon: 'fas fa-store',
+    accentColor: '#18a05c',
+    unit: 'ร้าน',
+  },
+];
 
 const ShopManagement = () => {
   const [summary, setSummary] = useState<ShopSummary | null>(null);
@@ -139,96 +140,12 @@ const ShopManagement = () => {
   return (
     <>
       {/* KPI Cards */}
-      <div className="row g-3 mb-4">
-        {KPI_CONFIG.map(cfg => {
-          const value = summary?.[cfg.key] ?? 0;
-          return (
-            <div key={cfg.key} className="col-sm-6 col-lg-4">
-              {summaryLoading ? (
-                <div
-                  className="private-metric-card h-100"
-                  style={{ borderLeft: '4px solid rgba(128,128,128,0.2)' }}
-                >
-                  <div className="private-card-body py-3 px-4">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div className="flex-fill">
-                        <div className="placeholder-glow mb-2">
-                          <span
-                            className="placeholder d-block rounded"
-                            style={{ height: 11, width: '55%' }}
-                          />
-                        </div>
-                        <div className="placeholder-glow">
-                          <span
-                            className="placeholder d-block rounded"
-                            style={{ height: 40, width: '45%' }}
-                          />
-                        </div>
-                      </div>
-                      <div
-                        className="rounded-circle flex-shrink-0"
-                        style={{
-                          width: 64,
-                          height: 64,
-                          backgroundColor: 'rgba(128,128,128,0.1)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="private-metric-card h-100"
-                  style={{ borderLeft: `4px solid ${cfg.accent}` }}
-                >
-                  <div className="private-card-body py-3 px-4">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div>
-                        <div
-                          className="text-muted fw-semibold text-uppercase mb-2"
-                          style={{
-                            fontSize: '0.85rem',
-                            letterSpacing: '0.6px',
-                          }}
-                        >
-                          {cfg.label}
-                        </div>
-                        <div className="d-flex align-items-baseline gap-1">
-                          <span
-                            className="fw-bold"
-                            style={{ fontSize: '3.5rem', lineHeight: 1 }}
-                          >
-                            {value}
-                          </span>
-                          <span
-                            className="text-muted"
-                            style={{ fontSize: '1rem' }}
-                          >
-                            {cfg.unit}
-                          </span>
-                        </div>
-                      </div>
-                      <div
-                        className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                        style={{
-                          width: 64,
-                          height: 64,
-                          backgroundColor: `${cfg.accent}1a`,
-                        }}
-                      >
-                        <i
-                          className={cfg.icon}
-                          style={{ color: cfg.accent, fontSize: '1.8rem' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      <ManagementKpiRow
+        configs={KPI_CONFIG}
+        data={summary as Record<keyof ShopSummary, number>}
+        loading={summaryLoading}
+        colClass="col-sm-6 col-lg-3"
+      />
 
       {/* Map Card */}
       <div className="row mb-4">
@@ -385,4 +302,3 @@ const ShopManagement = () => {
 };
 
 export default ShopManagement;
-

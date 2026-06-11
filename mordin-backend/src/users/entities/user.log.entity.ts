@@ -1,17 +1,7 @@
-import {
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { UserRoles } from '../enums/user.enum';
-import { Department } from './department.entity';
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import { User } from './user.entity';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
+
+import { UserRoles } from '../enums/user.enum';
 
 @Entity('users_logs')
 export class UserLog extends BaseLogEntity {
@@ -38,5 +28,4 @@ export class UserLog extends BaseLogEntity {
 
   @Column({ name: 'update_uid', nullable: true })
   updateUid: number;
-
 }

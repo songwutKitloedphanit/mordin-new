@@ -1,19 +1,19 @@
 /* eslint-disable prettier/prettier */
 import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { CreateLandDto } from './dto/create-land.dto';
-import { UpdateLandDto } from './dto/update-land.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Land } from './entities/land.entity';
-import { Repository } from 'typeorm';
-import { LandSummaryDTO } from './dto/land-summary.dto';
-import { Book } from 'src/sample/books/entities/book.entity';
-import e from 'express';
-import { LandLog } from './entities/land.log.entity';
-import { SampleStatusEnum } from 'src/sample/enums/qr-code.enum';
-import { formatGlobalDateWithOutWeekly, formatThaiDateWithOutWeekly } from 'src/common/utils/date.util';
-import { UpdateLandByFarmerDto } from './dto/update-land-by-farmer.dto';
+import { formatGlobalDateWithOutWeekly } from 'src/common/utils/date.util';
 import { Farmer } from 'src/farmers/entities/farmer.entity';
+import { Book } from 'src/sample/books/entities/book.entity';
+import { SampleStatusEnum } from 'src/sample/enums/qr-code.enum';
+import { Repository } from 'typeorm';
+
+import { CreateLandDto } from './dto/create-land.dto';
 import { CreatePublicLandByFarmerDto } from './dto/create-public-land-by-farmer.dto';
+import { LandSummaryDTO } from './dto/land-summary.dto';
+import { UpdateLandByFarmerDto } from './dto/update-land-by-farmer.dto';
+import { UpdateLandDto } from './dto/update-land.dto';
+import { Land } from './entities/land.entity';
+import { LandLog } from './entities/land.log.entity';
 
 @Injectable()
 export class LandsService {
@@ -149,7 +149,7 @@ export class LandsService {
       throw new NotFoundException('Land not found');
     }
 
-    land.removedBy = userId;
+    (land as any).removedBy = userId;
     // await this.landRepository.save(land); // If soft delete logic needed later
 
     try {
@@ -174,7 +174,7 @@ export class LandsService {
       fertileSoilCount: 0,
     }
 
-    let count = 0;
+    const count = 0;
     await Promise.all(
       lands.map(async (land) => {
         const book = await this.bookRepo.findOne({
@@ -250,7 +250,7 @@ export class LandsService {
       const today = new Date();
       const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
       // กำหนด Type ให้ชัดเจน
-      let statusInfo: {
+      const statusInfo: {
         bookId: number | null;
         status: string;
         daysRemaining: number | null;
@@ -361,7 +361,7 @@ export class LandsService {
   }
 
   async updateByFarmer(landId: number, updateDto: UpdateLandByFarmerDto) {
-    const land = await this.landRepository.findOneBy({ landId: landId });
+    const land = await this.landRepository.findOneBy({ landId });
 
     if (!land) {
       throw new NotFoundException('Land not found');

@@ -347,7 +347,12 @@ const CalendarEdit: React.FC = () => {
     const rawLink = String(calendarData.mapLink ?? '').trim();
     const linkCoords = extractLatLngFromGoogleMapsUrl(rawLink);
 
-    if (rawLink && linkCoords && !isNaN(linkCoords.lat) && !isNaN(linkCoords.lng)) {
+    if (
+      rawLink &&
+      linkCoords &&
+      !isNaN(linkCoords.lat) &&
+      !isNaN(linkCoords.lng)
+    ) {
       return {
         lat: linkCoords.lat.toFixed(6),
         lng: linkCoords.lng.toFixed(6),
@@ -650,7 +655,9 @@ const CalendarEdit: React.FC = () => {
                   emptyMessage="-- กรุณาเลือกอำเภอก่อนเลือกตำบล --"
                 />
                 {error.subdistrictCode && (
-                  <div className="text-danger ms-2">{error.subdistrictCode}</div>
+                  <div className="text-danger ms-2">
+                    {error.subdistrictCode}
+                  </div>
                 )}
 
                 <GenFormText1
@@ -741,4 +748,3 @@ const CalendarEdit: React.FC = () => {
 };
 
 export default CalendarEdit;
-

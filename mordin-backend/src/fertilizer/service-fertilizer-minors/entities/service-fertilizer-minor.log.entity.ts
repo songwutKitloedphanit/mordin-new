@@ -1,10 +1,5 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import {
-  Column,
-  Entity,
-  PrimaryColumn,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('service_fertilizer_minors_logs')
 export class ServiceFertilizerMinorLog extends BaseLogEntity {

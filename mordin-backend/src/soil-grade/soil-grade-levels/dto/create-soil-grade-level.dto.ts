@@ -1,12 +1,4 @@
-import {
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsNumber,
-  IsString,
-  Length,
-  Min,
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsNumber, IsString, Length } from 'class-validator';
 import { NormalLevelEnum } from 'src/common/enums/normal-level.enum';
 
 export class CreateSoilGradeLevelDto {

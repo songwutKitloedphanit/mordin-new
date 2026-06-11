@@ -45,12 +45,6 @@ interface DashboardFiltersProps {
   handlers: FilterHandlers;
 }
 
-const FilterItem = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ minWidth: 140, maxWidth: 200, flex: '1 1 140px' }}>
-    {children}
-  </div>
-);
-
 const DashboardFilters = ({
   lists,
   values,
@@ -76,9 +70,9 @@ const DashboardFilters = ({
   } = handlers;
 
   return (
-    <div className="d-flex flex-wrap gap-3 align-items-end">
+    <div className="row g-3">
       {serviceTypeList && serviceTypeList.length > 0 && (
-        <FilterItem>
+        <div className="col-sm-6 col-lg-3">
           <GenFormSelect
             isRequired={false}
             id="typeId"
@@ -91,33 +85,33 @@ const DashboardFilters = ({
             }))}
             onChange={handleTypeChange}
           />
-        </FilterItem>
+        </div>
       )}
 
       {yearList && (
-        <FilterItem>
+        <div className="col-sm-6 col-lg-3">
           <GenFormSelect
             isRequired={false}
             id="year"
             name="year"
-            label="ปี"
+            label="ปีงบประมาณ"
             options={yearList}
             value={values?.year}
             onChange={handleChange}
           />
-        </FilterItem>
+        </div>
       )}
 
       {factoryList && (
-        <FilterItem>
+        <div className="col-sm-6 col-lg-3">
           <GenFormSelect
             isRequired={false}
             id="factory"
             name="factory"
-            label="โรงงาน"
+            label="สังกัดโรงงาน"
             value={values?.factoryId?.toString() ?? ''}
             options={[
-              { value: '', name: 'ทั้งหมด' },
+              { value: '', name: 'ทุกโรงงาน' },
               ...factoryList.map(factory => ({
                 value: factory.factoryId.toString(),
                 name: `${factory.name} (${factory.initial})`,
@@ -125,11 +119,11 @@ const DashboardFilters = ({
             ]}
             onChange={handleSelectFactory}
           />
-        </FilterItem>
+        </div>
       )}
 
       {serviceAreaList && (
-        <FilterItem>
+        <div className="col-sm-6 col-lg-3">
           <GenFormSelect
             isRequired={false}
             id="serviceAreaId"
@@ -137,7 +131,7 @@ const DashboardFilters = ({
             label="เขตส่งเสริม"
             value={values?.serviceAreaId || ''}
             options={[
-              { value: '', name: 'ทั้งหมด' },
+              { value: '', name: 'ทุกเขต' },
               ...serviceAreaList.map(servArea => ({
                 value: servArea.serviceAreaId,
                 name: `เขต ${servArea.code} (${servArea.name})`,
@@ -145,11 +139,11 @@ const DashboardFilters = ({
             ]}
             onChange={handleChange}
           />
-        </FilterItem>
+        </div>
       )}
 
       {geographyList && (
-        <FilterItem>
+        <div className="col-sm-6 col-lg-3">
           <GenFormSelect
             isRequired={false}
             id="geographyId"
@@ -165,11 +159,11 @@ const DashboardFilters = ({
             ]}
             onChange={handleGeographyChange}
           />
-        </FilterItem>
+        </div>
       )}
 
       {provinceList && (
-        <FilterItem>
+        <div className="col-sm-6 col-lg-3">
           <GenFormSelect
             isRequired={false}
             id="provinceCode"
@@ -177,7 +171,7 @@ const DashboardFilters = ({
             label="จังหวัด"
             value={values?.provinceCode}
             options={[
-              { value: '', name: 'ทั้งหมด' },
+              { value: '', name: 'ทุกจังหวัด' },
               ...provinceList.map(province => ({
                 value: province.code,
                 name: province.nameTh,
@@ -185,11 +179,11 @@ const DashboardFilters = ({
             ]}
             onChange={handleProvinceChange}
           />
-        </FilterItem>
+        </div>
       )}
 
       {districtList && districtList.length > 0 && (
-        <FilterItem>
+        <div className="col-sm-6 col-lg-3">
           <GenFormSelect
             isRequired={false}
             id="districtCode"
@@ -205,11 +199,11 @@ const DashboardFilters = ({
             ]}
             onChange={handleDistrictChange}
           />
-        </FilterItem>
+        </div>
       )}
 
       {subDistrictList && subDistrictList.length > 0 && (
-        <FilterItem>
+        <div className="col-sm-6 col-lg-3">
           <GenFormSelect
             isRequired={false}
             id="subdistrictCode"
@@ -225,7 +219,7 @@ const DashboardFilters = ({
             ]}
             onChange={handleChange}
           />
-        </FilterItem>
+        </div>
       )}
     </div>
   );

@@ -45,4 +45,3 @@ const InfoTable: React.FC<InfoTableProps> = ({ title, data, loading }) => {
 };
 
 export default InfoTable;
-

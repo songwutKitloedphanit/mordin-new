@@ -1,5 +1,5 @@
-﻿import { useCallback, useEffect, useState } from 'react';
-import Swal from 'sweetalert2';
+import { useCallback, useEffect, useState } from 'react';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
@@ -18,7 +18,7 @@ const KPI_CONFIG = [
     key: 'totalLands' as keyof LandSummary,
     label: 'แปลงทั้งหมด',
     icon: 'fas fa-map-marked',
-    accent: '#31CE36',
+    accent: '#18a05c',
     unit: 'แปลง',
   },
   {
@@ -32,14 +32,14 @@ const KPI_CONFIG = [
     key: 'normalSoilCount' as keyof LandSummary,
     label: 'ดินปกติ',
     icon: 'fas fa-check-circle',
-    accent: '#337AB7',
+    accent: '#3b9bd9',
     unit: 'แปลง',
   },
   {
     key: 'fertileSoilCount' as keyof LandSummary,
     label: 'ดินสมบูรณ์',
     icon: 'fas fa-leaf',
-    accent: '#26C281',
+    accent: '#2fb380',
     unit: 'แปลง',
   },
 ];
@@ -101,7 +101,7 @@ const LandManagement = () => {
   const handleDelete = async (id: number) => {
     try {
       await deleteLandById(id);
-      await Swal.fire('สำเร็จ', 'ลบแปลงเรียบร้อยแล้ว', 'success');
+      await swalSuccessTimer('สำเร็จ', 'ลบแปลงเรียบร้อยแล้ว');
       setDeleteTarget(null);
       setRefreshKey(prev => prev + 1);
     } catch (error: unknown) {
@@ -113,7 +113,7 @@ const LandManagement = () => {
       const errorMessage = Array.isArray(message)
         ? message.join(', ')
         : message;
-      await Swal.fire('เกิดข้อผิดพลาด', errorMessage, 'error');
+      await swalError('เกิดข้อผิดพลาด', errorMessage);
       setDeleteTarget(null);
     }
   };
@@ -168,7 +168,10 @@ const LandManagement = () => {
                       <div>
                         <div
                           className="text-muted fw-semibold text-uppercase mb-2"
-                          style={{ fontSize: '0.85rem', letterSpacing: '0.6px' }}
+                          style={{
+                            fontSize: '0.85rem',
+                            letterSpacing: '0.6px',
+                          }}
                         >
                           {cfg.label}
                         </div>
@@ -338,7 +341,10 @@ const LandManagement = () => {
                           color={B_LIST.del.color}
                           icon={B_LIST.del.icon}
                           onClick={() =>
-                            setDeleteTarget({ id: land.landId, name: land.name })
+                            setDeleteTarget({
+                              id: land.landId,
+                              name: land.name,
+                            })
                           }
                         />
                       </>
@@ -374,4 +380,3 @@ const LandManagement = () => {
 };
 
 export default LandManagement;
-

@@ -19,13 +19,23 @@ Flight::route('GET /api/subdistricts/@districtCode', function($districtCode) {
 Flight::route('POST /api/farmer-lookup', function() {
     require_once __DIR__.'/services/FarmerAPI.php';
     $body = json_decode(Flight::request()->getBody(), true);
-    $firstName   = trim($body['firstName'] ?? '');
     $phoneNumber = preg_replace('/\D/', '', $body['phoneNumber'] ?? '');
-    if (!$firstName || !$phoneNumber) {
-        Flight::json(['success' => false, 'message' => 'กรุณากรอกชื่อและเบอร์โทร'], 400);
+    $birthDay    = $body['birthDay'] ?? '';
+    $birthMonth  = $body['birthMonth'] ?? '';
+    $birthYear   = $body['birthYear'] ?? '';
+
+    $birthDate = null;
+    if ($birthDay && $birthMonth && $birthYear) {
+        $ceYear = (int)$birthYear - 543;
+        $birthDate = sprintf('%04d-%02d-%02d', $ceYear, (int)$birthMonth, (int)$birthDay);
+    }
+
+    if (!$phoneNumber || !$birthDate) {
+        Flight::json(['success' => false, 'message' => 'กรุณากรอกเบอร์โทรศัพท์และวัน/เดือน/ปีเกิด'], 400);
         return;
     }
-    $result = FarmerAPI::publicLookupByNamePhone($firstName, $phoneNumber);
+
+    $result = FarmerAPI::publicLookupByNamePhone($phoneNumber, $birthDate);
     Flight::json($result);
 });
 
@@ -98,29 +108,6 @@ Flight::route('POST /services/report/summary', function() {
 // หน้าเข้าสู่ระบบรายงาน
 Flight::route('GET|POST /services/report/login', function() {
      Flight::render('services/service-reports/login.php');
-});
-
-// ยืนยันตัวตน (mock) แล้ว redirect ไปดูรายงาน
-Flight::route('POST /services/report/login', function() {
-  // ตัวอย่างรับค่าจากฟอร์ม
-  $identifier = $_POST['identifier'] ?? null;
-  $phone      = $_POST['phone'] ?? null;
-  $loginType  = $_POST['login_type'] ?? 'farmer_no';
-
-  // TODO: ที่จริงควรตรวจสอบกับฐานข้อมูล/ API
-  if ($identifier && $phone) {
-    $_SESSION['report_auth'] = [
-      'login_type' => $loginType,
-      'identifier' => $identifier,
-      'phone'      => $phone,
-      'login_time' => date('Y-m-d H:i:s')
-    ];
-    // เข้าสู่หน้า report หลังล็อกอิน
-    Flight::redirect('/services/report');
-  } else {
-    // กลับไปหน้า login ถ้าข้อมูลไม่ครบ
-    Flight::redirect('/services/report/login');
-  }
 });
 
 // ป้องกันเข้าหน้ารายงานโดยยังไม่ล็อกอิน

@@ -4,9 +4,9 @@ import {
   IsNotEmpty,
   IsNumber,
   IsString,
-  IsUUID,
   Length,
 } from 'class-validator';
+
 import { UserRoles } from '../enums/user.enum';
 
 export class CreateUserDto {

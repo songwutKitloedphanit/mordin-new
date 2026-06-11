@@ -1,24 +1,23 @@
+import { HttpService } from '@nestjs/axios';
 import {
-  Inject,
   Injectable,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { CreateServiceCalendarDto } from './dto/create-service-calendar.dto';
-import { UpdateServiceCalendarDto } from './dto/update-service-calendar.dto';
-import { ServiceCalendar } from './entities/service-calendar.entity';
-import { Brackets, In, MoreThanOrEqual, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
-import { LaboratorySettingsService } from 'src/laboratory/laboratory-settings/laboratory-settings.service';
-import { SearchServiceCalendarDto } from './dto/search-service-calendar.dto';
-import { HttpService } from '@nestjs/axios';
-import { ServiceCalendarSummaryDto } from './dto/service-calendar-summary.dto';
 import { LaboratorySetting } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.entity';
+import { LaboratorySettingsService } from 'src/laboratory/laboratory-settings/laboratory-settings.service';
 import { Book } from 'src/sample/books/entities/book.entity';
 import { SampleStatusEnum } from 'src/sample/enums/qr-code.enum';
+import { Brackets, In, MoreThanOrEqual, Repository } from 'typeorm';
+
+import { CreateServiceCalendarDto } from './dto/create-service-calendar.dto';
+import { SearchServiceCalendarDto } from './dto/search-service-calendar.dto';
+import { ServiceCalendarSummaryDto } from './dto/service-calendar-summary.dto';
+import { UpdateServiceCalendarDto } from './dto/update-service-calendar.dto';
+import { ServiceCalendar } from './entities/service-calendar.entity';
 import { ServiceCalendarLog } from './entities/service-calendar.log.entity';
-import dayjs from 'dayjs';
 
 // ประเภทข้อมูลสำหรับ Status ใหม่ (เพิ่ม 'no_samples')
 type SettingStatus = 'set' | 'not_set';
@@ -65,7 +64,22 @@ export class ServiceCalendarsService {
     private readonly httpService: HttpService,
     @InjectRepository(ServiceCalendarLog)
     private serviceCalendarLog: Repository<ServiceCalendarLog>
-  ) { }
+  ) {}
+
+  // Helper function to group data by calendar ID
+  private groupDataByCalendarId<T>(items: T[], key: keyof T): Map<number, T[]> {
+    const map = new Map<number, T[]>();
+    for (const item of items) {
+      const id = item[key] as number;
+      if (id) {
+        if (!map.has(id)) {
+          map.set(id, []);
+        }
+        map.get(id)!.push(item);
+      }
+    }
+    return map;
+  }
 
   async create(
     createServiceCalendarDto: CreateServiceCalendarDto,
@@ -337,7 +351,7 @@ export class ServiceCalendarsService {
         // 1. settingStatus
         const settingStatus: SettingStatus =
           relatedSettings.length > 0 &&
-            relatedSettings.every(s => s.intercept != null && s.slope != null)
+          relatedSettings.every(s => s.intercept != null && s.slope != null)
             ? 'set'
             : 'not_set';
 
@@ -404,21 +418,6 @@ export class ServiceCalendarsService {
       limit: all ? total : limit,
       totalPages: all ? 1 : Math.ceil(total / limit),
     };
-  }
-
-  // Helper function to group data by calendar ID
-  private groupDataByCalendarId<T>(items: T[], key: keyof T): Map<number, T[]> {
-    const map = new Map<number, T[]>();
-    for (const item of items) {
-      const id = item[key] as number;
-      if (id) {
-        if (!map.has(id)) {
-          map.set(id, []);
-        }
-        map.get(id)!.push(item);
-      }
-    }
-    return map;
   }
 
   async resolveShortUrl(shortUrl: string): Promise<string> {
@@ -538,8 +537,8 @@ export class ServiceCalendarsService {
         return {
           ...cal,
           currentBookings: bookingCount,
-          maxQuota: maxQuota,
-          isFull: isFull,
+          maxQuota,
+          isFull,
           // แปลงวันที่เป็น string ง่ายๆ หรือจะไปแปลงที่ front ก็ได้
           dateStr: cal.date,
         };
@@ -557,17 +556,29 @@ export class ServiceCalendarsService {
     const calendar = await this.serviceCalendarRepo.findOne({
       where: { serviceCalendarId: calendarId },
     });
-    if (!calendar) throw new NotFoundException(`ServiceCalendar ${calendarId} not found`);
+    if (!calendar)
+      throw new NotFoundException(`ServiceCalendar ${calendarId} not found`);
 
     const existing = await this.labSettingRepo.count({
       where: { serviceCalendarId: calendarId },
     });
     if (existing > 0) {
-      return { skipped: true, message: `Calendar ${calendarId} already has ${existing} settings` };
+      return {
+        skipped: true,
+        message: `Calendar ${calendarId} already has ${existing} settings`,
+      };
     }
 
-    await this.labSettingsService.createAllFromServiceCalendarId(calendarId, userId);
-    const created = await this.labSettingRepo.count({ where: { serviceCalendarId: calendarId } });
-    return { skipped: false, message: `Created ${created} settings for calendar ${calendarId}` };
+    await this.labSettingsService.createAllFromServiceCalendarId(
+      calendarId,
+      userId
+    );
+    const created = await this.labSettingRepo.count({
+      where: { serviceCalendarId: calendarId },
+    });
+    return {
+      skipped: false,
+      message: `Created ${created} settings for calendar ${calendarId}`,
+    };
   }
 }

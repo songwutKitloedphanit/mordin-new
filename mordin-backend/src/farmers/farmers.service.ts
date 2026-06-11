@@ -1,25 +1,27 @@
 /* eslint-disable prettier/prettier */
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateFarmerDto } from './dto/create-farmer.dto';
-import { UpdateFarmerDto } from './dto/update-farmer.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Farmer } from './entities/farmer.entity';
-import { IsNull, Like, Not, Repository } from 'typeorm';
-import { SearchFarmerDto } from './dto/search-farmer.dto';
-import { Land } from 'src/lands/entities/land.entity';
-import { FarmerSummaryDTO } from './dto/farmer-summary.dto';
-import { FarmerLog } from './entities/farmer.log.entity';
-import { error } from 'console';
-import { FarmerPublicLoginDto } from './dto/farmer-public-login.dto';
-import { FarmerPublicNamePhoneDto } from './dto/farmer-public-name-phone.dto';
-import { FarmerPublicProfileDto } from './dto/farmer-public-profile.dto'; import { Book } from 'src/sample/books/entities/book.entity';
-import { SampleStatusEnum } from 'src/sample/enums/qr-code.enum';
-import { BooksService } from 'src/sample/books/books.service';
+import * as archiver from 'archiver';
 import { Response } from 'express';
 import * as puppeteer from 'puppeteer';
-import * as archiver from 'archiver';
 import { formatThaiDateWithOutWeekly } from 'src/common/utils/date.util';
 import { formatNumber } from 'src/common/utils/format-number.util';
+import { Land } from 'src/lands/entities/land.entity';
+import { BooksService } from 'src/sample/books/books.service';
+ import { Book } from 'src/sample/books/entities/book.entity';
+import { SampleStatusEnum } from 'src/sample/enums/qr-code.enum';
+import { IsNull, Not, Repository } from 'typeorm';
+
+import { CreateFarmerDto } from './dto/create-farmer.dto';
+import { FarmerPublicLoginDto } from './dto/farmer-public-login.dto';
+import { FarmerPublicNamePhoneDto } from './dto/farmer-public-name-phone.dto';
+import { FarmerPublicProfileDto } from './dto/farmer-public-profile.dto';
+import { FarmerSummaryDTO } from './dto/farmer-summary.dto';
+import { SearchFarmerDto } from './dto/search-farmer.dto';
+import { UpdateFarmerDto } from './dto/update-farmer.dto';
+import { Farmer } from './entities/farmer.entity';
+import { FarmerLog } from './entities/farmer.log.entity';
+
 
 interface ReportItem {
   bookId: number;
@@ -95,7 +97,11 @@ export class FarmersService {
     return normalizedThaiNationalId;
   }
 
-  async create(createFarmerDto: CreateFarmerDto, Uid: number) {
+  private digits(v?: string): string {
+    return (v ?? '').replace(/\D/g, '');
+  }
+
+async create(createFarmerDto: CreateFarmerDto, Uid: number) {
     const thaiNationalId = await this.assertUniqueThaiNationalId(
       createFarmerDto.thaiNationalId,
     );
@@ -358,7 +364,7 @@ export class FarmersService {
       throw new NotFoundException('Farmer not found');
     }
 
-    farmer.removedBy = userId;
+    (farmer as any).removedBy = userId;
 
     try {
       await this.farmerRepo.remove(farmer);
@@ -374,9 +380,7 @@ export class FarmersService {
     }
   }
 
-  private digits(v?: string): string {
-    return (v ?? '').replace(/\D/g, '');
-  }
+  
 
   /**
    * ล็อกอินแบบ Public: ยืนยันตัวตนด้วย
@@ -443,6 +447,7 @@ export class FarmersService {
       firstName: farmer.firstName,
       lastName: farmer.lastName,
       phone: farmer.phone,
+      birthDate: farmer.birthDate,
       thaiFarmerId: farmer.thaiFarmerId || undefined,
       factory: farmer.factory ? {
         factoryId: farmer.factoryId,
@@ -464,7 +469,7 @@ export class FarmersService {
         latitude: land.latitude,
         longitude: land.longitude,
         subdistrictCode: land.subdistrictCode,
-        zipCode: land.zipCode,
+        zipCode: land.subdistrict.zipCode,
         subdistrict: land.subdistrict ? {
           code: land.subdistrict.code,
           zipCode: land.subdistrict.zipCode,
@@ -485,9 +490,9 @@ export class FarmersService {
 
   async publicLookupByNamePhone(dto: FarmerPublicNamePhoneDto): Promise<FarmerPublicProfileDto> {
     const phoneDigits = this.digits(dto.phone);
-    const firstName = dto.firstName.trim();
-    if (!firstName) {
-      throw new BadRequestException('Invalid first name');
+    const birthDate = dto.birthDate?.trim();
+    if (!birthDate) {
+      throw new BadRequestException('Invalid birth date');
     }
     if (!phoneDigits || phoneDigits.length < 9) {
       throw new BadRequestException('Invalid phone number');
@@ -496,13 +501,13 @@ export class FarmersService {
     const matches = await this.farmerRepo.createQueryBuilder('farmer')
       .leftJoinAndSelect('farmer.factory', 'factory')
       .leftJoinAndSelect('farmer.serviceArea', 'serviceArea')
-      .where('farmer.firstName = :firstName', { firstName })
+      .where('farmer.birthDate = :birthDate', { birthDate })
       .andWhere('farmer.phone = :phone', { phone: phoneDigits })
       .limit(2)
       .getMany();
 
     if (matches.length === 0) {
-      throw new NotFoundException('ไม่พบข้อมูลเกษตรกรจากชื่อและเบอร์โทรที่ให้มา');
+      throw new NotFoundException('ไม่พบข้อมูลเกษตรกรจากวันเกิดและเบอร์โทรที่ให้มา');
     }
     if (matches.length > 1) {
       throw new BadRequestException('พบข้อมูลซ้ำหลายรายการ กรุณาติดต่อเจ้าหน้าที่');
@@ -533,6 +538,7 @@ export class FarmersService {
       firstName: farmer.firstName,
       lastName: farmer.lastName,
       phone: farmer.phone,
+      birthDate: farmer.birthDate,
       thaiFarmerId: farmer.thaiFarmerId || undefined,
       factory: farmer.factory ? {
         factoryId: farmer.factoryId,
@@ -619,7 +625,7 @@ export class FarmersService {
     // 3. สร้างโครงสร้างข้อมูล
     const landsWithReports: LandWithReports[] = lands.map(land => ({
       landId: land.landId,
-      land: land,
+      land,
       reports: [],
     }));
 
@@ -699,7 +705,7 @@ export class FarmersService {
     // 3. สร้างโครงสร้างข้อมูล โดยกำหนด Type ให้ชัดเจน
     const landsWithReports: LandWithSummaryReports[] = lands.map(land => ({
       landId: land.landId,
-      land: land,
+      land,
       reports: [], // ตอนนี้ TypeScript รู้แล้วว่าเป็น Array ของ ReportItem
     }));
 
@@ -721,7 +727,7 @@ export class FarmersService {
         collectSampleAt: book.collectSampleAt,
         status: book.qrCode.status,
         results: result || null,
-        book: book, // เพิ่มข้อมูล book เต็มๆ เข้าไปใน reportData
+        book, // เพิ่มข้อมูล book เต็มๆ เข้าไปใน reportData
       };
 
 
@@ -750,6 +756,7 @@ export class FarmersService {
     }
     return result;
   }
+
   async generateLandReportPdf(landId: number, res: Response) {
     const reports = await this.getFarmerSummaryReportsByLand(landId);
     if (!reports || reports.length === 0) {

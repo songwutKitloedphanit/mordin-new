@@ -36,16 +36,16 @@ export class Factory {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
-  @OneToMany(() => ServiceArea, (serviceArea) => serviceArea.factory)
+  @OneToMany(() => ServiceArea, serviceArea => serviceArea.factory)
   serviceAreas: ServiceArea[];
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

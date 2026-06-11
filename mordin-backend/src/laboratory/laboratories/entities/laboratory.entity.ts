@@ -5,14 +5,12 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   Unique,
-  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('laboratories')
@@ -49,7 +47,7 @@ export class Laboratory {
   machineTypeId: number;
 
   @Column({ name: 'is_main', type: 'bool', default: false })
-  isMain: Boolean;
+  isMain: boolean;
 
   @Column({ name: 'is_use_for_grading', type: 'bool', default: false })
   isUseForGrading: boolean;
@@ -60,12 +58,6 @@ export class Laboratory {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
@@ -74,6 +66,12 @@ export class Laboratory {
   @JoinColumn({ name: 'machine_type_id' })
   machineType: MachineType;
 
-  @OneToMany(() => ServiceLaboratory, (servLab) => servLab.laboratories)
+  @OneToMany(() => ServiceLaboratory, servLab => servLab.laboratories)
   serviceLaboratories: ServiceLaboratory[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

@@ -1,6 +1,6 @@
 // src/service-calendars/dto/search-service-calendar.dto.ts
 
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
 import { BaseSearchDto } from 'src/common/dto/base-search.dto';
 

@@ -1,8 +1,9 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
+import { ManagementKpiRow } from '@/components/gui/ManagementKpiCard';
 import SearchAndPaginationTable from '@/components/gui/SearchAndPaginationTable';
 import {
   deleteLaboratory,
@@ -15,21 +16,21 @@ const KPI_CONFIG = [
     key: 'total' as const,
     label: 'ค่าวิเคราะห์ทั้งหมด',
     icon: 'fas fa-flask',
-    accent: '#31CE36',
+    accentColor: '#18a05c',
     unit: 'รายการ',
   },
   {
     key: 'main' as const,
     label: 'ค่าหลัก',
     icon: 'fas fa-star',
-    accent: '#337AB7',
+    accentColor: '#3b9bd9',
     unit: 'รายการ',
   },
   {
     key: 'minor' as const,
     label: 'ค่ารอง',
     icon: 'fas fa-vial',
-    accent: '#F39C12',
+    accentColor: '#d98f0c',
     unit: 'รายการ',
   },
 ];
@@ -151,93 +152,12 @@ const Laboratory = () => {
   return (
     <>
       {/* KPI Cards */}
-      <div className="row g-3 mb-4">
-        {KPI_CONFIG.map(cfg => {
-          const value = kpi[cfg.key];
-          return (
-            <div key={cfg.key} className="col-sm-6 col-lg-4">
-              {kpiLoading ? (
-                <div
-                  className="private-metric-card h-100"
-                  style={{ borderLeft: '4px solid rgba(128,128,128,0.2)' }}
-                >
-                  <div className="private-card-body py-3 px-4">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div className="flex-fill">
-                        <div className="placeholder-glow mb-2">
-                          <span
-                            className="placeholder d-block rounded"
-                            style={{ height: 11, width: '55%' }}
-                          />
-                        </div>
-                        <div className="placeholder-glow">
-                          <span
-                            className="placeholder d-block rounded"
-                            style={{ height: 40, width: '45%' }}
-                          />
-                        </div>
-                      </div>
-                      <div
-                        className="rounded-circle flex-shrink-0"
-                        style={{
-                          width: 64,
-                          height: 64,
-                          backgroundColor: 'rgba(128,128,128,0.1)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="private-metric-card h-100"
-                  style={{ borderLeft: `4px solid ${cfg.accent}` }}
-                >
-                  <div className="private-card-body py-3 px-4">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div>
-                        <div
-                          className="text-muted fw-semibold text-uppercase mb-2"
-                          style={{ fontSize: '0.85rem', letterSpacing: '0.6px' }}
-                        >
-                          {cfg.label}
-                        </div>
-                        <div className="d-flex align-items-baseline gap-1">
-                          <span
-                            className="fw-bold"
-                            style={{ fontSize: '3.5rem', lineHeight: 1 }}
-                          >
-                            {value}
-                          </span>
-                          <span
-                            className="text-muted"
-                            style={{ fontSize: '1rem' }}
-                          >
-                            {cfg.unit}
-                          </span>
-                        </div>
-                      </div>
-                      <div
-                        className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                        style={{
-                          width: 64,
-                          height: 64,
-                          backgroundColor: `${cfg.accent}1a`,
-                        }}
-                      >
-                        <i
-                          className={cfg.icon}
-                          style={{ color: cfg.accent, fontSize: '1.8rem' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      <ManagementKpiRow
+        configs={KPI_CONFIG}
+        data={kpi}
+        loading={kpiLoading}
+        colClass="col-sm-6 col-lg-4"
+      />
 
       {/* Main Labs Table */}
       <div className="row mb-4">
@@ -343,4 +263,3 @@ const Laboratory = () => {
 };
 
 export default Laboratory;
-

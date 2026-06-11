@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { getFertilizerSummary } from '@/services/api/fertilizer/FertilizerMajorApi';
 import { FertilizerSummary } from '@/types/fertilizer/FertilizerMajor';
@@ -21,14 +21,14 @@ const KPI_CONFIG: {
     key: 'majorAvgPricePerSack',
     label: 'ราคาปุ๋ยหลักเฉลี่ย',
     icon: 'fas fa-coins',
-    accent: '#31CE36',
+    accent: '#18a05c',
     unit: 'บาท/กระสอบ',
   },
   {
     key: 'minorCount',
     label: 'ธาตุอาหารรอง',
     icon: 'fas fa-leaf',
-    accent: '#F39C12',
+    accent: '#d98f0c',
     unit: 'ชนิด',
   },
   {
@@ -104,10 +104,7 @@ const FertilizerUsagesSummaryCard = () => {
                       >
                         {summary[cfg.key]}
                       </span>
-                      <span
-                        className="text-muted"
-                        style={{ fontSize: '1rem' }}
-                      >
+                      <span className="text-muted" style={{ fontSize: '1rem' }}>
                         {cfg.unit}
                       </span>
                     </div>
@@ -136,4 +133,3 @@ const FertilizerUsagesSummaryCard = () => {
 };
 
 export default FertilizerUsagesSummaryCard;
-

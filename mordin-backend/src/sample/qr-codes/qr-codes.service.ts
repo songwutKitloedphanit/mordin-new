@@ -1,25 +1,33 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { CreateQrCodeDto } from './dto/create-qr-code.dto';
-import { UpdateQrCodeDto } from './dto/update-qr-code.dto';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { QrCode } from './entities/qr-code.entity';
-import { Brackets, DataSource, In, Not, Repository } from 'typeorm';
-import { BooksService } from '../books/books.service';
+import * as dayjs from 'dayjs';
 import { CryptoService } from 'src/common/crypto/crypto.service';
+import { Farmer } from 'src/farmers/entities/farmer.entity';
+import { Land } from 'src/lands/entities/land.entity';
+import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
+import { Brackets, DataSource, In, Not, Repository } from 'typeorm';
+
+import { BooksService } from '../books/books.service';
 import { Book } from '../books/entities/book.entity';
 import { SampleStatusEnum } from '../enums/qr-code.enum';
-import { Land } from 'src/lands/entities/land.entity';
 import { ResultsService } from '../results/results.service';
-import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
-import { ReceiveSampleDto } from './dto/receive-sample.dto';
-import * as dayjs from 'dayjs';
-import { Farmer } from 'src/farmers/entities/farmer.entity';
-import { SearchQrCodeDto } from './dto/search-qr-code.dto';
+
+import { CreateQrCodeDto } from './dto/create-qr-code.dto';
 import { QrCodeSummaryDto } from './dto/qr-code-summary.dto';
+import { ReceiveSampleDto } from './dto/receive-sample.dto';
+import { SearchQrCodeDto } from './dto/search-qr-code.dto';
+import { UpdateQrCodeDto } from './dto/update-qr-code.dto';
+import { QrCode } from './entities/qr-code.entity';
 import { QrCodeLog } from './entities/qr-code.log.entity';
 
 @Injectable()
 export class QrCodesService {
+  private readonly logger = new Logger(QrCodesService.name);
   constructor(
     @InjectDataSource()
     private readonly dataSource: DataSource,
@@ -47,9 +55,128 @@ export class QrCodesService {
     private readonly cryptoService: CryptoService,
 
     private readonly resultService: ResultsService
-  ) { }
+  ) {}
 
-  private readonly logger = new Logger(QrCodesService.name);
+  private async mapInputData(
+    qrCode: QrCode,
+    manager?: import('typeorm').EntityManager
+  ): Promise<{ farmer: Farmer | null; land: Land | null }> {
+    const thaiId = qrCode.thaiNationalId?.trim();
+    const phone = qrCode.phoneNumber?.replace(/\D/g, ''); // normalize เบอร์
+    const landCode = qrCode.landCode?.trim();
+
+    const farmerRepo = manager?.getRepository(Farmer) ?? this.farmerRepo;
+    const landRepo = manager?.getRepository(Land) ?? this.landRepo;
+    const [farmerById, farmerByPhone] = await Promise.all([
+      thaiId ? farmerRepo.findOne({ where: { thaiNationalId: thaiId } }) : null,
+      phone ? farmerRepo.findOne({ where: { phone } }) : null,
+    ]);
+
+    let farmer: Farmer | null = null;
+
+    const sameFarmer =
+      farmerById &&
+      farmerByPhone &&
+      farmerById.farmerId === farmerByPhone.farmerId;
+    if (sameFarmer) {
+      farmer = farmerById;
+    } else if (farmerById && farmerByPhone === null) {
+      farmer = farmerById;
+    } else if (farmerById === null && farmerByPhone) {
+      farmer = farmerByPhone;
+    } else {
+      // conflict or not found — ปล่อย farmer = null โดยตั้งใจ (กันผูกตัวอย่างผิดคน)
+      // แต่ต้อง log ให้เจ้าหน้าที่ตามต่อได้ ไม่ปล่อยเงียบ
+      farmer = null;
+      if (farmerById && farmerByPhone) {
+        // เลขบัตรตรงคนหนึ่ง แต่เบอร์โทรตรงอีกคนหนึ่ง — ข้อมูลขัดกัน
+        this.logger.warn(
+          `Farmer conflict on QR ${qrCode.qrCode}: thaiNationalId matches farmerId=${farmerById.farmerId} ` +
+            `but phone matches farmerId=${farmerByPhone.farmerId}. Sample saved WITHOUT farmer link; staff must reconcile.`
+        );
+      } else if (thaiId || phone) {
+        // มีข้อมูลระบุตัวตนแต่ไม่พบเกษตรกรในระบบ — เป็นเกษตรกรรายใหม่/ยังไม่ลงทะเบียน
+        this.logger.warn(
+          `No matching farmer for QR ${qrCode.qrCode} (thaiNationalId/phone provided but not found). ` +
+            `Sample saved WITHOUT farmer link; staff must register/link this farmer.`
+        );
+      }
+    }
+
+    let land: Land | null = null;
+    if (landCode) {
+      const foundLand = await landRepo.findOne({ where: { landCode } });
+      if (foundLand) {
+        const isOwnedByFarmer =
+          farmer && foundLand.farmerId === farmer.farmerId;
+        land = isOwnedByFarmer || !farmer ? foundLand : null;
+        if (farmer && foundLand.farmerId !== farmer.farmerId) {
+          // landCode มีอยู่จริงแต่เป็นของเกษตรกรคนอื่น — ไม่ผูกแปลง ใช้ข้อมูลที่กรอกแทน
+          this.logger.warn(
+            `Land code "${landCode}" on QR ${qrCode.qrCode} belongs to farmerId=${foundLand.farmerId}, ` +
+              `not the matched farmerId=${farmer.farmerId}. Land link skipped.`
+          );
+        }
+      }
+    }
+
+    return { farmer, land };
+  }
+
+  private normalizeCoordinate(
+    value: unknown,
+    min: number,
+    max: number,
+    fieldName: 'latitude' | 'longitude'
+  ): string {
+    const rawValue = String(value ?? '').trim();
+    if (!rawValue) {
+      throw new BadRequestException(`${fieldName} is required`);
+    }
+
+    if (!/^-?\d+(\.\d{1,6})?$/.test(rawValue)) {
+      throw new BadRequestException(
+        `${fieldName} must be a decimal with up to 6 digits`
+      );
+    }
+
+    const numericValue = Number(rawValue);
+    if (
+      !Number.isFinite(numericValue) ||
+      numericValue < min ||
+      numericValue > max
+    ) {
+      throw new BadRequestException(`${fieldName} is invalid`);
+    }
+
+    return numericValue.toFixed(6);
+  }
+
+  private normalizeOptionalAreaSize(value: unknown): number | null {
+    if (value === undefined || value === null || String(value).trim() === '') {
+      return null;
+    }
+
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue) || numericValue <= 0) {
+      throw new BadRequestException('areaSize must be a positive number');
+    }
+
+    return numericValue;
+  }
+
+  private normalizeOptionalZipCode(value: unknown): number | null {
+    if (value === undefined || value === null || String(value).trim() === '') {
+      return null;
+    }
+
+    const numericValue = Number(value);
+    if (!Number.isInteger(numericValue) || String(numericValue).length !== 5) {
+      throw new BadRequestException('zipCode must be a 5 digit number');
+    }
+
+    return numericValue;
+  }
 
   async getLatestSequenceInYear(year: number): Promise<number> {
     const yearShort = (year % 100).toString().padStart(2, '0');
@@ -61,7 +188,7 @@ export class QrCodesService {
       .where('qrCode.qrCode ~ :pattern', {
         pattern: `^${yearShort}-[0-9]{6}-[0-9]{2}$`,
       })
-      .orderBy("CAST(SUBSTRING(qrCode.qrCode FROM 4 FOR 6) AS INTEGER)", 'DESC')
+      .orderBy('CAST(SUBSTRING(qrCode.qrCode FROM 4 FOR 6) AS INTEGER)', 'DESC')
       .getOne();
 
     if (!latestQr) {
@@ -71,6 +198,7 @@ export class QrCodesService {
     const seq = parseInt(latestQr.qrCode.split('-')[1], 10);
     return isNaN(seq) ? 0 : seq;
   }
+
   /**
    * [OPTIMIZED] สร้าง QR Code แบบ Bulk และปรับแก้ข้อมูลที่ส่งกลับ
    */
@@ -334,7 +462,7 @@ export class QrCodesService {
     }
     return {
       ...sample,
-      result: result,
+      result,
     };
   }
 
@@ -378,8 +506,17 @@ export class QrCodesService {
   async update(id: number, updateQrCodeDto: UpdateQrCodeDto, Uid: number) {
     const qrCode = await this.qrCodeRepo.findOne({ where: { qrCodeId: id } });
     if (!qrCode) throw new NotFoundException(`QrCode ${id} not found`);
-    const { firstName, lastName, phoneNumber, thaiNationalId, landCode, landName,
-            serviceAreaId, dirtWeightOm, dirtWeightMehlich } = updateQrCodeDto;
+    const {
+      firstName,
+      lastName,
+      phoneNumber,
+      thaiNationalId,
+      landCode,
+      landName,
+      serviceAreaId,
+      dirtWeightOm,
+      dirtWeightMehlich,
+    } = updateQrCodeDto;
     return this.qrCodeRepo.save({
       ...qrCode,
       ...(firstName !== undefined && { firstName }),
@@ -418,264 +555,156 @@ export class QrCodesService {
     return this.qrCodeRepo.remove(qrCode);
   }
 
-  private async mapInputData(
-    qrCode: QrCode,
-    manager?: import('typeorm').EntityManager
-  ): Promise<{ farmer: Farmer | null; land: Land | null }> {
-    const thaiId = qrCode.thaiNationalId?.trim();
-    const phone = qrCode.phoneNumber?.replace(/\D/g, ''); // normalize เบอร์
-    const landCode = qrCode.landCode?.trim();
-
-    const farmerRepo = manager?.getRepository(Farmer) ?? this.farmerRepo;
-    const landRepo = manager?.getRepository(Land) ?? this.landRepo;
-    const [farmerById, farmerByPhone] = await Promise.all([
-      thaiId
-        ? farmerRepo.findOne({ where: { thaiNationalId: thaiId } })
-        : null,
-      phone ? farmerRepo.findOne({ where: { phone } }) : null,
-    ]);
-
-    let farmer: Farmer | null = null;
-
-    const sameFarmer =
-      farmerById &&
-      farmerByPhone &&
-      farmerById.farmerId === farmerByPhone.farmerId;
-    if (sameFarmer) {
-      farmer = farmerById;
-    } else if (farmerById && farmerByPhone === null) {
-      farmer = farmerById;
-    } else if (farmerById === null && farmerByPhone) {
-      farmer = farmerByPhone;
-    } else {
-      // conflict or not found — ปล่อย farmer = null โดยตั้งใจ (กันผูกตัวอย่างผิดคน)
-      // แต่ต้อง log ให้เจ้าหน้าที่ตามต่อได้ ไม่ปล่อยเงียบ
-      farmer = null;
-      if (farmerById && farmerByPhone) {
-        // เลขบัตรตรงคนหนึ่ง แต่เบอร์โทรตรงอีกคนหนึ่ง — ข้อมูลขัดกัน
-        this.logger.warn(
-          `Farmer conflict on QR ${qrCode.qrCode}: thaiNationalId matches farmerId=${farmerById.farmerId} ` +
-            `but phone matches farmerId=${farmerByPhone.farmerId}. Sample saved WITHOUT farmer link; staff must reconcile.`
-        );
-      } else if (thaiId || phone) {
-        // มีข้อมูลระบุตัวตนแต่ไม่พบเกษตรกรในระบบ — เป็นเกษตรกรรายใหม่/ยังไม่ลงทะเบียน
-        this.logger.warn(
-          `No matching farmer for QR ${qrCode.qrCode} (thaiNationalId/phone provided but not found). ` +
-            `Sample saved WITHOUT farmer link; staff must register/link this farmer.`
-        );
-      }
-    }
-
-    let land: Land | null = null;
-    if (landCode) {
-      const foundLand = await landRepo.findOne({ where: { landCode } });
-      if (foundLand) {
-        const isOwnedByFarmer =
-          farmer && foundLand.farmerId === farmer.farmerId;
-        land = isOwnedByFarmer || !farmer ? foundLand : null;
-        if (farmer && foundLand.farmerId !== farmer.farmerId) {
-          // landCode มีอยู่จริงแต่เป็นของเกษตรกรคนอื่น — ไม่ผูกแปลง ใช้ข้อมูลที่กรอกแทน
-          this.logger.warn(
-            `Land code "${landCode}" on QR ${qrCode.qrCode} belongs to farmerId=${foundLand.farmerId}, ` +
-              `not the matched farmerId=${farmer.farmerId}. Land link skipped.`
-          );
-        }
-      }
-    }
-
-    return { farmer, land };
-  }
-
   //ใช้สำหรับ Update ข้อมูลจากที่เกษตรกรเก็บตัวอย่างแล้ว Scan QrCode กรอกข้อมูล
   async updateDataByFarmer(code: string, updateData: UpdateQrCodeDto) {
     const decryptCode = this.cryptoService.decrypt(code);
     return this.dataSource.transaction(async manager => {
-    const qrCode = await manager.findOne(QrCode, {
-      where: { qrCode: decryptCode },
-      lock: { mode: 'pessimistic_write' },
-    });
-    if (!qrCode) {
-      throw new NotFoundException('QrCode not found');
-    }
-    if (qrCode.status !== SampleStatusEnum.DISTRIBUTED) {
-      throw new BadRequestException(
-        'Soil sample information has already been recorded'
+      const qrCode = await manager.findOne(QrCode, {
+        where: { qrCode: decryptCode },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!qrCode) {
+        throw new NotFoundException('QrCode not found');
+      }
+      if (qrCode.status !== SampleStatusEnum.DISTRIBUTED) {
+        throw new BadRequestException(
+          'Soil sample information has already been recorded'
+        );
+      }
+      // const book = await this.bookRepo.findOne({
+      //   where: { qrCodeId: qrCode.qrCodeId },
+      // });
+      // if (!book) {
+      //   throw new NotFoundException('Book not found');
+      // }
+
+      // --- [เริ่มส่วนที่แก้ไข] ---
+
+      // 1. ลองค้นหา Book ของ QR Code นี้ก่อน
+      let book = await manager.findOne(Book, {
+        where: { qrCodeId: qrCode.qrCodeId },
+      });
+
+      // 2. ถ้าไม่เจอ (แสดงว่าเป็น QR ลอยๆ ที่เพิ่งถูกสแกนครั้งแรก) ให้สร้าง Instance ใหม่
+      if (!book) {
+        book = manager.create(Book, {
+          qrCodeId: qrCode.qrCodeId,
+        });
+      }
+
+      // --- [จบส่วนที่แก้ไข] ---
+
+      const {
+        firstName,
+        lastName,
+        phoneNumber,
+        thaiNationalId,
+        landCode,
+        landName,
+      } = updateData;
+      const { serviceAreaId, latitude, longitude, serviceTypeId } = updateData;
+      const areaSize = this.normalizeOptionalAreaSize(updateData.areaSize);
+      const subdistrictCode = updateData.subdistrictCode?.trim() || null;
+      const zipCode = this.normalizeOptionalZipCode(updateData.zipCode);
+      const normalizedLatitude = this.normalizeCoordinate(
+        latitude,
+        -90,
+        90,
+        'latitude'
       );
-    }
-    // const book = await this.bookRepo.findOne({
-    //   where: { qrCodeId: qrCode.qrCodeId },
-    // });
-    // if (!book) {
-    //   throw new NotFoundException('Book not found');
-    // }
-
-    // --- [เริ่มส่วนที่แก้ไข] ---
-
-    // 1. ลองค้นหา Book ของ QR Code นี้ก่อน
-    let book = await manager.findOne(Book, {
-      where: { qrCodeId: qrCode.qrCodeId },
-    });
-
-    // 2. ถ้าไม่เจอ (แสดงว่าเป็น QR ลอยๆ ที่เพิ่งถูกสแกนครั้งแรก) ให้สร้าง Instance ใหม่
-    if (!book) {
-      book = manager.create(Book, {
-        qrCodeId: qrCode.qrCodeId
-      });
-    }
-
-    // --- [จบส่วนที่แก้ไข] ---
-
-    const {
-      firstName,
-      lastName,
-      phoneNumber,
-      thaiNationalId,
-      landCode,
-      landName,
-    } = updateData;
-    const { serviceAreaId, latitude, longitude, serviceTypeId } = updateData;
-    const areaSize = this.normalizeOptionalAreaSize(updateData.areaSize);
-    const subdistrictCode = updateData.subdistrictCode?.trim() || null;
-    const zipCode = this.normalizeOptionalZipCode(updateData.zipCode);
-    const normalizedLatitude = this.normalizeCoordinate(
-      latitude,
-      -90,
-      90,
-      'latitude'
-    );
-    const normalizedLongitude = this.normalizeCoordinate(
-      longitude,
-      -180,
-      180,
-      'longitude'
-    );
-
-    const updateQrCode = {
-      ...qrCode,
-      firstName,
-      status: SampleStatusEnum.COLLECTED,
-      lastName,
-      phoneNumber,
-      thaiNationalId,
-      landCode,
-      landName,
-      ...(updateData.dirtWeightOm !== undefined && { dirtWeightOm: updateData.dirtWeightOm }),
-      ...(updateData.dirtWeightMehlich !== undefined && { dirtWeightMehlich: updateData.dirtWeightMehlich }),
-    };
-
-    const updatedQrCode = await manager.save(QrCode, updateQrCode);
-    let { farmer, land } = await this.mapInputData(updatedQrCode, manager);
-
-    if (updateData.farmerId) {
-      const phone = phoneNumber?.replace(/\D/g, '');
-      const verifiedFarmer = await manager.findOne(Farmer, {
-        where: {
-          farmerId: updateData.farmerId,
-          firstName,
-          phone,
-        },
-      });
-
-      if (!verifiedFarmer) {
-        throw new BadRequestException('Farmer information does not match');
-      }
-
-      farmer = verifiedFarmer;
-    }
-
-    if (updateData.landId) {
-      if (!farmer) {
-        throw new BadRequestException('Cannot link land without matched farmer');
-      }
-
-      const verifiedLand = await manager.findOne(Land, {
-        where: {
-          landId: updateData.landId,
-          farmerId: farmer.farmerId,
-        },
-      });
-
-      if (!verifiedLand) {
-        throw new BadRequestException('Land does not belong to matched farmer');
-      }
-
-      land = verifiedLand;
-    }
-
-    const updateBook = {
-      ...book,
-      collectSampleAt: Date.now(),
-      serviceAreaId,
-      latitude: normalizedLatitude,
-      longitude: normalizedLongitude,
-      serviceTypeId,
-      landId: land ? land.landId : undefined,
-      areaSize: land ? land.areaSize : (areaSize ?? book.areaSize),
-      subdistrictCode: land ? land.subdistrictCode : (subdistrictCode ?? book.subdistrictCode),
-      zipCode: land ? land.zipCode : (zipCode ?? book.zipCode),
-      farmerId: farmer ? farmer.farmerId : undefined,
-    };
-    await manager.save(Book, updateBook);
-    return {
-      status: SampleStatusEnum.COLLECTED,
-      message: 'Soil sample information has been recorded',
-    };
-    });
-  }
-
-  private normalizeCoordinate(
-    value: unknown,
-    min: number,
-    max: number,
-    fieldName: 'latitude' | 'longitude'
-  ): string {
-    const rawValue = String(value ?? '').trim();
-    if (!rawValue) {
-      throw new BadRequestException(`${fieldName} is required`);
-    }
-
-    if (!/^-?\d+(\.\d{1,6})?$/.test(rawValue)) {
-      throw new BadRequestException(
-        `${fieldName} must be a decimal with up to 6 digits`
+      const normalizedLongitude = this.normalizeCoordinate(
+        longitude,
+        -180,
+        180,
+        'longitude'
       );
-    }
 
-    const numericValue = Number(rawValue);
-    if (
-      !Number.isFinite(numericValue) ||
-      numericValue < min ||
-      numericValue > max
-    ) {
-      throw new BadRequestException(`${fieldName} is invalid`);
-    }
+      const updateQrCode = {
+        ...qrCode,
+        firstName,
+        status: SampleStatusEnum.COLLECTED,
+        lastName,
+        phoneNumber,
+        thaiNationalId,
+        landCode,
+        landName,
+        ...(updateData.dirtWeightOm !== undefined && {
+          dirtWeightOm: updateData.dirtWeightOm,
+        }),
+        ...(updateData.dirtWeightMehlich !== undefined && {
+          dirtWeightMehlich: updateData.dirtWeightMehlich,
+        }),
+      };
 
-    return numericValue.toFixed(6);
-  }
+      const updatedQrCode = await manager.save(QrCode, updateQrCode);
+      let { farmer, land } = await this.mapInputData(updatedQrCode, manager);
 
-  private normalizeOptionalAreaSize(value: unknown): number | null {
-    if (value === undefined || value === null || String(value).trim() === '') {
-      return null;
-    }
+      if (updateData.farmerId) {
+        const phone = phoneNumber?.replace(/\D/g, '');
+        const verifiedFarmer = await manager.findOne(Farmer, {
+          where: {
+            farmerId: updateData.farmerId,
+            firstName,
+            phone,
+          },
+        });
 
-    const numericValue = Number(value);
-    if (!Number.isFinite(numericValue) || numericValue <= 0) {
-      throw new BadRequestException('areaSize must be a positive number');
-    }
+        if (!verifiedFarmer) {
+          throw new BadRequestException('Farmer information does not match');
+        }
 
-    return numericValue;
-  }
+        farmer = verifiedFarmer;
+      }
 
-  private normalizeOptionalZipCode(value: unknown): number | null {
-    if (value === undefined || value === null || String(value).trim() === '') {
-      return null;
-    }
+      if (updateData.landId) {
+        if (!farmer) {
+          throw new BadRequestException(
+            'Cannot link land without matched farmer'
+          );
+        }
 
-    const numericValue = Number(value);
-    if (!Number.isInteger(numericValue) || String(numericValue).length !== 5) {
-      throw new BadRequestException('zipCode must be a 5 digit number');
-    }
+        const verifiedLand = await manager.findOne(Land, {
+          where: {
+            landId: updateData.landId,
+            farmerId: farmer.farmerId,
+          },
+        });
 
-    return numericValue;
+        if (!verifiedLand) {
+          throw new BadRequestException(
+            'Land does not belong to matched farmer'
+          );
+        }
+
+        land = verifiedLand;
+      }
+
+      if (farmer && updateData.birthDate) {
+        farmer.birthDate = updateData.birthDate;
+        await manager.save(Farmer, farmer);
+      }
+
+      const updateBook = {
+        ...book,
+        collectSampleAt: Date.now(),
+        serviceAreaId,
+        latitude: normalizedLatitude,
+        longitude: normalizedLongitude,
+        serviceTypeId,
+        landId: land ? land.landId : undefined,
+        areaSize: land ? land.areaSize : (areaSize ?? book.areaSize),
+        subdistrictCode: land
+          ? land.subdistrictCode
+          : (subdistrictCode ?? book.subdistrictCode),
+        zipCode: land ? land.zipCode : (zipCode ?? book.zipCode),
+        farmerId: farmer ? farmer.farmerId : undefined,
+      };
+      await manager.save(Book, updateBook);
+      return {
+        status: SampleStatusEnum.COLLECTED,
+        message: 'Soil sample information has been recorded',
+      };
+    });
   }
 
   async receiveQrCodeSampleByEncryptedCode(
@@ -806,7 +835,7 @@ export class QrCodesService {
       sampleReceivedAt: Date.now(),
       sampleReceivedUid: mockUid,
       receivedServiceCalendarId: serviceCalendar.serviceCalendarId,
-      sampleCode: sampleCode,
+      sampleCode,
     };
 
     const updatedBook = await this.bookRepo.save(updateBook);
@@ -846,6 +875,7 @@ export class QrCodesService {
   getDecryptCode(code: string) {
     return this.cryptoService.decrypt(code);
   }
+
   async getQrCodeSummary(): Promise<QrCodeSummaryDto> {
     const [total, distributed, reserved, completed] = await Promise.all([
       this.qrCodeRepo.count(),

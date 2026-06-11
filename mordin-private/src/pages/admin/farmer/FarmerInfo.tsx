@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 
 import 'datatables.net-bs5';
 import { useParams } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import ConfirmAlert from '../../../components/gui/ConfirmAlert';
 import { DataTableFilter } from '../../../components/gui/DataTableFilter';
@@ -15,6 +15,7 @@ import type { FarmerInfo } from '../../../types/Farmer';
 import LeafletMap, { MapMarkerData } from '@/components/map/LeafletMap';
 import FarmerCard from '@/components/pages/farmer/farmerCard';
 import { LandInfoInterface } from '@/types/Land';
+import { formatThaiDateWithOutWeekly } from '@/utils/Date';
 import { formatThaiNationalId } from '@/utils/IdentificationNumberFormat';
 
 const FarmerInfo: React.FC = () => {
@@ -67,7 +68,6 @@ const FarmerInfo: React.FC = () => {
       <div className="row">
         <FarmerCard />
       </div>
-      Farmer Info and Map
       <div className="row">
         <div className="col-md-6">
           <div className="private-card">
@@ -149,7 +149,13 @@ const FarmerInfo: React.FC = () => {
                             </tr>
                             <tr>
                               <th>วันเดือนปีเกิด</th>
-                              <td>{farmerInfo.birthDate || '-'}</td>
+                              <td>
+                                {farmerInfo.birthDate
+                                  ? formatThaiDateWithOutWeekly(
+                                      farmerInfo.birthDate
+                                    )
+                                  : '-'}
+                              </td>
                             </tr>
                             <tr>
                               <th>Line ID</th>
@@ -274,11 +280,11 @@ const FarmerInfo: React.FC = () => {
                           <td>{land.subdistrict?.district?.nameTh}</td>
                           <td>{land.subdistrict?.nameTh}</td>
                           <td>
-                            {
-                              new Date(Number(land.updatedAt))
-                                .toISOString()
-                                .split('T')[0]
-                            }
+                            {land.updatedAt && !isNaN(Number(land.updatedAt))
+                              ? new Date(Number(land.updatedAt))
+                                  .toISOString()
+                                  .split('T')[0]
+                              : '-'}
                           </td>
                           <td></td>
                           <td>
@@ -309,11 +315,11 @@ const FarmerInfo: React.FC = () => {
                           </td>
                           {/* showConfirm was previously inside Map, moved outside */}
                           <td>
-                            {
-                              new Date(Number(land.updatedAt))
-                                .toISOString()
-                                .split('T')[0]
-                            }
+                            {land.updatedAt && !isNaN(Number(land.updatedAt))
+                              ? new Date(Number(land.updatedAt))
+                                  .toISOString()
+                                  .split('T')[0]
+                              : '-'}
                           </td>
                         </tr>
                       ))}
@@ -342,25 +348,14 @@ const FarmerInfo: React.FC = () => {
                     lands: prev.lands.filter(l => l.landId !== deleteLandId),
                   }));
                   setDeleteLandId(null);
-                  Swal.fire({
-                    title: 'สำเร็จ!',
-                    text: 'ลบแปลงสำเร็จแล้ว',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false,
-                  });
+                  swalSuccessTimer('สำเร็จ!', 'ลบแปลงสำเร็จแล้ว', 2000);
                 } catch (error: unknown) {
                   const err = error as {
                     response?: { data?: { message?: string } };
                   };
                   const message =
                     err?.response?.data?.message || 'เกิดข้อผิดพลาดในการลบ';
-                  Swal.fire({
-                    title: 'เกิดข้อผิดพลาด',
-                    text: message,
-                    icon: 'error',
-                    confirmButtonText: 'ตกลง',
-                  });
+                  swalError('เกิดข้อผิดพลาด', message);
                   setDeleteLandId(null);
                 }
               }
@@ -374,4 +369,3 @@ const FarmerInfo: React.FC = () => {
 };
 
 export default FarmerInfo;
-

@@ -3,12 +3,11 @@
 import { AnalysisStandardInterface } from '@/types/standard-sample/AnalysisStandards';
 
 interface BlankTableProps {
-   data: AnalysisStandardInterface[] | undefined;
+  data: AnalysisStandardInterface[] | undefined;
 }
 
-const StandardTable:  React.FC<BlankTableProps> = ({ data }) => {
-
-  console.log('data1' , data);
+const StandardTable: React.FC<BlankTableProps> = ({ data }) => {
+  console.log('data1', data);
   return (
     <div className="private-card">
       <div className="private-card-header">
@@ -16,13 +15,12 @@ const StandardTable:  React.FC<BlankTableProps> = ({ data }) => {
       </div>
       <div className="private-card-body">
         <div className="table-responsive">
-
           {/* {data?.map((item , index) =>( */}
-            <table className="table table-bordered">
+          <table className="table table-bordered">
             <thead>
               <tr>
                 {/* <th key={index}>aaa</th> */}
-                                <th>pH</th>
+                <th>pH</th>
 
                 <th>pH</th>
                 <th>EC</th>
@@ -31,7 +29,7 @@ const StandardTable:  React.FC<BlankTableProps> = ({ data }) => {
                 <th>K</th>
                 <th>Ca</th>
                 <th>Mg</th>
-                </tr>
+              </tr>
             </thead>
             <tbody>
               <tr>
@@ -58,8 +56,7 @@ const StandardTable:  React.FC<BlankTableProps> = ({ data }) => {
               </tr>
             </tbody>
           </table>
-           {/* ))} */}
-          
+          {/* ))} */}
         </div>
       </div>
     </div>
@@ -67,4 +64,3 @@ const StandardTable:  React.FC<BlankTableProps> = ({ data }) => {
 };
 
 export default StandardTable;
-

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { getServiceCalendarSummary } from '@/services/api/ServiceCalendarApi';
 import { ServiceCalendarSummary } from '@/types/ServiceCalendar';
@@ -24,7 +24,7 @@ const KPI_CONFIG: {
     key: 'remaining',
     label: 'ว่าง',
     icon: 'fas fa-hourglass-half',
-    accent: '#F39C12',
+    accent: '#d98f0c',
   },
   {
     key: 'totalBookings',
@@ -36,7 +36,7 @@ const KPI_CONFIG: {
     key: 'analyzed',
     label: 'วิเคราะห์แล้ว',
     icon: 'fas fa-check-circle',
-    accent: '#31CE36',
+    accent: '#18a05c',
   },
 ];
 
@@ -115,10 +115,7 @@ export default function ServiceCalendarCard({
                       >
                         {summary[cfg.key]}
                       </span>
-                      <span
-                        className="text-muted"
-                        style={{ fontSize: '1rem' }}
-                      >
+                      <span className="text-muted" style={{ fontSize: '1rem' }}>
                         ราย
                       </span>
                     </div>
@@ -161,4 +158,3 @@ export default function ServiceCalendarCard({
     </div>
   );
 }
-

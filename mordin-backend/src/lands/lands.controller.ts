@@ -10,13 +10,14 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { LandsService } from './lands.service';
-import { CreateLandDto } from './dto/create-land.dto';
-import { UpdateLandDto } from './dto/update-land.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
-import { UpdateLandByFarmerDto } from './dto/update-land-by-farmer.dto';
+
+import { CreateLandDto } from './dto/create-land.dto';
 import { CreatePublicLandByFarmerDto } from './dto/create-public-land-by-farmer.dto';
+import { UpdateLandByFarmerDto } from './dto/update-land-by-farmer.dto';
+import { UpdateLandDto } from './dto/update-land.dto';
+import { LandsService } from './lands.service';
 
 @Controller('lands')
 export class LandsController {

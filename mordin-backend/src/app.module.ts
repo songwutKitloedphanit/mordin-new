@@ -1,33 +1,34 @@
-import { ConfigurableModuleBuilder, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { getNamespace } from 'cls-hooked';
+
+import { AddressModule } from './address/address.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { BusesModule } from './buses/buses.module';
-import { FarmersModule } from './farmers/farmers.module';
-import { LandsModule } from './lands/lands.module';
-import { ServiceCalendarsModule } from './service-calendars/service-calendars.module';
-import { UsersModule } from './users/users.module';
-import { DatabaseModule } from './database/database.module';
-import { AddressModule } from './address/address.module';
-import { ShopsModule } from './shops/shops.module';
-import { FertilizerModule } from './fertilizer/fertilizer.module';
+import { AuditOutboxModule } from './audit-outbox/audit-outbox.module';
 import { AuthModule } from './auth/auth.module';
-import { ReferenceDataModule } from './reference-data/reference-data.module';
-import { LaboratoryModule } from './laboratory/laboratory.module';
-import { ServiceTypeModule } from './service-type/service-type.module';
-import { SoilGradeModule } from './soil-grade/soil-grade.module';
-import { ServiceAreaModule } from './service-area/service-area.module';
-import { SampleModule } from './sample/sample.module';
+import { BusesModule } from './buses/buses.module';
 import { CommonModule } from './common/common.module';
+import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+import { LoggingSubscriber } from './common/subscribers/logging.subscriber';
 import { ConfigModule } from './config/config.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { DatabaseModule } from './database/database.module';
+import { FarmersModule } from './farmers/farmers.module';
+import { FertilizerModule } from './fertilizer/fertilizer.module';
+import { ConvertOmSettingModule } from './laboratory/convert-om-settings/convert-om-settings.module';
+import { LaboratoryModule } from './laboratory/laboratory.module';
+import { LandsModule } from './lands/lands.module';
+import { ReferenceDataModule } from './reference-data/reference-data.module';
 import { ResultGradeModule } from './result-grade/result-grade.module';
 import { StandardSampleModule } from './standard-sample/standard-sample.module';
-import { ConvertOmSettingModule } from './laboratory/convert-om-settings/convert-om-settings.module';
 import { ResultsModule } from './sample/results/results.module';
-import { getNamespace } from 'cls-hooked';
-import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
-import { DashboardModule } from './dashboard/dashboard.module';
-import { LoggingSubscriber } from './common/subscribers/logging.subscriber';
-import { AuditOutboxModule } from './audit-outbox/audit-outbox.module';
+import { SampleModule } from './sample/sample.module';
+import { ServiceAreaModule } from './service-area/service-area.module';
+import { ServiceCalendarsModule } from './service-calendars/service-calendars.module';
+import { ServiceTypeModule } from './service-type/service-type.module';
+import { ShopsModule } from './shops/shops.module';
+import { SoilGradeModule } from './soil-grade/soil-grade.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -56,7 +57,6 @@ import { AuditOutboxModule } from './audit-outbox/audit-outbox.module';
     ResultsModule,
     DashboardModule,
     AuditOutboxModule,
-    
   ],
   controllers: [AppController],
   providers: [

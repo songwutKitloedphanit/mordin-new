@@ -9,57 +9,58 @@ type PrivateTheme = 'light' | 'dark';
 
 const PRIVATE_THEME_STORAGE_KEY = 'mordin-private-theme';
 
+// ป้าย breadcrumb/ชื่อหน้า — ภาษาไทยให้ตรงกับเมนู Sidebar (แสดงผลเท่านั้น ไม่กระทบ route)
 const breadcrumbNames: { [key: string]: string } = {
-  admin: 'Admin',
-  officer: 'Officer',
-  executive: 'Executive',
-  dashboard: 'Dashboard',
-  user: 'User Management',
-  bus: 'Bus Management',
-  'service-area': 'Factories & Promotion Zones',
-  land: 'Land Management',
-  farmer: 'Farmer Management',
-  shop: 'Shop Management',
-  'service-calendar': 'Service Calendars',
-  laboratory: 'Laboratories',
-  'service-type': 'Service Types',
-  'fertilizer-prices': 'Fertilizer Prices',
-  'fertilizer-usages': 'Fertilizer Usages',
-  standard: 'Standard Management',
+  admin: 'ผู้ดูแลระบบ',
+  officer: 'เจ้าหน้าที่',
+  executive: 'ผู้บริหาร',
+  dashboard: 'แดชบอร์ด',
+  user: 'ผู้ใช้งานระบบ',
+  bus: 'รถบัส',
+  'service-area': 'โรงงาน & เขตส่งเสริม',
+  land: 'แปลงที่ดิน',
+  farmer: 'ชาวไร่',
+  shop: 'ร้านค้า',
+  'service-calendar': 'ปฏิทินรอบบริการ',
+  laboratory: 'ห้องปฏิบัติการ',
+  'service-type': 'ประเภทบริการ',
+  'fertilizer-prices': 'ราคาปุ๋ย',
+  'fertilizer-usages': 'สูตรการใช้ปุ๋ย',
+  standard: 'เกณฑ์มาตรฐาน',
   qrcode: 'QR Code',
-  'qrcode-officer': 'QR Code',
-  'sample-receiving': 'Sample Receiving',
-  'analysis-setting': 'Analysis Setting',
-  'add-pt-sample': 'Add Standard',
-  'edit-pt-sample': 'Edit Standard',
-  'lab-result': 'Lab Result',
-  'add-21': 'Get Result',
-  'add-22': 'Get Result',
-  'add-23': 'Get Result',
-  'analysis-report': 'Analysis Report',
-  report: 'Report',
-  charts: 'Charts',
-  profile: 'Profile Management',
-  'add-major': 'Add (Major)',
-  'add-minor': 'Add (Minor)',
-  'edit-major': 'Edit (Major)',
-  'edit-minor': 'Edit (Minor)',
-  'edit-score': 'Edit Score',
-  'edit-result-grade': 'Edit Result Grade',
-  'edit-working-standard': 'Edit Working Standard',
-  'input-result': 'Input Result',
-  edit: 'Edit',
-  info: 'Info',
-  add: 'Add',
+  'qrcode-officer': 'สร้าง QR Code',
+  'sample-receiving': 'รับตัวอย่างดิน',
+  'analysis-setting': 'ตั้งค่าการวิเคราะห์',
+  'add-pt-sample': 'เพิ่มเกณฑ์มาตรฐาน',
+  'edit-pt-sample': 'แก้ไขเกณฑ์มาตรฐาน',
+  'lab-result': 'บันทึกผลแล็บ',
+  'add-21': 'บันทึกผล',
+  'add-22': 'บันทึกผล',
+  'add-23': 'บันทึกผล',
+  'analysis-report': 'รายงานวิเคราะห์',
+  report: 'รายงานผู้บริหาร',
+  charts: 'กราฟ',
+  profile: 'จัดการโปรไฟล์',
+  'add-major': 'เพิ่มปุ๋ยหลัก',
+  'add-minor': 'เพิ่มสารปรับปรุงดิน',
+  'edit-major': 'แก้ไขปุ๋ยหลัก',
+  'edit-minor': 'แก้ไขสารปรับปรุงดิน',
+  'edit-score': 'แก้ไขคะแนน',
+  'edit-result-grade': 'แก้ไขเกณฑ์ผลวิเคราะห์',
+  'edit-working-standard': 'แก้ไข Working Standard',
+  'input-result': 'กรอกผล',
+  edit: 'แก้ไข',
+  info: 'ข้อมูล',
+  add: 'เพิ่ม',
 };
 
 const moduleLabelNames: { [key: string]: string } = {
-  laboratory: 'Laboratory',
-  'service-type': 'Service Type',
-  'service-area': 'Factory & Zone',
-  'service-calendar': 'Service Calendar',
-  'fertilizer-prices': 'Fertilizer Price',
-  'fertilizer-usages': 'Fertilizer Usage',
+  laboratory: 'ห้องปฏิบัติการ',
+  'service-type': 'ประเภทบริการ',
+  'service-area': 'โรงงาน & เขตส่งเสริม',
+  'service-calendar': 'ปฏิทินรอบบริการ',
+  'fertilizer-prices': 'ราคาปุ๋ย',
+  'fertilizer-usages': 'สูตรการใช้ปุ๋ย',
 };
 
 const getInitialTheme = (): PrivateTheme => {
@@ -195,15 +196,13 @@ const AdminLayout: React.FC = () => {
 
       const lastPath = filteredPathnames[filteredPathnames.length - 1];
 
-      if (name.includes('-')) {
-        displayName = name
+      // หาใน map ก่อนเสมอ (ป้ายไทย) แล้วค่อย fallback เป็น capitalize จาก path
+      displayName =
+        breadcrumbNames[name] ??
+        name
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
-      } else {
-        displayName =
-          breadcrumbNames[name] || name.charAt(0).toUpperCase() + name.slice(1);
-      }
 
       if (index === lastRenderableIndex) {
         if (lastPath in breadcrumbNames) {
@@ -226,8 +225,10 @@ const AdminLayout: React.FC = () => {
         }
       }
 
-      const isEdit = displayName.toLowerCase().includes('edit');
-      const separatorClasses = isDarkMode ? 'text-[#6F7B8E]' : 'text-[#A19A90]';
+      const isEdit =
+        displayName.includes('แก้ไข') ||
+        displayName.toLowerCase().includes('edit');
+      const separatorClasses = isDarkMode ? 'text-[#6F7B8E]' : 'text-[#94a3b8]';
       const currentClasses = isDarkMode
         ? 'text-[#E6EAF0] font-semibold'
         : 'text-[#2F3A4A] font-semibold';
@@ -260,13 +261,13 @@ const AdminLayout: React.FC = () => {
       const infoUrl = `${location.pathname}`;
       const isCollectExam = filteredPathnames[1] === 'sample-receiving';
       const displayName = isCollectExam
-        ? 'Receiving'
+        ? 'รับตัวอย่าง'
         : `${moduleName} ${breadcrumbNames['info']}`;
 
       breadcrumbItems.push(
         <li
           className={`flex items-center ${
-            isDarkMode ? 'text-[#6F7B8E]' : 'text-[#A19A90]'
+            isDarkMode ? 'text-[#6F7B8E]' : 'text-[#94a3b8]'
           }`}
           key="sep-info"
         >
@@ -305,7 +306,7 @@ const AdminLayout: React.FC = () => {
       }
     }
 
-    return lastKnownTitle || 'Dashboard';
+    return lastKnownTitle || 'แดชบอร์ด';
   };
 
   const pageTitle = getPageTitle();
@@ -315,7 +316,7 @@ const AdminLayout: React.FC = () => {
       className={`private-layout-root flex h-screen overflow-hidden font-sans transition-colors ${
         isDarkMode
           ? 'private-layout-dark bg-[#172033] text-[#E6EAF0]'
-          : 'bg-[#eeeeee] text-[#2F3A4A]'
+          : 'bg-[#f3f5f8] text-[#2F3A4A]'
       }`}
     >
       <div
@@ -334,20 +335,29 @@ const AdminLayout: React.FC = () => {
 
       <main
         className={`flex min-w-0 flex-1 flex-col overflow-y-auto transition-colors ${
-          isDarkMode ? 'bg-[#172033]' : 'bg-[#eeeeee]'
+          isDarkMode ? 'bg-[#172033]' : 'bg-[#f3f5f8]'
         }`}
       >
-        <div className="min-w-0 flex-1 p-6 lg:p-10">
-          <Header
-            onMenuClick={() => setSidebarOpen(current => !current)}
-            isSidebarOpen={sidebarOpen}
-            isDarkMode={isDarkMode}
-            onThemeToggle={() =>
-              setTheme(current => (current === 'dark' ? 'light' : 'dark'))
-            }
-            pageTitle={pageTitle}
-            breadcrumbs={generateBreadcrumbs()}
-          />
+        {/* Topbar เต็มกว้าง sticky (mockup .topbar) — title ใหญ่ย้ายลงไปอยู่ในเนื้อหา */}
+        <Header
+          onMenuClick={() => setSidebarOpen(current => !current)}
+          isSidebarOpen={sidebarOpen}
+          isDarkMode={isDarkMode}
+          onThemeToggle={() =>
+            setTheme(current => (current === 'dark' ? 'light' : 'dark'))
+          }
+          breadcrumbs={generateBreadcrumbs()}
+        />
+        <div className="min-w-0 flex-1 p-4 sm:p-6 lg:px-[26px] lg:py-6">
+          <div className="private-page-head">
+            <h1
+              className={`private-page-title ${
+                isDarkMode ? 'text-[#E6EAF0]' : 'text-[#16222f]'
+              }`}
+            >
+              {pageTitle}
+            </h1>
+          </div>
           <div key={location.pathname} className="private-page-transition">
             <Outlet />
           </div>

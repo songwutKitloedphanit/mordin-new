@@ -433,4 +433,3 @@ const FertilizerMinorUsageEdit = () => {
 };
 
 export default FertilizerMinorUsageEdit;
-

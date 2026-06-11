@@ -37,7 +37,11 @@ CREATE OR REPLACE FUNCTION lock_service_area_change_exclusive()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   PERFORM pg_advisory_xact_lock(742001, OLD.service_area_id);
-  RETURN OLD;
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  ELSE
+    RETURN NEW;
+  END IF;
 END;
 $$;
 

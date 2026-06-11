@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { CreateFertilizerMinorLandUsageDto } from './dto/create-fertilizer-minor-land-usage.dto';
-import { UpdateFertilizerMinorLandUsageDto } from './dto/update-fertilizer-minor-land-usage.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FertilizerMinorLandUsage } from './entities/fertilizer-minor-land-usage.entity';
-import { EntityManager, In, Repository } from 'typeorm';
-import { Book } from '../books/entities/book.entity';
 import { ServiceFertilizerMinor } from 'src/fertilizer/service-fertilizer-minors/entities/service-fertilizer-minor.entity';
+import { EntityManager, In, Repository } from 'typeorm';
+
+import { Book } from '../books/entities/book.entity';
 import { Result } from '../results/entities/result.entity';
+
+import { FertilizerMinorLandUsage } from './entities/fertilizer-minor-land-usage.entity';
 import { FertilizerMinorLandUsageLog } from './entities/fertilizer-minor-land-usage.log.entity';
 
 @Injectable()
@@ -22,28 +22,32 @@ export class FertilizerMinorLandUsagesService {
     private readonly serviceFerMinorRepo: Repository<ServiceFertilizerMinor>,
 
     @InjectRepository(Result)
-    private readonly resultRepo: Repository<Result>,
-  ) { }
+    private readonly resultRepo: Repository<Result>
+  ) {}
 
   /**
    * [NEW] Bulk processing version of the summary method.
    */
   async summaryFertilizerMinorLandUsagesBulk(
-    booksToSummarize: { book: Book, results: Result[] }[],
+    booksToSummarize: { book: Book; results: Result[] }[],
     manager: EntityManager
   ) {
     const bookIds = booksToSummarize.map(item => item.book.bookId);
     if (bookIds.length === 0) return;
 
     // Repositories from transaction
-    const ferMinorLandUsageRepo = manager.getRepository(FertilizerMinorLandUsage);
+    const ferMinorLandUsageRepo = manager.getRepository(
+      FertilizerMinorLandUsage
+    );
     const serviceFerMinorRepo = manager.getRepository(ServiceFertilizerMinor);
 
     // STEP 1: Bulk delete existing data
     await ferMinorLandUsageRepo.delete({ bookId: In(bookIds) });
 
     // STEP 2: Pre-fetch all necessary service fertilizer minors
-    const serviceTypeIds = [...new Set(booksToSummarize.map(item => item.book.serviceTypeId))];
+    const serviceTypeIds = [
+      ...new Set(booksToSummarize.map(item => item.book.serviceTypeId)),
+    ];
     const allServFerMinors = await serviceFerMinorRepo.find({
       where: { serviceTypeId: In(serviceTypeIds) },
       relations: {
@@ -52,7 +56,7 @@ export class FertilizerMinorLandUsagesService {
       },
       order: {
         serviceFertilizerMinorUsages: { level: 'ASC' },
-      }
+      },
     });
 
     // Create a map for quick access
@@ -71,11 +75,17 @@ export class FertilizerMinorLandUsagesService {
       const servFerMinors = servFerMinorsMap.get(book.serviceTypeId) ?? [];
 
       for (const servFerMinor of servFerMinors) {
-        const refResult = results.find(result => result.laboratoryId === servFerMinor.laboratoryId);
+        const refResult = results.find(
+          result => result.laboratoryId === servFerMinor.laboratoryId
+        );
         if (refResult) {
-          const selectedUsage = servFerMinor.serviceFertilizerMinorUsages.find(
-            ferUsage => refResult.postValue <= ferUsage.cutoffValue
-          ) || servFerMinor.serviceFertilizerMinorUsages[servFerMinor.serviceFertilizerMinorUsages.length - 1];
+          const selectedUsage =
+            servFerMinor.serviceFertilizerMinorUsages.find(
+              ferUsage => refResult.postValue <= ferUsage.cutoffValue
+            ) ||
+            servFerMinor.serviceFertilizerMinorUsages[
+              servFerMinor.serviceFertilizerMinorUsages.length - 1
+            ];
 
           if (selectedUsage) {
             const ferMinorLandUsage = ferMinorLandUsageRepo.create({
@@ -88,8 +98,13 @@ export class FertilizerMinorLandUsagesService {
               fertilizerMinorName: servFerMinor.fertilizerMinor.name,
               useRatePerRai: selectedUsage.fertilizerUsageValue,
               totalUsage: selectedUsage.fertilizerUsageValue * book.areaSize,
-              pricePerRai: servFerMinor.fertilizerMinor.pricePerUnit * selectedUsage.fertilizerUsageValue,
-              totalPrice: servFerMinor.fertilizerMinor.pricePerUnit * selectedUsage.fertilizerUsageValue * book.areaSize,
+              pricePerRai:
+                servFerMinor.fertilizerMinor.pricePerUnit *
+                selectedUsage.fertilizerUsageValue,
+              totalPrice:
+                servFerMinor.fertilizerMinor.pricePerUnit *
+                selectedUsage.fertilizerUsageValue *
+                book.areaSize,
               updatedUid: 1,
             });
             newLandUsages.push(ferMinorLandUsage);
@@ -119,13 +134,15 @@ export class FertilizerMinorLandUsagesService {
       order: {
         serviceFertilizerMinorUsages: {
           level: 'ASC',
-        }
-      }
+        },
+      },
     });
 
-    // Calculate Usage Summary 
+    // Calculate Usage Summary
     for (const servFerMinor of servFerMinors) {
-      const refResult = results.find(result => result.laboratoryId === servFerMinor.laboratoryId);
+      const refResult = results.find(
+        result => result.laboratoryId === servFerMinor.laboratoryId
+      );
       if (refResult) {
         // หาการใช้ปุ๋ยที่ตรงกับผลลัพธ์
         const matchedUsage = servFerMinor.serviceFertilizerMinorUsages.find(
@@ -133,7 +150,11 @@ export class FertilizerMinorLandUsagesService {
         );
 
         // หากค่ามากกว่าทุก cutoffValue ให้ใช้ค่า cutoffValue สุดท้าย
-        const selectedUsage = matchedUsage || servFerMinor.serviceFertilizerMinorUsages[servFerMinor.serviceFertilizerMinorUsages.length - 1];
+        const selectedUsage =
+          matchedUsage ||
+          servFerMinor.serviceFertilizerMinorUsages[
+            servFerMinor.serviceFertilizerMinorUsages.length - 1
+          ];
         const ferMinorLandUsage = this.ferMinorLandUsageRepo.create({
           serviceFertilizerMinorId: servFerMinor.serviceFertilizerMinorId,
           bookId: book.bookId,
@@ -144,8 +165,13 @@ export class FertilizerMinorLandUsagesService {
           fertilizerMinorName: servFerMinor.fertilizerMinor.name,
           useRatePerRai: selectedUsage.fertilizerUsageValue,
           totalUsage: selectedUsage.fertilizerUsageValue * book.areaSize,
-          pricePerRai: servFerMinor.fertilizerMinor.pricePerUnit * selectedUsage.fertilizerUsageValue,
-          totalPrice: servFerMinor.fertilizerMinor.pricePerUnit * selectedUsage.fertilizerUsageValue * book.areaSize,
+          pricePerRai:
+            servFerMinor.fertilizerMinor.pricePerUnit *
+            selectedUsage.fertilizerUsageValue,
+          totalPrice:
+            servFerMinor.fertilizerMinor.pricePerUnit *
+            selectedUsage.fertilizerUsageValue *
+            book.areaSize,
           updatedUid: 1, // Mocked updatedUid, should be replaced with actual user ID
         });
         await this.ferMinorLandUsageRepo.save(ferMinorLandUsage);

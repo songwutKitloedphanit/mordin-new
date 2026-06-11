@@ -44,38 +44,38 @@ const ServiceFertilizerMinor = ({
                 </div>
               </div>
             ) : // ตรวจสอบว่ามีข้อมูลใน ratonCane หรือไม่
-              serviceFertilizerMinors?.serviceFertilizerMinorUsages?.length ===
-                0 ? (
-                <p className="text-center text-muted text-danger">
-                  ยังไม่มีการบันทึกข้อมูล
-                </p>
-              ) : (
-                <table className="table table-bordered">
-                  <thead>
-                    <tr>
-                      <th>
-                        {serviceFertilizerMinors?.laboratory?.shortNameAfter}(
-                        {serviceFertilizerMinors?.laboratory?.unitAfter})
-                      </th>
-                      <th>
-                        อัตราการใช้ (
-                        {serviceFertilizerMinors?.fertilizerMinor?.unit?.initial}
-                        /ไร่)
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {serviceFertilizerMinors?.serviceFertilizerMinorUsages?.map(
-                      (usages, index) => (
-                        <tr key={index}>
-                          <td>{usages?.cutoffText}</td>
-                          <td>{usages?.fertilizerUsageValue}</td>
-                        </tr>
-                      )
-                    )}
-                  </tbody>
-                </table>
-              )}
+            serviceFertilizerMinors?.serviceFertilizerMinorUsages?.length ===
+              0 ? (
+              <p className="text-center text-muted text-danger">
+                ยังไม่มีการบันทึกข้อมูล
+              </p>
+            ) : (
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>
+                      {serviceFertilizerMinors?.laboratory?.shortNameAfter}(
+                      {serviceFertilizerMinors?.laboratory?.unitAfter})
+                    </th>
+                    <th>
+                      อัตราการใช้ (
+                      {serviceFertilizerMinors?.fertilizerMinor?.unit?.initial}
+                      /ไร่)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {serviceFertilizerMinors?.serviceFertilizerMinorUsages?.map(
+                    (usages, index) => (
+                      <tr key={index}>
+                        <td>{usages?.cutoffText}</td>
+                        <td>{usages?.fertilizerUsageValue}</td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
@@ -84,4 +84,3 @@ const ServiceFertilizerMinor = ({
 };
 
 export default ServiceFertilizerMinor;
-

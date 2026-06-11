@@ -1,4 +1,3 @@
-import { WorkingStandardAxisEnum } from 'src/laboratory/enums/working-standard.enum';
 import { LaboratorySetting } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
@@ -18,10 +17,10 @@ export class LaboratorySettingDetail {
 
   @ManyToOne(
     () => LaboratorySetting,
-    (laboratorySetting) => laboratorySetting.laboratorySettingDetails,
+    laboratorySetting => laboratorySetting.laboratorySettingDetails,
     {
       onDelete: 'CASCADE',
-    },
+    }
   )
   @JoinColumn({ name: 'laboratory_setting_id' })
   laboratorySetting: LaboratorySetting;

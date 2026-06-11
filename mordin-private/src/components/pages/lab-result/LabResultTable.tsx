@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 
 import PrintQrCode from './PrintQrCode';
@@ -56,6 +56,7 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
       shortNameBefore: string | null;
       resultId: number | null;
       preValue: number | null;
+      laboratoryId?: number | null;
     }[]
   >([]);
   const [originalResults, setOriginalResults] = useState<
@@ -64,6 +65,7 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
       shortNameBefore: string | null;
       resultId: number | null;
       preValue: number | null;
+      laboratoryId?: number | null;
     }[]
   >([]);
   const [editedDirtWeight, setEditedDirtWeight] = useState<
@@ -114,11 +116,13 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
       shortNameBefore: string | null;
       resultId: number | null;
       preValue: number | null;
+      laboratoryId?: number | null;
     }[] = rowResults.map(result => ({
       unitBefore: result.laboratorySetting.laboratory.unitBefore,
       shortNameBefore: result.laboratorySetting.laboratory.shortNameBefore,
       resultId: result.resultId,
       preValue: result.preValue ?? 0,
+      laboratoryId: result.laboratoryId,
     }));
 
     const initDirtValues: {
@@ -405,7 +409,9 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
                                     <React.Fragment key={col.laboratoryId}>
                                       <td>-</td>
                                       {col?.machineType?.type !==
-                                        MachineTypeTypes.RAW_VALUE && <td>-</td>}
+                                        MachineTypeTypes.RAW_VALUE && (
+                                        <td>-</td>
+                                      )}
                                       <td></td>
                                     </React.Fragment>
                                   );
@@ -435,61 +441,115 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
                                 const gradeColor =
                                   (result?.resultGradeLevel?.color as
                                     | string
-                                    | undefined) ??
-                                  fallbackGradeColor;
+                                    | undefined) ?? fallbackGradeColor;
 
                                 return (
                                   <React.Fragment key={result.laboratoryId}>
                                     {/* preValue cell */}
                                     <td className="text-left">
-                                      <div
-                                        className="d-flex align-items-center gap-1"
-                                        style={{ minWidth: '120px' }}
-                                      >
-                                        <input
-                                          type="number"
-                                          className="form-control form-control-sm"
-                                          value={inlineValue}
-                                          placeholder="เพิ่มค่า"
-                                          disabled={isSavingInline || !hasValidResultId}
-                                          onChange={e =>
-                                            setInlineValues(prev => ({
-                                              ...prev,
-                                              [resultId]: e.target.value,
-                                            }))
-                                          }
-                                          onKeyDown={e => {
-                                            if (e.key === 'Enter' && canSaveInline) {
-                                              e.preventDefault();
-                                              void saveInlinePreValue(
-                                                resultId,
-                                                inlineNumber
-                                              );
-                                            }
-                                          }}
-                                          onBlur={() => {
-                                            if (canSaveInline) {
-                                              void saveInlinePreValue(
-                                                resultId,
-                                                inlineNumber
-                                              );
-                                            }
-                                          }}
-                                        />
-                                        {isSavingInline && (
-                                          <span
-                                            className="spinner-border spinner-border-sm text-success"
-                                            role="status"
-                                            aria-label="กำลังบันทึก"
-                                          />
-                                        )}
-                                      </div>
+                                      {(() => {
+                                        const isOutOfRange = (
+                                          valStr: string
+                                        ) => {
+                                          if (valStr.trim() === '')
+                                            return false;
+                                          const valNum = Number(valStr);
+                                          if (!Number.isFinite(valNum))
+                                            return false;
+                                          const min = col.rangeMin;
+                                          const max = col.rangeMax;
+                                          const hasMin =
+                                            typeof min === 'number' &&
+                                            !isNaN(min);
+                                          const hasMax =
+                                            typeof max === 'number' &&
+                                            !isNaN(max);
+                                          if (hasMin && valNum < min)
+                                            return true;
+                                          if (hasMax && valNum > max)
+                                            return true;
+                                          return false;
+                                        };
+                                        const outOfRange =
+                                          isOutOfRange(inlineValue);
+                                        const hasRange =
+                                          typeof col.rangeMin === 'number' &&
+                                          typeof col.rangeMax === 'number';
+                                        const rangePlaceholder = hasRange
+                                          ? `${col.rangeMin}-${col.rangeMax}`
+                                          : 'เพิ่มค่า';
+
+                                        return (
+                                          <div
+                                            className="d-flex align-items-center gap-1"
+                                            style={{ minWidth: '130px' }}
+                                          >
+                                            <input
+                                              type="number"
+                                              className={`form-control form-control-sm ${outOfRange ? 'is-invalid border-danger bg-danger-subtle text-danger' : ''}`}
+                                              value={inlineValue}
+                                              placeholder={rangePlaceholder}
+                                              disabled={
+                                                isSavingInline ||
+                                                !hasValidResultId
+                                              }
+                                              onChange={e =>
+                                                setInlineValues(prev => ({
+                                                  ...prev,
+                                                  [resultId]: e.target.value,
+                                                }))
+                                              }
+                                              onKeyDown={e => {
+                                                if (
+                                                  e.key === 'Enter' &&
+                                                  canSaveInline
+                                                ) {
+                                                  e.preventDefault();
+                                                  void saveInlinePreValue(
+                                                    resultId,
+                                                    inlineNumber
+                                                  );
+                                                }
+                                              }}
+                                              onBlur={() => {
+                                                if (canSaveInline) {
+                                                  void saveInlinePreValue(
+                                                    resultId,
+                                                    inlineNumber
+                                                  );
+                                                }
+                                              }}
+                                              title={
+                                                outOfRange
+                                                  ? `อยู่นอกช่วงพารามิเตอร์วิเคราะห์ (${col.rangeMin} - ${col.rangeMax})`
+                                                  : ''
+                                              }
+                                            />
+                                            {outOfRange && (
+                                              <span
+                                                className="text-danger ms-1"
+                                                title={`อยู่นอกช่วงพารามิเตอร์วิเคราะห์ (${col.rangeMin} - ${col.rangeMax})`}
+                                                style={{ cursor: 'help' }}
+                                              >
+                                                <i className="fas fa-exclamation-circle text-danger" />
+                                              </span>
+                                            )}
+                                            {isSavingInline && (
+                                              <span
+                                                className="spinner-border spinner-border-sm text-success"
+                                                role="status"
+                                                aria-label="กำลังบันทึก"
+                                              />
+                                            )}
+                                          </div>
+                                        );
+                                      })()}
                                     </td>
 
                                     {/* postValue */}
                                     {result?.laboratorySetting?.laboratory
                                       ?.machineType?.type ===
-                                      MachineTypeTypes.RAW_VALUE ? null : (
+                                    MachineTypeTypes.RAW_VALUE ? null : (
                                       <td className="text-left">
                                         {formatDecimal(result?.postValue ?? 0)}
                                       </td>
@@ -499,7 +559,9 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
                                     <td
                                       className="text-left"
                                       style={{
-                                        background: hasPreValue ? gradeColor : '',
+                                        background: hasPreValue
+                                          ? gradeColor
+                                          : '',
                                         minWidth: '0.125vh',
                                       }}
                                     />
@@ -669,75 +731,118 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
                     </div>
 
                     <form>
-                      {editedResults.map(result => (
-                        <div
-                          className="mb-3 p-3 bg-light rounded-3 border-start border-4 border-success"
-                          key={result.resultId}
-                        >
-                          <div className="row align-items-center">
-                            <div className="col-4">
-                              <label className="form-label fw-bold text-dark mb-0">
-                                <i className="fas fa-flask me-2 text-success"></i>
-                                {result.shortNameBefore}{' '}
-                                {result.unitBefore
-                                  ? `(${result.unitBefore})`
-                                  : ``}
-                              </label>
-                            </div>
-                            <div className="col-8">
-                              <div className="input-group">
-                                <input
-                                  type="number"
-                                  className="form-control form-control-lg border-2"
-                                  style={{
-                                    borderColor:
-                                      result.preValue !== null
-                                        ? '#28a745'
-                                        : '#dee2e6',
-                                    backgroundColor: '#fff',
-                                    transition: 'all 0.3s ease',
-                                  }}
-                                  value={result.preValue ?? ''}
-                                  placeholder="กรอกค่า..."
-                                  onChange={e => {
-                                    const val = parseFloat(e.target.value);
-                                    setEditedResults(prev =>
-                                      prev.map(r =>
-                                        r.resultId === result.resultId
-                                          ? {
-                                            ...r,
-                                            preValue: isNaN(val) ? null : val,
-                                          }
-                                          : r
-                                      )
-                                    );
-                                  }}
-                                  onFocus={e => {
-                                    e.target.style.borderColor = '#28a745';
-                                    e.target.style.boxShadow =
-                                      '0 0 0 0.2rem rgba(40,167,69,.25)';
-                                  }}
-                                  onBlur={e => {
-                                    e.target.style.borderColor =
-                                      result.preValue !== null
-                                        ? '#28a745'
-                                        : '#dee2e6';
-                                    e.target.style.boxShadow = 'none';
-                                  }}
-                                />
+                      {editedResults.map(result => {
+                        const matchedCol = columns?.find(
+                          c =>
+                            c.laboratoryId === result.laboratoryId ||
+                            c.shortNameBefore === result.shortNameBefore
+                        );
+                        const isModalOutOfRange = (val: number | null) => {
+                          if (val === null || val === undefined || !matchedCol)
+                            return false;
+                          const min = matchedCol.rangeMin;
+                          const max = matchedCol.rangeMax;
+                          const hasMin = typeof min === 'number' && !isNaN(min);
+                          const hasMax = typeof max === 'number' && !isNaN(max);
+                          if (hasMin && val < min) return true;
+                          if (hasMax && val > max) return true;
+                          return false;
+                        };
+                        const outOfRange = isModalOutOfRange(result.preValue);
+
+                        return (
+                          <div
+                            className={`mb-3 p-3 bg-light rounded-3 border-start border-4 ${outOfRange ? 'border-danger' : 'border-success'}`}
+                            key={result.resultId}
+                          >
+                            <div className="row align-items-center">
+                              <div className="col-4">
+                                <label className="form-label fw-bold text-dark mb-0">
+                                  <i
+                                    className={`fas fa-flask me-2 ${outOfRange ? 'text-danger' : 'text-success'}`}
+                                  ></i>
+                                  {result.shortNameBefore}{' '}
+                                  {result.unitBefore
+                                    ? `(${result.unitBefore})`
+                                    : ``}
+                                </label>
                               </div>
-                              {result.preValue !== null && (
-                                <div className="mt-2">
-                                  <small className="text-success fw-bold">
-                                    <i className="fas fa-check-circle me-1"></i>
-                                    ค่าที่กรอก: {result.preValue}
-                                  </small>
+                              <div className="col-8">
+                                <div className="input-group">
+                                  <input
+                                    type="number"
+                                    className={`form-control form-control-lg border-2 ${outOfRange ? 'is-invalid border-danger text-danger bg-danger-subtle' : ''}`}
+                                    style={{
+                                      borderColor: outOfRange
+                                        ? '#dc3545'
+                                        : result.preValue !== null
+                                          ? '#28a745'
+                                          : '#dee2e6',
+                                      backgroundColor: '#fff',
+                                      transition: 'all 0.3s ease',
+                                    }}
+                                    value={result.preValue ?? ''}
+                                    placeholder={
+                                      matchedCol
+                                        ? `ช่วงแนะนำ: ${matchedCol.rangeMin} - ${matchedCol.rangeMax}`
+                                        : 'กรอกค่า...'
+                                    }
+                                    onChange={e => {
+                                      const val = parseFloat(e.target.value);
+                                      setEditedResults(prev =>
+                                        prev.map(r =>
+                                          r.resultId === result.resultId
+                                            ? {
+                                                ...r,
+                                                preValue: isNaN(val)
+                                                  ? null
+                                                  : val,
+                                              }
+                                            : r
+                                        )
+                                      );
+                                    }}
+                                    onFocus={e => {
+                                      e.target.style.borderColor = outOfRange
+                                        ? '#dc3545'
+                                        : '#28a745';
+                                      e.target.style.boxShadow = outOfRange
+                                        ? '0 0 0 0.2rem rgba(220,53,69,.25)'
+                                        : '0 0 0 0.2rem rgba(40,167,69,.25)';
+                                    }}
+                                    onBlur={e => {
+                                      e.target.style.borderColor = outOfRange
+                                        ? '#dc3545'
+                                        : result.preValue !== null
+                                          ? '#28a745'
+                                          : '#dee2e6';
+                                      e.target.style.boxShadow = 'none';
+                                    }}
+                                  />
                                 </div>
-                              )}
+                                {result.preValue !== null && (
+                                  <div className="mt-2">
+                                    {outOfRange ? (
+                                      <small className="text-danger fw-bold">
+                                        <i className="fas fa-exclamation-triangle me-1"></i>
+                                        คำเตือน: ค่า {result.preValue}{' '}
+                                        อยู่นอกช่วงวิเคราะห์ (
+                                        {matchedCol?.rangeMin} -{' '}
+                                        {matchedCol?.rangeMax})
+                                      </small>
+                                    ) : (
+                                      <small className="text-success fw-bold">
+                                        <i className="fas fa-check-circle me-1"></i>
+                                        ค่าที่กรอก: {result.preValue}
+                                      </small>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </form>
                   </div>
                 )}
@@ -793,9 +898,9 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
                                       prev.map(r =>
                                         r.id === result.id
                                           ? {
-                                            ...r,
-                                            value: isNaN(val) ? null : val,
-                                          }
+                                              ...r,
+                                              value: isNaN(val) ? null : val,
+                                            }
                                           : r
                                       )
                                     );
@@ -866,5 +971,3 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
 };
 
 export default LabResultTable;
-
-

@@ -1,14 +1,20 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { CreateFertilizerMajorDto } from './dto/create-fertilizer-major.dto';
-import { UpdateFertilizerMajorDto } from './dto/update-fertilizer-major.dto';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FertilizerMajor } from './entities/fertilizer-major.entity';
 import { Like, Repository } from 'typeorm';
-import { SearchFertilizerMajorDto } from './dto/search-fertilizer-major.dto';
-import { FertilizerSummaryDto } from './dto/fertilizer-summary.dto';
+
 import { FertilizerMinor } from '../fertilizer-minors/entities/fertilizer-minor.entity';
-import { FertilizerMajorLog } from './entities/fertilizer-major.log.entity';
 import { ServiceFertilizerMajorUsage } from '../service-fertilizer-major-usages/entities/service-fertilizer-major-usage.entity';
+
+import { CreateFertilizerMajorDto } from './dto/create-fertilizer-major.dto';
+import { FertilizerSummaryDto } from './dto/fertilizer-summary.dto';
+import { SearchFertilizerMajorDto } from './dto/search-fertilizer-major.dto';
+import { UpdateFertilizerMajorDto } from './dto/update-fertilizer-major.dto';
+import { FertilizerMajor } from './entities/fertilizer-major.entity';
+import { FertilizerMajorLog } from './entities/fertilizer-major.log.entity';
 
 @Injectable()
 export class FertilizerMajorsService {
@@ -20,8 +26,8 @@ export class FertilizerMajorsService {
     @InjectRepository(FertilizerMajorLog)
     private readonly fertilizerMajorLog: Repository<FertilizerMajorLog>,
     @InjectRepository(ServiceFertilizerMajorUsage)
-    private readonly serviceFertilizerMajorUsageRepository: Repository<ServiceFertilizerMajorUsage>,
-  ) { }
+    private readonly serviceFertilizerMajorUsageRepository: Repository<ServiceFertilizerMajorUsage>
+  ) {}
 
   create(createFertilizerMajorDto: CreateFertilizerMajorDto, Uid: number) {
     const { N, P, K } = createFertilizerMajorDto;
@@ -86,7 +92,11 @@ export class FertilizerMajorsService {
     });
   }
 
-  async update(id: number, updateFertilizerMajorDto: UpdateFertilizerMajorDto, Uid: number) {
+  async update(
+    id: number,
+    updateFertilizerMajorDto: UpdateFertilizerMajorDto,
+    Uid: number
+  ) {
     const fertilizerMajor = await this.fertilizerMajorRepository.findOneBy({
       fertilizerMajorId: id,
     });
@@ -121,14 +131,15 @@ export class FertilizerMajorsService {
       throw new NotFoundException('FertilizerMajor not found');
     }
 
-    // We cannot set removedBy because it doesn't exist. 
+    // We cannot set removedBy because it doesn't exist.
     // We can update updateUid before delete if needed for logs, but since it's hard delete, it might be lost unless logs capture it.
     // Assuming logs capture the state before delete or we just delete it.
-    // The user requirement was "use real uid". 
+    // The user requirement was "use real uid".
     // If I cannot save it, I will just proceed to delete.
 
     await this.fertilizerMajorRepository.remove(fertilizerMajor);
   }
+
   async getFertilizerSummary(): Promise<FertilizerSummaryDto> {
     // ปุ๋ยหลัก
     const majors = await this.fertilizerMajorRepository.find();

@@ -39,8 +39,18 @@ if (is_array($shops) && !isset($shops['error'])) {
 include_once COMPONENT_PATH . 'lib_header.php';
 ?>
 
+<link rel="stylesheet" href="/assets/css/leaflet.css">
+
+<div class="ag-page-banner">
+  <div class="container-xl ag-page-banner-inner">
+    <div class="ag-kicker"><i class="bi bi-shop me-1"></i>Recommended Shops</div>
+    <h1>ร้านค้าแนะนำ</h1>
+    <p>รวมร้านค้าปุ๋ยและวัสดุปรับปรุงดินในพื้นที่เขตส่งเสริม พร้อมตำแหน่งบนแผนที่</p>
+  </div>
+</div>
+
 <section id="shops-map" class="section public-shops-map">
-  <div class="mb-5" data-aos="fade-up" data-aos-delay="200">
+  <div class="mb-5 scroll-reveal">
     <?php include_once COMPONENT_PATH.'leafmap_marker.php'; ?>
   </div>
 </section>
@@ -79,7 +89,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
                 $fullAddress = implode(' ', $addressParts);
                 $imgUrl = ShopsAPI::getImageUrl($shop['imageUrl'] ?? '');
               ?>
-              <div class="col-xl-3 col-lg-6" data-aos="zoom-in" data-aos-delay="100">
+              <div class="col-xl-3 col-lg-6 scroll-reveal stagger-<?= (($loop_index_shop = isset($loop_index_shop) ? $loop_index_shop + 1 : 0) % 5) + 1 ?>">
                 <div class="public-shop-card">
                   <h3><?php echo htmlspecialchars($shop['name']); ?></h3>
 

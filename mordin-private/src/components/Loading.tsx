@@ -75,7 +75,10 @@ export const Loading = () => {
         {/* Header */}
         <div
           className="d-flex align-items-center justify-content-between mb-5"
-          style={{ borderBottom: `1px solid ${c.headerBorder}`, paddingBottom: '1rem' }}
+          style={{
+            borderBottom: `1px solid ${c.headerBorder}`,
+            paddingBottom: '1rem',
+          }}
         >
           <div className="placeholder-glow" style={{ width: 180 }}>
             <span

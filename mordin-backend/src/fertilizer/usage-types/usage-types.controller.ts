@@ -8,11 +8,12 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { UsageTypesService } from './usage-types.service';
-import { CreateUsageTypeDto } from './dto/create-usage-type.dto';
-import { UpdateUsageTypeDto } from './dto/update-usage-type.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateUsageTypeDto } from './dto/create-usage-type.dto';
+import { UpdateUsageTypeDto } from './dto/update-usage-type.dto';
+import { UsageTypesService } from './usage-types.service';
 
 @Controller('usage-types')
 export class UsageTypesController {
@@ -20,7 +21,10 @@ export class UsageTypesController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createUsageTypeDto: CreateUsageTypeDto, @User('sub')  userId: number) {
+  create(
+    @Body() createUsageTypeDto: CreateUsageTypeDto,
+    @User('sub') userId: number
+  ) {
     return this.usageTypesService.create(createUsageTypeDto, userId);
   }
 
@@ -44,7 +48,7 @@ export class UsageTypesController {
   update(
     @Param('id') id: string,
     @Body() updateUsageTypeDto: UpdateUsageTypeDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.usageTypesService.update(+id, updateUsageTypeDto, userId);
   }

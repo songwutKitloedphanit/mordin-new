@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { CreateShopDto } from './dto/create-shop.dto';
-import { UpdateShopDto } from './dto/update-shop.dto';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Shop } from './entities/shop.entity';
 import { Repository } from 'typeorm';
+
+import { CreateShopDto } from './dto/create-shop.dto';
 import { ShopSummaryDTO } from './dto/shop-summary.dto';
+import { UpdateShopDto } from './dto/update-shop.dto';
+import { Shop } from './entities/shop.entity';
 import { ShopLog } from './entities/shop.log.entity';
 
 @Injectable()
@@ -13,8 +18,9 @@ export class ShopsService {
     @InjectRepository(Shop)
     private shopRepository: Repository<Shop>,
     @InjectRepository(ShopLog)
-    private shopLog: Repository<ShopLog>,
-  ) { }
+    private shopLog: Repository<ShopLog>
+  ) {}
+
   async create(createShopDto: CreateShopDto, Uid: number) {
     const shop = this.shopRepository.create(createShopDto);
     shop.updateUid = Uid;
@@ -23,14 +29,22 @@ export class ShopsService {
 
   findAll() {
     return this.shopRepository.find({
-      relations: ['subdistrict', 'subdistrict.district', 'subdistrict.district.province'],
+      relations: [
+        'subdistrict',
+        'subdistrict.district',
+        'subdistrict.district.province',
+      ],
     });
   }
 
   async findOne(id: number) {
     const shop = await this.shopRepository.findOne({
       where: { shopId: id },
-      relations: ['subdistrict', 'subdistrict.district', 'subdistrict.district.province'],
+      relations: [
+        'subdistrict',
+        'subdistrict.district',
+        'subdistrict.district.province',
+      ],
     });
 
     if (!shop) {
@@ -56,7 +70,9 @@ export class ShopsService {
       return await this.shopRepository.remove(shop);
     } catch (error) {
       if (error?.code === '23503') {
-        throw new ConflictException('ไม่สามารถลบร้านค้านี้ได้เนื่องจากมีการใช้งานอยู่ในส่วนอื่น');
+        throw new ConflictException(
+          'ไม่สามารถลบร้านค้านี้ได้เนื่องจากมีการใช้งานอยู่ในส่วนอื่น'
+        );
       }
       throw error;
     }
@@ -67,7 +83,7 @@ export class ShopsService {
 
     const shopSummary: ShopSummaryDTO = {
       totalShops: shops.length,
-    }
+    };
 
     return shopSummary;
   }

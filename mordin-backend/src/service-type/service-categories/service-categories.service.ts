@@ -1,12 +1,13 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
-import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ServiceCategory } from './entities/service-category.entity';
-import { Repository } from 'typeorm';
 import { ServiceFertilizerMajorUsage } from 'src/fertilizer/service-fertilizer-major-usages/entities/service-fertilizer-major-usage.entity';
 import { ServiceFertilizerMajorUsagesService } from 'src/fertilizer/service-fertilizer-major-usages/service-fertilizer-major-usages.service';
+import { Repository } from 'typeorm';
+
+import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
+import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
+import { ServiceCategory } from './entities/service-category.entity';
 import { ServiceCategoryLog } from './entities/service-category.log.entity';
 
 @Injectable()
@@ -81,7 +82,7 @@ export class ServiceCategoriesService {
     }
 
     // 2. แนบ userId เข้าไปใน property ที่เรานิยามไว้ใน .d.ts
-    serviceCategory.removedBy = userId;
+    (serviceCategory as any).removedBy = userId;
 
     // 3. ส่ง Entity object ที่แก้ไขแล้วไปให้ .remove()
     await this.serviceCategoryRepository.remove(serviceCategory);

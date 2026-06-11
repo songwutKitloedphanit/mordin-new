@@ -11,7 +11,9 @@ interface OfficerQRCodeSummaryCardProps {
   serviceCalendarId?: number;
 }
 
-const OfficerQRCodeSummaryCard = ({ serviceCalendarId }: OfficerQRCodeSummaryCardProps) => {
+const OfficerQRCodeSummaryCard = ({
+  serviceCalendarId,
+}: OfficerQRCodeSummaryCardProps) => {
   const [qrCodes, setQrCodes] = useState<QrCodeInfo[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -43,8 +45,12 @@ const OfficerQRCodeSummaryCard = ({ serviceCalendarId }: OfficerQRCodeSummaryCar
 
   // คำนวณสถิติจากข้อมูลที่ fetch มา
   const total = qrCodes.length;
-  const reserved = qrCodes.filter(qr => qr.book !== null && qr.book !== undefined).length;
-  const completed = qrCodes.filter(qr => qr.book?.results && qr.book.results.length > 0).length;
+  const reserved = qrCodes.filter(
+    qr => qr.book !== null && qr.book !== undefined
+  ).length;
+  const completed = qrCodes.filter(
+    qr => qr.book?.results && qr.book.results.length > 0
+  ).length;
   const available = total - reserved;
 
   const percent = (value: number) =>
@@ -53,7 +59,9 @@ const OfficerQRCodeSummaryCard = ({ serviceCalendarId }: OfficerQRCodeSummaryCar
   if (loading) {
     return (
       <div className="row">
-        {[1, 2, 3, 4].map(i => <GenCard1Skeleton key={i} />)}
+        {[1, 2, 3, 4].map(i => (
+          <GenCard1Skeleton key={i} />
+        ))}
       </div>
     );
   }

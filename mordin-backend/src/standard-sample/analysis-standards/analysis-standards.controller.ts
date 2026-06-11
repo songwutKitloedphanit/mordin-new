@@ -8,17 +8,19 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { User } from 'src/auth/decorators/user.decorator';
+
 import { AnalysisStandardsService } from './analysis-standards.service';
 import { CreateAnalysisStandardDto } from './dto/create-analysis-standard.dto';
 import { UpdateAnalysisStandardDto } from './dto/update-analysis-standard.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
-import { User } from 'src/auth/decorators/user.decorator';
 
 @Controller('analysis-standards')
 export class AnalysisStandardsController {
   constructor(
     private readonly analysisStandardsService: AnalysisStandardsService
   ) {}
+
   @UseGuards(AuthGuard)
   @Post()
   create(
@@ -52,6 +54,7 @@ export class AnalysisStandardsController {
   findOne(@Param('id') id: string) {
     return this.analysisStandardsService.findOne(+id);
   }
+
   @UseGuards(AuthGuard)
   @Patch(':id')
   update(
@@ -65,6 +68,7 @@ export class AnalysisStandardsController {
       userId
     );
   }
+
   @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {

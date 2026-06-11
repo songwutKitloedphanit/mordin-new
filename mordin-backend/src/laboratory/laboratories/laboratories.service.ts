@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ServiceLaboratoriesService } from 'src/service-type/service-laboratories/service-laboratories.service';
+import { Repository } from 'typeorm';
+
+import { LaboratorySettingsService } from '../laboratory-settings/laboratory-settings.service';
+
 import { CreateLaboratoryDto } from './dto/create-laboratory.dto';
 import { UpdateLaboratoryDto } from './dto/update-laboratory.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Laboratory } from './entities/laboratory.entity';
-import { Repository } from 'typeorm';
-import { ServiceLaboratoriesService } from 'src/service-type/service-laboratories/service-laboratories.service';
-import { LaboratorySettingsService } from '../laboratory-settings/laboratory-settings.service';
 import { LaboratoryLog } from './entities/laboratory.log.entity';
 
 @Injectable()
@@ -18,7 +20,7 @@ export class LaboratoriesService {
     private readonly laboratoryLog: Repository<LaboratoryLog>,
 
     private readonly ServLabService: ServiceLaboratoriesService,
-    private readonly labSettingsService: LaboratorySettingsService,
+    private readonly labSettingsService: LaboratorySettingsService
   ) {}
 
   async create(createLaboratoryDto: CreateLaboratoryDto, Uid: number) {
@@ -30,7 +32,7 @@ export class LaboratoriesService {
     await this.ServLabService.createByNewLaboratoryId(savedLab.laboratoryId);
     await this.labSettingsService.createByNewLabIdForUpcomingCalendar(
       savedLab.laboratoryId,
-      Uid,
+      Uid
     );
     return savedLab;
   }
@@ -52,7 +54,11 @@ export class LaboratoriesService {
       .getOne();
   }
 
-  async update(id: number, updateLaboratoryDto: UpdateLaboratoryDto, Uid: number) {
+  async update(
+    id: number,
+    updateLaboratoryDto: UpdateLaboratoryDto,
+    Uid: number
+  ) {
     const laboratory = await this.laboratoryRepository.findOneBy({
       laboratoryId: id,
     });

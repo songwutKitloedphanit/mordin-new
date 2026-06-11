@@ -1,6 +1,7 @@
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator'; // เพิ่ม Max, Min
 import { BaseSearchDto } from 'src/common/dto/base-search.dto';
+
 import { QrCodeTypeEnum, SampleStatusEnum } from '../../enums/qr-code.enum';
 
 export class SearchQrCodeDto extends BaseSearchDto {

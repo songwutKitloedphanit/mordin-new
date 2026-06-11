@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -25,21 +25,21 @@ const KPI_CONFIG = [
     key: 'total' as const,
     label: 'ค่าวิเคราะห์ทั้งหมด',
     icon: 'fas fa-flask',
-    accent: '#31CE36',
+    accent: '#18a05c',
     unit: 'รายการ',
   },
   {
     key: 'main' as const,
     label: 'ค่าหลัก',
     icon: 'fas fa-star',
-    accent: '#337AB7',
+    accent: '#3b9bd9',
     unit: 'รายการ',
   },
   {
     key: 'minor' as const,
     label: 'ค่ารอง',
     icon: 'fas fa-vial',
-    accent: '#F39C12',
+    accent: '#d98f0c',
     unit: 'รายการ',
   },
 ];
@@ -142,7 +142,8 @@ const LaboratoryAdd = () => {
       const err = error as {
         response?: { data?: { message?: string | string[] } };
       };
-      const message = err?.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลได้';
+      const message =
+        err?.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลได้';
       const errorMessage = Array.isArray(message)
         ? message.join(', ')
         : message;
@@ -241,127 +242,127 @@ const LaboratoryAdd = () => {
             </div>
             <div className="private-card-body">
               <GenFormText2
-                  isRequired
-                  id="laboratoryCode"
-                  name="laboratoryCode"
-                  label="รหัส"
-                  placeholder="รหัส"
-                  desc="ใช้ในการเชื่อมโยงการคำนวณต่าง ๆ"
-                  value={laboratoryData.laboratoryCode}
-                  onChange={handleChange}
-                  errorMessage={error.laboratoryCode}
-                />
-                <GenFormText1
-                  isRequired
-                  id="name"
-                  name="name"
-                  label="ชื่อ"
-                  placeholder="ระบุชื่อ"
-                  value={laboratoryData.name}
-                  onChange={handleChange}
-                  errorMessage={error.name}
-                />
-                <GenFormText1
-                  isRequired
-                  id="shortNameBefore"
-                  name="shortNameBefore"
-                  label="ชื่อย่อ (ก่อนแปลงค่า)"
-                  placeholder="ระบุชื่อย่อ"
-                  value={laboratoryData.shortNameBefore}
-                  onChange={handleChange}
-                  errorMessage={error.shortNameBefore}
-                />
-                <GenFormText1
-                  isRequired
-                  id="unitBefore"
-                  name="unitBefore"
-                  label="หน่วยวัด (ก่อนแปลงค่า)"
-                  placeholder="ระบุหน่วยวัด (ก่อนแปลงค่า)"
-                  value={laboratoryData.unitBefore}
-                  onChange={handleChange}
-                  errorMessage={error.unitBefore}
-                />
-                <GenFormText1
-                  isRequired
-                  id="shortNameAfter"
-                  name="shortNameAfter"
-                  label="ชื่อย่อ (หลังแปลงค่า)"
-                  placeholder="ระบุชื่อย่อ (หลังแปลงค่า)"
-                  value={laboratoryData.shortNameAfter}
-                  onChange={handleChange}
-                  errorMessage={error.shortNameAfter}
-                />
-                <GenFormText1
-                  isRequired
-                  id="unitAfter"
-                  name="unitAfter"
-                  label="หน่วยวัด (หลังแปลงค่า)"
-                  placeholder="ระบุหน่วยวัด (หลังแปลงค่า)"
-                  value={laboratoryData.unitAfter}
-                  onChange={handleChange}
-                  errorMessage={error.unitAfter}
-                />
-                <div className="row">
-                  <div className="col-md-6">
-                    <GenFormText1
-                      isRequired
-                      id="rangeMin"
-                      name="rangeMin"
-                      label="ขอบเขตล่าง"
-                      placeholder="ระบุขอบเขตล่าง"
-                      value={laboratoryData.rangeMin}
-                      onChange={handleChange}
-                      errorMessage={error.rangeMin}
-                      type="number"
-                      step="any"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <GenFormText1
-                      isRequired
-                      id="rangeMax"
-                      name="rangeMax"
-                      label="ขอบเขตบน"
-                      placeholder="ระบุขอบเขตบน"
-                      value={laboratoryData.rangeMax}
-                      onChange={handleChange}
-                      errorMessage={error.rangeMax}
-                      type="number"
-                      step="any"
-                    />
-                  </div>
+                isRequired
+                id="laboratoryCode"
+                name="laboratoryCode"
+                label="รหัส"
+                placeholder="รหัส"
+                desc="ใช้ในการเชื่อมโยงการคำนวณต่าง ๆ"
+                value={laboratoryData.laboratoryCode}
+                onChange={handleChange}
+                errorMessage={error.laboratoryCode}
+              />
+              <GenFormText1
+                isRequired
+                id="name"
+                name="name"
+                label="ชื่อ"
+                placeholder="ระบุชื่อ"
+                value={laboratoryData.name}
+                onChange={handleChange}
+                errorMessage={error.name}
+              />
+              <GenFormText1
+                isRequired
+                id="shortNameBefore"
+                name="shortNameBefore"
+                label="ชื่อย่อ (ก่อนแปลงค่า)"
+                placeholder="ระบุชื่อย่อ"
+                value={laboratoryData.shortNameBefore}
+                onChange={handleChange}
+                errorMessage={error.shortNameBefore}
+              />
+              <GenFormText1
+                isRequired
+                id="unitBefore"
+                name="unitBefore"
+                label="หน่วยวัด (ก่อนแปลงค่า)"
+                placeholder="ระบุหน่วยวัด (ก่อนแปลงค่า)"
+                value={laboratoryData.unitBefore}
+                onChange={handleChange}
+                errorMessage={error.unitBefore}
+              />
+              <GenFormText1
+                isRequired
+                id="shortNameAfter"
+                name="shortNameAfter"
+                label="ชื่อย่อ (หลังแปลงค่า)"
+                placeholder="ระบุชื่อย่อ (หลังแปลงค่า)"
+                value={laboratoryData.shortNameAfter}
+                onChange={handleChange}
+                errorMessage={error.shortNameAfter}
+              />
+              <GenFormText1
+                isRequired
+                id="unitAfter"
+                name="unitAfter"
+                label="หน่วยวัด (หลังแปลงค่า)"
+                placeholder="ระบุหน่วยวัด (หลังแปลงค่า)"
+                value={laboratoryData.unitAfter}
+                onChange={handleChange}
+                errorMessage={error.unitAfter}
+              />
+              <div className="row">
+                <div className="col-md-6">
+                  <GenFormText1
+                    isRequired
+                    id="rangeMin"
+                    name="rangeMin"
+                    label="ขอบเขตล่าง"
+                    placeholder="ระบุขอบเขตล่าง"
+                    value={laboratoryData.rangeMin}
+                    onChange={handleChange}
+                    errorMessage={error.rangeMin}
+                    type="number"
+                    step="any"
+                  />
                 </div>
-                <GenFormSelect
-                  isRequired
-                  id="machineType"
-                  name="machineTypeId"
-                  label="ประเภท"
-                  options={machine.map(item => ({
-                    value: item.machineTypeId,
-                    name: item.name,
-                  }))}
-                  value={laboratoryData.machineTypeId}
-                  onChange={handleChange}
-                />
+                <div className="col-md-6">
+                  <GenFormText1
+                    isRequired
+                    id="rangeMax"
+                    name="rangeMax"
+                    label="ขอบเขตบน"
+                    placeholder="ระบุขอบเขตบน"
+                    value={laboratoryData.rangeMax}
+                    onChange={handleChange}
+                    errorMessage={error.rangeMax}
+                    type="number"
+                    step="any"
+                  />
+                </div>
+              </div>
+              <GenFormSelect
+                isRequired
+                id="machineType"
+                name="machineTypeId"
+                label="ประเภท"
+                options={machine.map(item => ({
+                  value: item.machineTypeId,
+                  name: item.name,
+                }))}
+                value={laboratoryData.machineTypeId}
+                onChange={handleChange}
+              />
 
-                <div className="private-action-footer mt-4 d-flex justify-content-between">
-                  <button
-                    type="button"
-                    className="btn btn-success"
-                    style={{ width: 150 }}
-                    onClick={handleSubmit}
-                  >
-                    เพิ่มแล็บ
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    style={{ width: 150 }}
-                    onClick={() => setShowConfirm(true)}
-                  >
-                    ยกเลิก
-                  </button>
-                </div>
+              <div className="private-action-footer mt-4 d-flex justify-content-between">
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  style={{ width: 150 }}
+                  onClick={handleSubmit}
+                >
+                  เพิ่มแล็บ
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  style={{ width: 150 }}
+                  onClick={() => setShowConfirm(true)}
+                >
+                  ยกเลิก
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -384,4 +385,3 @@ const LaboratoryAdd = () => {
 };
 
 export default LaboratoryAdd;
-

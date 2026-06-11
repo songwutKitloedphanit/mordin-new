@@ -55,7 +55,9 @@ const UserManagementSummaryCard = () => {
   if (isLoading) {
     return (
       <div className="row">
-        {[1, 2, 3, 4].map(i => <GenCard1Skeleton key={i} />)}
+        {[1, 2, 3, 4].map(i => (
+          <GenCard1Skeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -77,5 +79,3 @@ const UserManagementSummaryCard = () => {
 };
 
 export default UserManagementSummaryCard;
-
-

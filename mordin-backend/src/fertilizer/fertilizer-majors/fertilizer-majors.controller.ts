@@ -9,24 +9,31 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { FertilizerMajorsService } from './fertilizer-majors.service';
-import { CreateFertilizerMajorDto } from './dto/create-fertilizer-major.dto';
-import { UpdateFertilizerMajorDto } from './dto/update-fertilizer-major.dto';
-import { SearchFertilizerMajorDto } from './dto/search-fertilizer-major.dto';
-import { FertilizerSummaryDto } from './dto/fertilizer-summary.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateFertilizerMajorDto } from './dto/create-fertilizer-major.dto';
+import { FertilizerSummaryDto } from './dto/fertilizer-summary.dto';
+import { SearchFertilizerMajorDto } from './dto/search-fertilizer-major.dto';
+import { UpdateFertilizerMajorDto } from './dto/update-fertilizer-major.dto';
+import { FertilizerMajorsService } from './fertilizer-majors.service';
 
 @Controller('fertilizer-majors')
 export class FertilizerMajorsController {
   constructor(
     private readonly fertilizerMajorsService: FertilizerMajorsService
-  ) { }
+  ) {}
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createFertilizerMajorDto: CreateFertilizerMajorDto, @User('sub') userId: number) {
-    return this.fertilizerMajorsService.create(createFertilizerMajorDto, userId);
+  create(
+    @Body() createFertilizerMajorDto: CreateFertilizerMajorDto,
+    @User('sub') userId: number
+  ) {
+    return this.fertilizerMajorsService.create(
+      createFertilizerMajorDto,
+      userId
+    );
   }
 
   @Get()
@@ -47,6 +54,7 @@ export class FertilizerMajorsController {
   getFertilizerSummary(): Promise<FertilizerSummaryDto> {
     return this.fertilizerMajorsService.getFertilizerSummary();
   }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.fertilizerMajorsService.findOne(+id);
@@ -59,7 +67,11 @@ export class FertilizerMajorsController {
     @Body() updateFertilizerMajorDto: UpdateFertilizerMajorDto,
     @User('sub') userId: number
   ) {
-    return this.fertilizerMajorsService.update(+id, updateFertilizerMajorDto, userId);
+    return this.fertilizerMajorsService.update(
+      +id,
+      updateFertilizerMajorDto,
+      userId
+    );
   }
 
   @UseGuards(AuthGuard)

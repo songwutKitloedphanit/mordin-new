@@ -8,11 +8,12 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { LaboratoriesService } from './laboratories.service';
-import { CreateLaboratoryDto } from './dto/create-laboratory.dto';
-import { UpdateLaboratoryDto } from './dto/update-laboratory.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateLaboratoryDto } from './dto/create-laboratory.dto';
+import { UpdateLaboratoryDto } from './dto/update-laboratory.dto';
+import { LaboratoriesService } from './laboratories.service';
 
 @Controller('laboratories')
 export class LaboratoriesController {
@@ -20,7 +21,10 @@ export class LaboratoriesController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createLaboratoryDto: CreateLaboratoryDto, @User('sub')  userId: number) {
+  create(
+    @Body() createLaboratoryDto: CreateLaboratoryDto,
+    @User('sub') userId: number
+  ) {
     return this.laboratoriesService.create(createLaboratoryDto, userId);
   }
 
@@ -44,7 +48,7 @@ export class LaboratoriesController {
   update(
     @Param('id') id: string,
     @Body() updateLaboratoryDto: UpdateLaboratoryDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.laboratoriesService.update(+id, updateLaboratoryDto, userId);
   }

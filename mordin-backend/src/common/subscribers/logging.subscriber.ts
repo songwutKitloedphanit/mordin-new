@@ -1,33 +1,16 @@
-import { BusLog } from 'src/buses/entities/bus.log.entity';
+import { InjectDataSource } from '@nestjs/typeorm';
 import { Bus } from 'src/buses/entities/bus.entity';
-import { Book } from 'src/sample/books/entities/book.entity';
-import { BookLog } from 'src/sample/books/entities/book.log.entity';
-import { ServiceTypeLog } from 'src/service-type/service-types/entities/service-type.log.entity';
-import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
-import { Unit } from 'src/reference-data/units/entities/unit.entity';
-import { UnitLog } from 'src/reference-data/units/entities/unit.log.entity';
-import { ServiceCalendarLog } from 'src/service-calendars/entities/service-calendar.log.entity';
-import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
-import { ResultGrade } from 'src/result-grade/result-grades/entities/result-grade.entity';
-import { ResultGradeLog } from 'src/result-grade/result-grades/entities/result-grade.log.entity';
-import { MachineType } from 'src/laboratory/machine-types/entities/machine-type.entity';
-import { MachineTypeLog } from 'src/laboratory/machine-types/entities/machine-type.log.entity';
-import { ShopLog } from 'src/shops/entities/shop.log.entity';
-import { Shop } from 'src/shops/entities/shop.entity';
-import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
-import { LaboratoryLog } from 'src/laboratory/laboratories/entities/laboratory.log.entity';
-import { LaboratorySetting } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.entity';
-import { LaboratorySettingLog } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.log.entity';
+import { BusLog } from 'src/buses/entities/bus.log.entity';
 import { LaboratorySettingDetail } from 'src/laboratory/laboratory-setting-details/entities/laboratory-setting-detail.entity';
 import { LaboratorySettingDetailLog } from 'src/laboratory/laboratory-setting-details/entities/laboratory-setting-detail.log.entity';
 import { ConvertOmSettingLog } from 'src/laboratory/convert-om-settings/entities/convert-om-setting.log.entity';
 import { ConvertOmSetting } from 'src/laboratory/convert-om-settings/entities/convert-om-setting.entity';
-import { SoilGradeLog } from 'src/soil-grade/soil-grades/entities/soil-grade.log.entity';
 import { SoilGrade } from 'src/soil-grade/soil-grades/entities/soil-grade.entity';
+import { SoilGradeLog } from 'src/soil-grade/soil-grades/entities/soil-grade.log.entity';
 import { SoilGradeLevelLog } from 'src/soil-grade/soil-grade-levels/entities/soil-grade-level.log.entity';
 import { SoilGradeLevel } from 'src/soil-grade/soil-grade-levels/entities/soil-grade-level.entity';
-import { StandardLog } from 'src/standard-sample/standards/entities/standard.log.entity';
 import { Standard } from 'src/standard-sample/standards/entities/standard.entity';
+import { StandardLog } from 'src/standard-sample/standards/entities/standard.log.entity';
 import { AnalysisStandardLog } from 'src/standard-sample/analysis-standards/entities/analysis-standard.log.entity';
 import { AnalysisStandard } from 'src/standard-sample/analysis-standards/entities/analysis-standard.entity';
 import { AnalysisStandardResultLog } from 'src/standard-sample/analysis-standard-results/entities/analysis-standard-result.log.entity';
@@ -56,8 +39,20 @@ import { ServiceFertilizerMinor } from 'src/fertilizer/service-fertilizer-minors
 import { ServiceFertilizerMinorLog } from 'src/fertilizer/service-fertilizer-minors/entities/service-fertilizer-minor.log.entity';
 import { UsageType } from 'src/fertilizer/usage-types/entities/usage-type.entity';
 import { UsageTypeLog } from 'src/fertilizer/usage-types/entities/usage-type.log.entity';
+import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
+import { LaboratoryLog } from 'src/laboratory/laboratories/entities/laboratory.log.entity';
+import { LaboratorySetting } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.entity';
+import { LaboratorySettingLog } from 'src/laboratory/laboratory-settings/entities/laboratory-setting.log.entity';
+import { MachineType } from 'src/laboratory/machine-types/entities/machine-type.entity';
+import { MachineTypeLog } from 'src/laboratory/machine-types/entities/machine-type.log.entity';
 import { Land } from 'src/lands/entities/land.entity';
 import { LandLog } from 'src/lands/entities/land.log.entity';
+import { Unit } from 'src/reference-data/units/entities/unit.entity';
+import { UnitLog } from 'src/reference-data/units/entities/unit.log.entity';
+import { ResultGrade } from 'src/result-grade/result-grades/entities/result-grade.entity';
+import { ResultGradeLog } from 'src/result-grade/result-grades/entities/result-grade.log.entity';
+import { Book } from 'src/sample/books/entities/book.entity';
+import { BookLog } from 'src/sample/books/entities/book.log.entity';
 import { FertilizerMajorLandUsage } from 'src/sample/fertilizer-major-land-usages/entities/fertilizer-major-land-usage.entity';
 import { FertilizerMajorLandUsageLog } from 'src/sample/fertilizer-major-land-usages/entities/fertilizer-major-land-usage.log.entity';
 import { FertilizerMinorLandUsage } from 'src/sample/fertilizer-minor-land-usages/entities/fertilizer-minor-land-usage.entity';
@@ -72,8 +67,14 @@ import { SampleBlankResult } from 'src/sample/sample-blank-results/entities/samp
 import { SampleBlankResultLog } from 'src/sample/sample-blank-results/entities/sample-blank-result.log.entity';
 import { SampleBlank } from 'src/sample/sample-blanks/entities/sample-blank.entity';
 import { SampleBlankLog } from 'src/sample/sample-blanks/entities/sample-blank.log.entity';
-import { UserLog } from 'src/users/entities/user.log.entity';
+import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
+import { ServiceCalendarLog } from 'src/service-calendars/entities/service-calendar.log.entity';
+import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
+import { ServiceTypeLog } from 'src/service-type/service-types/entities/service-type.log.entity';
+import { Shop } from 'src/shops/entities/shop.entity';
+import { ShopLog } from 'src/shops/entities/shop.log.entity';
 import { User } from 'src/users/entities/user.entity';
+import { UserLog } from 'src/users/entities/user.log.entity';
 import {
   DataSource,
   EntitySubscriberInterface,
@@ -82,7 +83,6 @@ import {
   RemoveEvent,
   UpdateEvent,
 } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
 
 const entityToLogMap = new Map<Function, Function>([
   [Farmer, FarmerLog],
@@ -130,7 +130,7 @@ export class LoggingSubscriber implements EntitySubscriberInterface {
   constructor(
     // **[FIX]** Inject ทั้ง 2 connections
     @InjectDataSource('default') defaultDataSource: DataSource,
-    @InjectDataSource('logs') private readonly logsDataSource: DataSource,
+    @InjectDataSource('logs') private readonly logsDataSource: DataSource
   ) {
     // **[FIX]** ลงทะเบียน subscriber กับ connection หลัก
     defaultDataSource.subscribers.push(this);
@@ -223,7 +223,12 @@ export class LoggingSubscriber implements EntitySubscriberInterface {
       deletedAt: now,
     };
 
-    const deleterInfoField = this.logsDataSource.getMetadata(LogEntity).columns.find(col => col.propertyName === "updateUid" || col.propertyName === "updatedUid");
+    const deleterInfoField = this.logsDataSource
+      .getMetadata(LogEntity)
+      .columns.find(
+        col =>
+          col.propertyName === 'updateUid' || col.propertyName === 'updatedUid'
+      );
     if (deleterInfoField) {
       logData[deleterInfoField.propertyName] = currentUserId;
     }

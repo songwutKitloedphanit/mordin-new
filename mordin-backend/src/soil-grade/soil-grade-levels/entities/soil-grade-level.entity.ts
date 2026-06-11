@@ -1,4 +1,3 @@
-import { NormalLevelEnum } from 'src/common/enums/normal-level.enum';
 import { SoilGrade } from 'src/soil-grade/soil-grades/entities/soil-grade.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
@@ -42,19 +41,19 @@ export class SoilGradeLevel {
   @Column({ name: 'updatedAt', type: 'bigint' })
   updatedAt: number;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'update_uid' })
+  updateUser: User;
+
+  @ManyToOne(() => SoilGrade, soilGrade => soilGrade.soilGradeLevels, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'soil_grade_id' })
+  soilGrade: SoilGrade;
+
   @BeforeInsert()
   @BeforeUpdate()
   setUpdatedAt() {
     this.updatedAt = Date.now();
   }
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'update_uid' })
-  updateUser: User;
-
-  @ManyToOne(() => SoilGrade, (soilGrade) => soilGrade.soilGradeLevels, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'soil_grade_id' })
-  soilGrade: SoilGrade;
 }

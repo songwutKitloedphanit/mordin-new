@@ -23,7 +23,7 @@ define('SERVICES_PATH', __DIR__ . '/src/services/');
 
 define('TYPES_PATH', __DIR__ . '/src/types/');
 
-define('API_BASE_URL', Env::get('API_BASE_URL', 'http://localhost:3000/'));
+define('API_BASE_URL', Env::get('API_BASE_URL', 'http://127.0.0.1:3000/'));
 
 // ตั้งค่า path สำหรับ views ของ FlightPHP (โฟลเดอร์ pages)
 Flight::set('flight.views.path', __DIR__ . '/src/pages');

@@ -10,11 +10,11 @@ import { map, Observable } from 'rxjs';
 export class TransformResponseInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      map((data) => ({
+      map(data => ({
         success: true,
         data,
         timestamp: new Date().toISOString(),
-      })),
+      }))
     );
   }
 }

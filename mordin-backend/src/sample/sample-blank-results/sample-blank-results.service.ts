@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateSampleBlankResultDto } from './dto/create-sample-blank-result.dto';
 import { UpdateSampleBlankResultDto } from './dto/update-sample-blank-result.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { SampleBlankResult } from './entities/sample-blank-result.entity';
-import { Repository } from 'typeorm';
 import { SampleBlankResultLog } from './entities/sample-blank-result.log.entity';
 
 @Injectable()
@@ -14,7 +15,8 @@ export class SampleBlankResultsService {
 
     @InjectRepository(SampleBlankResultLog)
     private sampleBlankResultLog: Repository<SampleBlankResultLog>
-  ){}
+  ) {}
+
   create(createSampleBlankResultDto: CreateSampleBlankResultDto, Uid: number) {
     return 'This action adds a new sampleBlankResult';
   }
@@ -58,13 +60,9 @@ export class SampleBlankResultsService {
     return this.sampleBlankResultRepo.save(entity);
   }
 
-  async update(
-    id: number,
-    dto: UpdateSampleBlankResultDto,
-    Uid: number
-  ) {
+  async update(id: number, dto: UpdateSampleBlankResultDto, Uid: number) {
     const resultToUpdate = await this.sampleBlankResultRepo.findOne({
-      where: { sampleBlankResultId: id }
+      where: { sampleBlankResultId: id },
     });
 
     if (!resultToUpdate) {

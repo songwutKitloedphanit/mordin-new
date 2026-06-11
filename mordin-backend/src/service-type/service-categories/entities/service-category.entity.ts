@@ -1,9 +1,6 @@
 import { ServiceFertilizerMajorUsage } from 'src/fertilizer/service-fertilizer-major-usages/entities/service-fertilizer-major-usage.entity';
 import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
-import { User } from 'src/users/entities/user.entity';
 import {
-  BeforeInsert,
-  BeforeUpdate,
   Column,
   Entity,
   JoinColumn,
@@ -42,21 +39,16 @@ export class ServiceCategory {
   // @JoinColumn({ name: 'update_uid' })
   // updateUser: User;
 
-  @ManyToOne(
-    () => ServiceType,
-    (serviceType) => serviceType.serviceCategories,
-    {
-      onDelete: 'CASCADE',
-    },
-  )
+  @ManyToOne(() => ServiceType, serviceType => serviceType.serviceCategories, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'service_type_id' })
   serviceType: ServiceType;
 
   @OneToMany(
     () => ServiceFertilizerMajorUsage,
-    (serviceFertilizerMajorUsage) =>
-      serviceFertilizerMajorUsage.serviceCategory,
-    { cascade: true },
+    serviceFertilizerMajorUsage => serviceFertilizerMajorUsage.serviceCategory,
+    { cascade: true }
   )
   serviceFertilizerMajorUsages: ServiceFertilizerMajorUsage[];
 }

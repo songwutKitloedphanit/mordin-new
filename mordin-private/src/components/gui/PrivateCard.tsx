@@ -5,11 +5,7 @@ type DivProps = React.HTMLAttributes<HTMLDivElement>;
 const joinClassNames = (...classes: Array<string | undefined | false>) =>
   classes.filter(Boolean).join(' ');
 
-export const PrivateCard = ({
-  className,
-  children,
-  ...props
-}: DivProps) => (
+export const PrivateCard = ({ className, children, ...props }: DivProps) => (
   <div className={joinClassNames('private-card', className)} {...props}>
     {children}
   </div>

@@ -3,7 +3,6 @@ import { Navigate, Routes, Route } from 'react-router-dom';
 import AdminLayout from './layouts/AdminLayout';
 import Login from './pages/auth/login';
 import Logout from './pages/auth/logout';
-import Profile from './pages/profile/Profile';
 import CollectSample from './pages/public/CollectSample';
 import AdminRoutes from './routes/AdminRoute';
 import ExecutiveRoutes from './routes/ExecutiveRoute';
@@ -51,7 +50,6 @@ function App() {
           </RouteGuard>
         }
       >
-        <Route path="profile" element={<Profile />} />
         {routes.map(route => (
           <Route
             key={route.path}

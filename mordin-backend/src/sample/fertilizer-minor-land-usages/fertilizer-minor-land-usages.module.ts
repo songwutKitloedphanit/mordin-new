@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
-import { FertilizerMinorLandUsagesService } from './fertilizer-minor-land-usages.service';
-import { FertilizerMinorLandUsagesController } from './fertilizer-minor-land-usages.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { FertilizerMinorLandUsage } from './entities/fertilizer-minor-land-usage.entity';
 import { ServiceFertilizerMinor } from 'src/fertilizer/service-fertilizer-minors/entities/service-fertilizer-minor.entity';
+
 import { Result } from '../results/entities/result.entity';
+
+import { FertilizerMinorLandUsage } from './entities/fertilizer-minor-land-usage.entity';
 import { FertilizerMinorLandUsageLog } from './entities/fertilizer-minor-land-usage.log.entity';
+import { FertilizerMinorLandUsagesController } from './fertilizer-minor-land-usages.controller';
+import { FertilizerMinorLandUsagesService } from './fertilizer-minor-land-usages.service';
 
 @Module({
   imports: [
@@ -13,11 +15,11 @@ import { FertilizerMinorLandUsageLog } from './entities/fertilizer-minor-land-us
       FertilizerMinorLandUsage,
       FertilizerMinorLandUsageLog,
       ServiceFertilizerMinor,
-      Result
-    ])
+      Result,
+    ]),
   ],
   controllers: [FertilizerMinorLandUsagesController],
   providers: [FertilizerMinorLandUsagesService],
-  exports: [FertilizerMinorLandUsagesService]
+  exports: [FertilizerMinorLandUsagesService],
 })
 export class FertilizerMinorLandUsagesModule {}

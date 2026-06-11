@@ -1,9 +1,9 @@
-﻿import { Buffer } from 'buffer';
+import { Buffer } from 'buffer';
 
 import JSZip from 'jszip';
 import { PDFDocument } from 'pdf-lib';
 import React, { useEffect, useState } from 'react';
-import Swal from 'sweetalert2';
+import { swalWarning, swalError, swalLoading, swalClose } from '@/utils/swal';
 // เพิ่ม import สำหรับจัดการ ZIP และ PDF
 
 import { GenButtonCircle } from '@/components/gui/GuiButton';
@@ -195,7 +195,7 @@ const AnalysisReport: React.FC = () => {
         .map(report => report.qrCode?.book?.bookId);
       setIsAllApproves(
         updated.length === allApproveIds.length &&
-        allApproveIds.every(id => updated.includes(id))
+          allApproveIds.every(id => updated.includes(id))
       );
     }
 
@@ -213,7 +213,7 @@ const AnalysisReport: React.FC = () => {
         .map(report => report.qrCode?.book?.sampleCode);
       setIsAllPrints(
         updated.length === allPrintIds.length &&
-        allPrintIds.every(sampleCode => updated.includes(sampleCode))
+          allPrintIds.every(sampleCode => updated.includes(sampleCode))
       );
     }
   };
@@ -225,11 +225,7 @@ const AnalysisReport: React.FC = () => {
       };
 
       if (!playload.bookIds || playload.bookIds.length === 0) {
-        Swal.fire({
-          title: 'ยังไม่ได้เลือกตัวอย่าง',
-          text: 'กรุณาเลือกตัวอย่างที่ต้องการยืนยัน',
-          icon: 'warning',
-        });
+        swalWarning('ยังไม่ได้เลือกตัวอย่าง', 'กรุณาเลือกตัวอย่างที่ต้องการยืนยัน');
         return;
       }
       const unavailableReports = reports.filter(
@@ -239,11 +235,7 @@ const AnalysisReport: React.FC = () => {
       );
 
       if (unavailableReports.length > 0) {
-        Swal.fire({
-          title: 'ยังอนุมัติไม่ได้',
-          text: 'ตัวอย่างที่เลือกยังไม่มีเกณฑ์สี/คะแนนจริงครบถ้วน',
-          icon: 'warning',
-        });
+        swalWarning('ยังอนุมัติไม่ได้', 'ตัวอย่างที่เลือกยังไม่มีเกณฑ์สี/คะแนนจริงครบถ้วน');
         return;
       }
 
@@ -262,22 +254,11 @@ const AnalysisReport: React.FC = () => {
     };
 
     if (!payload.sampleCodes || payload.sampleCodes.length === 0) {
-      Swal.fire({
-        title: 'ยังไม่ได้เลือกตัวอย่าง',
-        text: 'กรุณาเลือกตัวอย่างที่ต้องการดาวน์โหลด',
-        icon: 'warning',
-      });
+      swalWarning('ยังไม่ได้เลือกตัวอย่าง', 'กรุณาเลือกตัวอย่างที่ต้องการดาวน์โหลด');
       return;
     }
 
-    Swal.fire({
-      title: 'กำลังเตรียมไฟล์...',
-      text: 'กรุณารอสักครู่',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+    swalLoading('กำลังเตรียมไฟล์…');
 
     try {
       const responseBlob = await getReportsPdf(payload);
@@ -285,7 +266,9 @@ const AnalysisReport: React.FC = () => {
       if (responseBlob.type === 'application/json') {
         const text = await responseBlob.text();
         const error = JSON.parse(text);
-        throw new Error(error.message || 'Server returned JSON error instead of Blob');
+        throw new Error(
+          error.message || 'Server returned JSON error instead of Blob'
+        );
       }
 
       const blobUrl = URL.createObjectURL(responseBlob);
@@ -298,18 +281,11 @@ const AnalysisReport: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(blobUrl);
 
-      Swal.close();
+      swalClose();
     } catch (error) {
       console.error('error', error);
-      Swal.close();
-      Swal.fire({
-        title: 'เกิดข้อผิดพลาด!',
-        text: 'ไม่สามารถดาวน์โหลดไฟล์ได้ กรุณาลองใหม่',
-        icon: 'error',
-        timer: 2000,
-        confirmButtonText: 'ตกลง',
-        timerProgressBar: true,
-      });
+      swalClose();
+      swalError('เกิดข้อผิดพลาด!', 'ไม่สามารถดาวน์โหลดไฟล์ได้ กรุณาลองใหม่');
     }
   };
 
@@ -322,22 +298,11 @@ const AnalysisReport: React.FC = () => {
     };
 
     if (!payload.sampleCodes || payload.sampleCodes.length === 0) {
-      Swal.fire({
-        title: 'ยังไม่ได้เลือกตัวอย่าง',
-        text: 'กรุณาเลือกตัวอย่างที่ต้องการพิมพ์',
-        icon: 'warning',
-      });
+      swalWarning('ยังไม่ได้เลือกตัวอย่าง', 'กรุณาเลือกตัวอย่างที่ต้องการพิมพ์');
       return;
     }
 
-    Swal.fire({
-      title: 'กำลังประมวลผล...',
-      text: 'กรุณารอสักครู่ ระบบกำลังรวมไฟล์เพื่อสั่งพิมพ์',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+    swalLoading('กำลังประมวลผล…');
 
     try {
       // 1. ดาวน์โหลดไฟล์ ZIP มาก่อน
@@ -366,8 +331,11 @@ const AnalysisReport: React.FC = () => {
           const pdf = await PDFDocument.load(fileData);
 
           // คัดลอกทุกหน้ามาใส่ใน mergedPdf
-          const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-          copiedPages.forEach((page) => mergedPdf.addPage(page));
+          const copiedPages = await mergedPdf.copyPages(
+            pdf,
+            pdf.getPageIndices()
+          );
+          copiedPages.forEach(page => mergedPdf.addPage(page));
 
           pdfCount++;
         }
@@ -380,21 +348,19 @@ const AnalysisReport: React.FC = () => {
       // 4. บันทึกไฟล์ PDF ที่รวมเสร็จแล้วเป็น Blob
       const mergedPdfBytes = await mergedPdf.save();
       // ใช้ as any เพื่อเลี่ยง Error Type 'Uint8Array'
-      const mergedBlob = new Blob([mergedPdfBytes as any], { type: 'application/pdf' });
+      const mergedBlob = new Blob([mergedPdfBytes as any], {
+        type: 'application/pdf',
+      });
 
       // 5. เปิดหน้าต่างใหม่เพื่อสั่งพิมพ์
       const blobUrl = URL.createObjectURL(mergedBlob);
       window.open(blobUrl, '_blank');
 
-      Swal.close();
+      swalClose();
     } catch (error) {
       console.error('Print error:', error);
-      Swal.close();
-      Swal.fire({
-        title: 'เกิดข้อผิดพลาด!',
-        text: 'ไม่สามารถเปิดไฟล์เพื่อพิมพ์ได้ กรุณาลองใหม่',
-        icon: 'error',
-      });
+      swalClose();
+      swalError('เกิดข้อผิดพลาด!', 'ไม่สามารถเปิดไฟล์เพื่อพิมพ์ได้ กรุณาลองใหม่');
     }
   };
 
@@ -468,190 +434,238 @@ const AnalysisReport: React.FC = () => {
                 <div className="private-card-body">
                   {loading ? (
                     <div className="text-center p-5">
-                      <div className="spinner-border text-primary" role="status" />
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      />
                     </div>
-                  ) : (() => {
-                    const baseReports = reports.filter(
-                      report =>
-                        report.qrCode?.status === SampleStatusEnum.ANALYZED ||
-                        report.qrCode?.status === SampleStatusEnum.ANALYZING
-                    );
-                    const term = searchAnalyzing.toLowerCase();
-                    const filteredReports = term
-                      ? baseReports.filter(r =>
-                          (r.qrCode?.book?.sampleCode ?? '').toLowerCase().includes(term) ||
-                          (r.qrCode?.book?.land?.landCode ?? '').toLowerCase().includes(term) ||
-                          (r.qrCode?.book?.farmer?.thaiNationalId ?? '').includes(term)
-                        )
-                      : baseReports;
-                    const readyCount = baseReports.filter(canApproveReport).length;
-                    const missingDataCount = baseReports.filter(
-                      report => getApprovalBlockReason(report) === 'report-data'
-                    ).length;
-                    const missingGradeCount = baseReports.filter(
-                      report => getApprovalBlockReason(report) === 'grade'
-                    ).length;
-                    return (
-                      <>
-                        {/* Filter + Summary */}
-                        <div className="row g-2 mb-3 align-items-end">
-                          <div className="col-md-6">
-                            <label className="form-label small mb-1">
-                              ค้นหา (รหัสตัวอย่าง / รหัสแปลง / เลขบัตร)
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              placeholder="พิมพ์เพื่อค้นหา..."
-                              value={searchAnalyzing}
-                              onChange={e => setSearchAnalyzing(e.target.value)}
-                            />
+                  ) : (
+                    (() => {
+                      const baseReports = reports.filter(
+                        report =>
+                          report.qrCode?.status === SampleStatusEnum.ANALYZED ||
+                          report.qrCode?.status === SampleStatusEnum.ANALYZING
+                      );
+                      const term = searchAnalyzing.toLowerCase();
+                      const filteredReports = term
+                        ? baseReports.filter(
+                            r =>
+                              (r.qrCode?.book?.sampleCode ?? '')
+                                .toLowerCase()
+                                .includes(term) ||
+                              (r.qrCode?.book?.land?.landCode ?? '')
+                                .toLowerCase()
+                                .includes(term) ||
+                              (
+                                r.qrCode?.book?.farmer?.thaiNationalId ?? ''
+                              ).includes(term)
+                          )
+                        : baseReports;
+                      const readyCount =
+                        baseReports.filter(canApproveReport).length;
+                      const missingDataCount = baseReports.filter(
+                        report =>
+                          getApprovalBlockReason(report) === 'report-data'
+                      ).length;
+                      const missingGradeCount = baseReports.filter(
+                        report => getApprovalBlockReason(report) === 'grade'
+                      ).length;
+                      return (
+                        <>
+                          {/* Filter + Summary */}
+                          <div className="row g-2 mb-3 align-items-end">
+                            <div className="col-md-6">
+                              <label className="form-label small mb-1">
+                                ค้นหา (รหัสตัวอย่าง / รหัสแปลง / เลขบัตร)
+                              </label>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="พิมพ์เพื่อค้นหา..."
+                                value={searchAnalyzing}
+                                onChange={e =>
+                                  setSearchAnalyzing(e.target.value)
+                                }
+                              />
+                            </div>
+                            <div className="col-md-6 d-flex align-items-end gap-2">
+                              <span className="private-chip private-chip-gray">
+                                ทั้งหมด: {baseReports.length}
+                              </span>
+                              <span className="private-chip private-chip-green">
+                                พร้อมอนุมัติ: {readyCount}
+                              </span>
+                              {missingGradeCount > 0 && (
+                                <span className="private-chip private-chip-amber">
+                                  รอเกณฑ์: {missingGradeCount}
+                                </span>
+                              )}
+                              {missingDataCount > 0 && (
+                                <span className="private-chip private-chip-red">
+                                  ข้อมูลไม่ครบ: {missingDataCount}
+                                </span>
+                              )}
+                              {filteredReports.length !==
+                                baseReports.length && (
+                                <span className="private-chip private-chip-blue">
+                                  กรองแล้ว: {filteredReports.length}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <div className="col-md-6 d-flex align-items-end gap-2">
-                            <span className="badge bg-secondary">ทั้งหมด: {baseReports.length}</span>
-                            <span className="badge bg-success">พร้อมอนุมัติ: {readyCount}</span>
-                            {missingGradeCount > 0 && (
-                              <span className="badge bg-warning text-dark">
-                                รอเกณฑ์: {missingGradeCount}
-                              </span>
-                            )}
-                            {missingDataCount > 0 && (
-                              <span className="badge bg-danger">
-                                ข้อมูลไม่ครบ: {missingDataCount}
-                              </span>
-                            )}
-                            {filteredReports.length !== baseReports.length && (
-                              <span className="badge bg-info text-dark">
-                                กรองแล้ว: {filteredReports.length}
-                              </span>
-                            )}
-                          </div>
-                        </div>
 
-                        <div className="table-responsive">
-                          <table
-                            id="multi-filter-select"
-                            className="display table table-striped table-hover"
-                          >
-                            <thead>
-                              <tr className="text-center">
-                                <th style={{ width: 40 }}>#</th>
-                                <th className="text-center">
-                                  {reports.filter(canApproveReport).length > 0 ? (
-                                    <input
-                                      type="checkbox"
-                                      checked={isAllApproves}
-                                      onChange={() => handleSelectAll('approve')}
-                                    />
-                                  ) : ''}
-                                </th>
-                                <th>ไฟล์รายงาน</th>
-                                <th>รหัสตัวอย่าง</th>
-                                <th>รหัสโควต้าอ้อย</th>
-                                <th>หมายเลขบัตรประชาชน</th>
-                                <th>รหัสแปลง</th>
-                                <th>สถานะ</th>
-                                <th>ผลวิเคราะห์</th>
-                                <th className="text-center">แก้ไขล่าสุด</th>
-                              </tr>
-                            </thead>
-                            <tbody className="text-center">
-                              {filteredReports.length > 0 ? (
-                                filteredReports.map((report, index) => (
-                                  <tr key={report.qrCode?.qrCodeId}>
-                                    <td className="text-muted small">{index + 1}</td>
-                                    <td>
-                                      {canApproveReport(report) ? (
-                                        <input
-                                          type="checkbox"
-                                          checked={selectedApproves.includes(
-                                            report.qrCode?.book?.bookId || 0
-                                          )}
-                                          onChange={() =>
-                                            handleSelectRow(report.qrCode?.book?.bookId || 0)
-                                          }
+                          <div className="table-responsive">
+                            <table
+                              id="multi-filter-select"
+                              className="display table table-striped table-hover"
+                            >
+                              <thead>
+                                <tr className="text-center">
+                                  <th style={{ width: 40 }}>#</th>
+                                  <th className="text-center">
+                                    {reports.filter(canApproveReport).length >
+                                    0 ? (
+                                      <input
+                                        type="checkbox"
+                                        checked={isAllApproves}
+                                        onChange={() =>
+                                          handleSelectAll('approve')
+                                        }
+                                      />
+                                    ) : (
+                                      ''
+                                    )}
+                                  </th>
+                                  <th>ไฟล์รายงาน</th>
+                                  <th>รหัสตัวอย่าง</th>
+                                  <th>รหัสโควต้าอ้อย</th>
+                                  <th>หมายเลขบัตรประชาชน</th>
+                                  <th>รหัสแปลง</th>
+                                  <th>สถานะ</th>
+                                  <th>ผลวิเคราะห์</th>
+                                  <th className="text-center">แก้ไขล่าสุด</th>
+                                </tr>
+                              </thead>
+                              <tbody className="text-center">
+                                {filteredReports.length > 0 ? (
+                                  filteredReports.map((report, index) => (
+                                    <tr key={report.qrCode?.qrCodeId}>
+                                      <td className="text-muted small">
+                                        {index + 1}
+                                      </td>
+                                      <td>
+                                        {canApproveReport(report) ? (
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedApproves.includes(
+                                              report.qrCode?.book?.bookId || 0
+                                            )}
+                                            onChange={() =>
+                                              handleSelectRow(
+                                                report.qrCode?.book?.bookId || 0
+                                              )
+                                            }
+                                          />
+                                        ) : report.qrCode?.status ===
+                                          SampleStatusEnum.ANALYZED ? (
+                                          getApprovalBlockReason(report) ===
+                                          'report-data' ? (
+                                            <span
+                                              className="private-chip private-chip-red"
+                                              title="ข้อมูลเกษตรกรหรือข้อมูลแปลงยังไม่ครบสำหรับออก Report"
+                                            >
+                                              ข้อมูลไม่ครบ
+                                            </span>
+                                          ) : (
+                                            <span
+                                              className="private-chip private-chip-gray"
+                                              title="ยังไม่ได้กำหนดเกณฑ์สี/คะแนนจริง"
+                                            >
+                                              รอเกณฑ์
+                                            </span>
+                                          )
+                                        ) : (
+                                          ''
+                                        )}
+                                      </td>
+                                      <td className="text-center">
+                                        <GenButtonCircle
+                                          color="btn-info"
+                                          icon="fa fa-info"
+                                          link={`/officer/analysis-report/${report.qrCode?.book?.sampleCode}`}
                                         />
-                                      ) : report.qrCode?.status === SampleStatusEnum.ANALYZED ? (
-                                        getApprovalBlockReason(report) === 'report-data' ? (
-                                          <span
-                                            className="badge bg-danger"
-                                            title="ข้อมูลเกษตรกรหรือข้อมูลแปลงยังไม่ครบสำหรับออก Report"
-                                          >
-                                            ข้อมูลไม่ครบ
+                                      </td>
+                                      <td className="text-center">
+                                        {report.qrCode?.book?.sampleCode}
+                                      </td>
+                                      <td className="text-center">
+                                        {report.qrCode?.book.land?.quotaCode}
+                                      </td>
+                                      <td className="text-center">
+                                        {formatThaiNationalId(
+                                          report.qrCode?.book.farmer
+                                            ?.thaiNationalId ?? ''
+                                        )}
+                                      </td>
+                                      <td className="text-center">
+                                        {report.qrCode?.book.land?.landCode}
+                                      </td>
+                                      <td className="px-3 py-2 text-center align-middle">
+                                        <span
+                                          className={`badge rounded-pill fw-semibold border-0 ${
+                                            report.analyzedResult ===
+                                            report.totalResult
+                                              ? 'text-success'
+                                              : 'text-danger'
+                                          }`}
+                                          style={{
+                                            backgroundColor:
+                                              report.analyzedResult ===
+                                              report.totalResult
+                                                ? 'rgba(209, 250, 229, 1)'
+                                                : 'rgba(255, 228, 230, 1)',
+                                          }}
+                                        >
+                                          {report.analyzedResult}/
+                                          {report.totalResult}
+                                        </span>
+                                      </td>
+                                      <td className="text-center">
+                                        {getApprovalBlockReason(report) ===
+                                        'report-data' ? (
+                                          <span className="text-danger">
+                                            เติมข้อมูลเกษตรกร/แปลงก่อน
+                                          </span>
+                                        ) : report.hasCompleteGradeConfig ===
+                                          false ? (
+                                          <span className="text-muted">
+                                            ยังไม่พร้อมอนุมัติ
                                           </span>
                                         ) : (
-                                          <span
-                                            className="badge bg-secondary"
-                                            title="ยังไม่ได้กำหนดเกณฑ์สี/คะแนนจริง"
-                                          >
-                                            รอเกณฑ์
-                                          </span>
-                                        )
-                                      ) : ''}
-                                    </td>
-                                    <td className="text-center">
-                                      <GenButtonCircle
-                                        color="btn-info"
-                                        icon="fa fa-info"
-                                        link={`/officer/analysis-report/${report.qrCode?.book?.sampleCode}`}
-                                      />
-                                    </td>
-                                    <td className="text-center">
-                                      {report.qrCode?.book?.sampleCode}
-                                    </td>
-                                    <td className="text-center">
-                                      {report.qrCode?.book.land?.quotaCode}
-                                    </td>
-                                    <td className="text-center">
-                                      {formatThaiNationalId(
-                                        report.qrCode?.book.farmer?.thaiNationalId ?? ''
-                                      )}
-                                    </td>
-                                    <td className="text-center">
-                                      {report.qrCode?.book.land?.landCode}
-                                    </td>
-                                    <td className="px-3 py-2 text-center align-middle">
-                                      <span
-                                        className={`badge rounded-pill fw-semibold border-0 ${
-                                          report.analyzedResult === report.totalResult
-                                            ? 'text-success'
-                                            : 'text-danger'
-                                        }`}
-                                        style={{
-                                          backgroundColor:
-                                            report.analyzedResult === report.totalResult
-                                              ? 'rgba(209, 250, 229, 1)'
-                                              : 'rgba(255, 228, 230, 1)',
-                                        }}
-                                      >
-                                        {report.analyzedResult}/{report.totalResult}
-                                      </span>
-                                    </td>
-                                    <td className="text-center">
-                                      {getApprovalBlockReason(report) === 'report-data' ? (
-                                        <span className="text-danger">
-                                          เติมข้อมูลเกษตรกร/แปลงก่อน
-                                        </span>
-                                      ) : report.hasCompleteGradeConfig === false ? (
-                                        <span className="text-muted">ยังไม่พร้อมอนุมัติ</span>
-                                      ) : ''}
-                                    </td>
-                                    <td className="text-center">
-                                      {TimeStampToDate(report.qrCode?.book?.sampleReceivedAt)}
+                                          ''
+                                        )}
+                                      </td>
+                                      <td className="text-center">
+                                        {TimeStampToDate(
+                                          report.qrCode?.book?.sampleReceivedAt
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={10}>
+                                      ไม่พบข้อมูลผลการวิเคราะห์ดิน
                                     </td>
                                   </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={10}>ไม่พบข้อมูลผลการวิเคราะห์ดิน</td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </>
-                    );
-                  })()}
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      );
+                    })()
+                  )}
                 </div>
               </div>
             </div>
@@ -688,146 +702,191 @@ const AnalysisReport: React.FC = () => {
                 <div className="private-card-body">
                   {loading ? (
                     <div className="text-center p-5">
-                      <div className="spinner-border text-primary" role="status" />
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      />
                     </div>
-                  ) : (() => {
-                    const baseApproved = reports.filter(
-                      report => report.qrCode?.status === SampleStatusEnum.APPROVED
-                    );
-                    const term = searchApproved.toLowerCase();
-                    const approvedReports = term
-                      ? baseApproved.filter(r =>
-                          (r.qrCode?.book?.sampleCode ?? '').toLowerCase().includes(term) ||
-                          (r.qrCode?.book?.land?.landCode ?? '').toLowerCase().includes(term) ||
-                          (r.qrCode?.book?.farmer?.thaiNationalId ?? '').includes(term)
-                        )
-                      : baseApproved;
-                    return (
-                      <>
-                        {/* Filter + Summary */}
-                        <div className="row g-2 mb-3 align-items-end">
-                          <div className="col-md-6">
-                            <label className="form-label small mb-1">
-                              ค้นหา (รหัสตัวอย่าง / รหัสแปลง / เลขบัตร)
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              placeholder="พิมพ์เพื่อค้นหา..."
-                              value={searchApproved}
-                              onChange={e => setSearchApproved(e.target.value)}
-                            />
-                          </div>
-                          <div className="col-md-6 d-flex align-items-end gap-2">
-                            <span className="badge bg-success">
-                              อนุมัติแล้ว: {baseApproved.length}
-                            </span>
-                            <span className="badge bg-primary">
-                              เลือกแล้ว: {selectedPrints.length}
-                            </span>
-                            {approvedReports.length !== baseApproved.length && (
-                              <span className="badge bg-info text-dark">
-                                กรองแล้ว: {approvedReports.length}
+                  ) : (
+                    (() => {
+                      const baseApproved = reports.filter(
+                        report =>
+                          report.qrCode?.status === SampleStatusEnum.APPROVED
+                      );
+                      const term = searchApproved.toLowerCase();
+                      const approvedReports = term
+                        ? baseApproved.filter(
+                            r =>
+                              (r.qrCode?.book?.sampleCode ?? '')
+                                .toLowerCase()
+                                .includes(term) ||
+                              (r.qrCode?.book?.land?.landCode ?? '')
+                                .toLowerCase()
+                                .includes(term) ||
+                              (
+                                r.qrCode?.book?.farmer?.thaiNationalId ?? ''
+                              ).includes(term)
+                          )
+                        : baseApproved;
+                      return (
+                        <>
+                          {/* Filter + Summary */}
+                          <div className="row g-2 mb-3 align-items-end">
+                            <div className="col-md-6">
+                              <label className="form-label small mb-1">
+                                ค้นหา (รหัสตัวอย่าง / รหัสแปลง / เลขบัตร)
+                              </label>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="พิมพ์เพื่อค้นหา..."
+                                value={searchApproved}
+                                onChange={e =>
+                                  setSearchApproved(e.target.value)
+                                }
+                              />
+                            </div>
+                            <div className="col-md-6 d-flex align-items-end gap-2">
+                              <span className="private-chip private-chip-green">
+                                อนุมัติแล้ว: {baseApproved.length}
                               </span>
-                            )}
+                              <span className="private-chip private-chip-blue">
+                                เลือกแล้ว: {selectedPrints.length}
+                              </span>
+                              {approvedReports.length !==
+                                baseApproved.length && (
+                                <span className="private-chip private-chip-blue">
+                                  กรองแล้ว: {approvedReports.length}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="table-responsive">
-                          <table
-                            id="multi-filter-select-approved"
-                            className="display table table-striped table-hover"
-                          >
-                            <thead>
-                              <tr>
-                                <th style={{ width: 40 }}>#</th>
-                                <th className="text-center">
-                                  {baseApproved.length > 0 ? (
-                                    <input
-                                      type="checkbox"
-                                      checked={isAllPrints}
-                                      onChange={() => handleSelectAll('print')}
-                                    />
-                                  ) : ''}
-                                </th>
-                                <th className="text-center">ไฟล์รายงาน</th>
-                                <th className="text-center">รหัสตัวอย่าง</th>
-                                <th className="text-center">รหัสโควต้าอ้อย</th>
-                                <th className="text-center">หมายเลขบัตรประชาชน</th>
-                                <th className="text-center">รหัสแปลง</th>
-                                <th className="text-center">สถานะ</th>
-                                <th className="text-center">ผลวิเคราะห์</th>
-                                <th className="text-center">แก้ไขล่าสุด</th>
-                              </tr>
-                            </thead>
-                            <tbody className="text-center">
-                              {approvedReports.length > 0 ? (
-                                approvedReports.map((report, index) => (
-                                  <tr key={report.qrCode?.book?.bookId}>
-                                    <td className="text-muted small">{index + 1}</td>
-                                    <td>
+                          <div className="table-responsive">
+                            <table
+                              id="multi-filter-select-approved"
+                              className="display table table-striped table-hover"
+                            >
+                              <thead>
+                                <tr>
+                                  <th style={{ width: 40 }}>#</th>
+                                  <th className="text-center">
+                                    {baseApproved.length > 0 ? (
                                       <input
                                         type="checkbox"
-                                        checked={selectedPrints.includes(
-                                          report.qrCode?.book?.sampleCode || ''
-                                        )}
+                                        checked={isAllPrints}
                                         onChange={() =>
-                                          handleSelectRow(null, report.qrCode?.book?.sampleCode || '')
+                                          handleSelectAll('print')
                                         }
                                       />
-                                    </td>
-                                    <td>
-                                      <GenButtonCircle
-                                        color="btn-warning text-white"
-                                        icon="fa-solid fa-download"
-                                        onClick={() => {
-                                          const sampleCode = report.qrCode?.book?.sampleCode;
-                                          if (sampleCode) handleDownload([sampleCode]);
-                                        }}
-                                      />
-                                      <GenButtonCircle
-                                        className="mx-1"
-                                        color="btn-secondary"
-                                        icon="fas fa-file-alt"
-                                        onClick={() => {
-                                          const sampleCode = report.qrCode?.book?.sampleCode;
-                                          if (sampleCode) handlePrint([sampleCode]);
-                                        }}
-                                      />
-                                      <GenButtonCircle
-                                        color="btn-info"
-                                        icon="fa fa-info"
-                                        link={`/officer/analysis-report/${report.qrCode?.book?.sampleCode}`}
-                                      />
-                                    </td>
-                                    <td>{report.qrCode?.book?.sampleCode}</td>
-                                    <td>{report.qrCode?.book.land?.quotaCode}</td>
-                                    <td>
-                                      {formatThaiNationalId(
-                                        report.qrCode?.book.farmer?.thaiNationalId ?? ''
-                                      )}
-                                    </td>
-                                    <td>{report.qrCode?.book.land?.landCode}</td>
-                                    <td>
-                                      {report.analyzedResult}/{report.totalResult}
-                                    </td>
-                                    <td></td>
-                                    <td>
-                                      {TimeStampToDate(report.qrCode?.book?.sampleReceivedAt)}
+                                    ) : (
+                                      ''
+                                    )}
+                                  </th>
+                                  <th className="text-center">ไฟล์รายงาน</th>
+                                  <th className="text-center">รหัสตัวอย่าง</th>
+                                  <th className="text-center">
+                                    รหัสโควต้าอ้อย
+                                  </th>
+                                  <th className="text-center">
+                                    หมายเลขบัตรประชาชน
+                                  </th>
+                                  <th className="text-center">รหัสแปลง</th>
+                                  <th className="text-center">สถานะ</th>
+                                  <th className="text-center">ผลวิเคราะห์</th>
+                                  <th className="text-center">แก้ไขล่าสุด</th>
+                                </tr>
+                              </thead>
+                              <tbody className="text-center">
+                                {approvedReports.length > 0 ? (
+                                  approvedReports.map((report, index) => (
+                                    <tr key={report.qrCode?.book?.bookId}>
+                                      <td className="text-muted small">
+                                        {index + 1}
+                                      </td>
+                                      <td>
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedPrints.includes(
+                                            report.qrCode?.book?.sampleCode ||
+                                              ''
+                                          )}
+                                          onChange={() =>
+                                            handleSelectRow(
+                                              null,
+                                              report.qrCode?.book?.sampleCode ||
+                                                ''
+                                            )
+                                          }
+                                        />
+                                      </td>
+                                      <td>
+                                        <GenButtonCircle
+                                          color="btn-warning text-white"
+                                          icon="fa-solid fa-download"
+                                          onClick={() => {
+                                            const sampleCode =
+                                              report.qrCode?.book?.sampleCode;
+                                            if (sampleCode)
+                                              handleDownload([sampleCode]);
+                                          }}
+                                        />
+                                        <GenButtonCircle
+                                          className="mx-1"
+                                          color="btn-secondary"
+                                          icon="fas fa-file-alt"
+                                          onClick={() => {
+                                            const sampleCode =
+                                              report.qrCode?.book?.sampleCode;
+                                            if (sampleCode)
+                                              handlePrint([sampleCode]);
+                                          }}
+                                        />
+                                        <GenButtonCircle
+                                          color="btn-info"
+                                          icon="fa fa-info"
+                                          link={`/officer/analysis-report/${report.qrCode?.book?.sampleCode}`}
+                                        />
+                                      </td>
+                                      <td>{report.qrCode?.book?.sampleCode}</td>
+                                      <td>
+                                        {report.qrCode?.book.land?.quotaCode}
+                                      </td>
+                                      <td>
+                                        {formatThaiNationalId(
+                                          report.qrCode?.book.farmer
+                                            ?.thaiNationalId ?? ''
+                                        )}
+                                      </td>
+                                      <td>
+                                        {report.qrCode?.book.land?.landCode}
+                                      </td>
+                                      <td>
+                                        {report.analyzedResult}/
+                                        {report.totalResult}
+                                      </td>
+                                      <td></td>
+                                      <td>
+                                        {TimeStampToDate(
+                                          report.qrCode?.book?.sampleReceivedAt
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={10}>
+                                      ไม่พบข้อมูลผลการวิเคราะห์ดิน
                                     </td>
                                   </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={10}>ไม่พบข้อมูลผลการวิเคราะห์ดิน</td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </>
-                    );
-                  })()}
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      );
+                    })()
+                  )}
                 </div>
               </div>
             </div>
@@ -844,4 +903,3 @@ const AnalysisReport: React.FC = () => {
 };
 
 export default AnalysisReport;
-

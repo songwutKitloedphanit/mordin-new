@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,13 +42,13 @@ const Profile: React.FC = () => {
     };
 
     if (!normalizedProfile.firstName) {
-      nextErrors.firstName = 'เธเธฃเธธเธ“เธฒเธเธฃเธญเธเธเธทเนเธญ';
+      nextErrors.firstName = 'กรุณากรอกชื่อ';
     }
     if (!normalizedProfile.lastName) {
-      nextErrors.lastName = 'เธเธฃเธธเธ“เธฒเธเธฃเธญเธเธเธฒเธกเธชเธเธธเธฅ';
+      nextErrors.lastName = 'กรุณากรอกนามสกุล';
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedProfile.email)) {
-      nextErrors.email = 'เธเธฃเธธเธ“เธฒเธเธฃเธญเธเธญเธตเน€เธกเธฅเนเธซเนเธ–เธนเธเธ•เนเธญเธ';
+      nextErrors.email = 'กรุณากรอกอีเมลให้ถูกต้อง';
     }
 
     setErrors(nextErrors);
@@ -65,16 +65,16 @@ const Profile: React.FC = () => {
       await updateUserProfile(normalizedProfile);
       await refreshProfile();
       await Swal.fire({
-        title: 'เธเธฑเธเธ—เธถเธเนเธเธฃเนเธเธฅเนเน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง',
+        title: 'บันทึกโปรไฟล์เรียบร้อยแล้ว',
         icon: 'success',
-        confirmButtonText: 'เธ•เธเธฅเธ',
+        confirmButtonText: 'ตกลง',
       });
     } catch {
       await Swal.fire({
-        title: 'เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เธเธฑเธเธ—เธถเธเนเธเธฃเนเธเธฅเนเนเธ”เน',
-        text: 'เธเธฃเธธเธ“เธฒเธ•เธฃเธงเธเธชเธญเธเธเนเธญเธกเธนเธฅเนเธฅเนเธงเธฅเธญเธเนเธซเธกเนเธญเธตเธเธเธฃเธฑเนเธ',
+        title: 'ไม่สามารถบันทึกโปรไฟล์ได้',
+        text: 'กรุณาตรวจสอบข้อมูลแล้วลองใหม่อีกครั้ง',
         icon: 'error',
-        confirmButtonText: 'เธ•เธเธฅเธ',
+        confirmButtonText: 'ตกลง',
       });
     } finally {
       setIsSaving(false);
@@ -87,9 +87,9 @@ const Profile: React.FC = () => {
         <div className="col-xl-7 col-lg-8">
           <div className="private-card">
             <div className="private-card-header">
-              <h4 className="private-card-title mb-1">เธเธฑเธ”เธเธฒเธฃเนเธเธฃเนเธเธฅเน</h4>
+              <h4 className="private-card-title mb-1">จัดการโปรไฟล์</h4>
               <p className="text-muted mb-0">
-                เนเธเนเนเธเธเนเธญเธกเธนเธฅเธชเนเธงเธเธ•เธฑเธงเธชเธณเธซเธฃเธฑเธเธเธฑเธเธเธตเธ—เธตเนเธเธณเธฅเธฑเธเน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ
+                แก้ไขข้อมูลส่วนตัวสำหรับบัญชีที่กำลังเข้าสู่ระบบ
               </p>
             </div>
 
@@ -97,7 +97,7 @@ const Profile: React.FC = () => {
               <div className="private-card-body">
                 <div className="mb-3">
                   <label className="form-label" htmlFor="profile-username">
-                    เธเธทเนเธญเธเธนเนเนเธเน
+                    ชื่อผู้ใช้
                   </label>
                   <input
                     id="profile-username"
@@ -105,12 +105,12 @@ const Profile: React.FC = () => {
                     value={user?.username || ''}
                     readOnly
                   />
-                  <div className="form-text">เธเธทเนเธญเธเธนเนเนเธเนเนเธกเนเธชเธฒเธกเธฒเธฃเธ–เนเธเนเนเธเนเธ”เน</div>
+                  <div className="form-text">ชื่อผู้ใช้ไม่สามารถแก้ไขได้</div>
                 </div>
 
                 <div className="mb-3">
                   <label className="form-label" htmlFor="profile-first-name">
-                    เธเธทเนเธญ
+                    ชื่อ
                   </label>
                   <input
                     id="profile-first-name"
@@ -130,7 +130,7 @@ const Profile: React.FC = () => {
 
                 <div className="mb-3">
                   <label className="form-label" htmlFor="profile-last-name">
-                    เธเธฒเธกเธชเธเธธเธฅ
+                    นามสกุล
                   </label>
                   <input
                     id="profile-last-name"
@@ -150,7 +150,7 @@ const Profile: React.FC = () => {
 
                 <div className="mb-3">
                   <label className="form-label" htmlFor="profile-email">
-                    เธญเธตเน€เธกเธฅ
+                    อีเมล
                   </label>
                   <input
                     id="profile-email"
@@ -175,7 +175,7 @@ const Profile: React.FC = () => {
                   type="submit"
                   disabled={isSaving}
                 >
-                  {isSaving ? 'เธเธณเธฅเธฑเธเธเธฑเธเธ—เธถเธ...' : 'เธเธฑเธเธ—เธถเธเธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธ'}
+                  {isSaving ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
                 </button>
               </div>
             </form>
@@ -187,4 +187,3 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
-

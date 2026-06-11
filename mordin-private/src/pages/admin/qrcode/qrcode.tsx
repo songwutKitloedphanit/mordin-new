@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import Swal from 'sweetalert2';
 
@@ -39,20 +39,20 @@ const KPI_CONFIG: KpiItem[] = [
   {
     label: 'QR Code ทั้งหมด',
     icon: 'fas fa-qrcode',
-    accent: '#31CE36',
+    accent: '#18a05c',
     unit: 'ใบ',
   },
   {
     label: 'QR Code ว่าง',
     icon: 'fas fa-inbox',
-    accent: '#F39C12',
+    accent: '#d98f0c',
     unit: 'ใบ',
   },
-  { label: 'จองวิเคราะห์', icon: 'fas fa-vial', accent: '#337AB7', unit: 'ใบ' },
+  { label: 'จองวิเคราะห์', icon: 'fas fa-vial', accent: '#3b9bd9', unit: 'ใบ' },
   {
     label: 'วิเคราะห์แล้ว',
     icon: 'fas fa-check-circle',
-    accent: '#26C281',
+    accent: '#2fb380',
     unit: 'ใบ',
   },
 ];

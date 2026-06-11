@@ -8,18 +8,19 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { StandardCertificatesService } from './standard-certificates.service';
-import { CreateStandardCertificateDto } from './dto/create-standard-certificate.dto';
-import { UpdateStandardCertificateDto } from './dto/update-standard-certificate.dto';
-import { UpdateStandardCertificateValueFromFileDto } from './dto/update-standard-certificate-value-file.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateStandardCertificateDto } from './dto/create-standard-certificate.dto';
+import { UpdateStandardCertificateValueFromFileDto } from './dto/update-standard-certificate-value-file.dto';
+import { StandardCertificatesService } from './standard-certificates.service';
 
 @Controller('standard-certificates')
 export class StandardCertificatesController {
   constructor(
     private readonly standardCertificatesService: StandardCertificatesService
   ) {}
+
   @UseGuards(AuthGuard)
   @Post()
   create(
@@ -41,6 +42,7 @@ export class StandardCertificatesController {
   findOne(@Param('id') id: string) {
     return this.standardCertificatesService.findOne(+id);
   }
+
   @UseGuards(AuthGuard)
   @Patch('file')
   async updateCertificateFromFile(
@@ -51,6 +53,7 @@ export class StandardCertificatesController {
     );
     return { message: 'Updated standard certificate (CRM) successfully.' };
   }
+
   @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {

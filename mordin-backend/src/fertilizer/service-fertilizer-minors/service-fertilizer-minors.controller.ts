@@ -8,23 +8,24 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { ServiceFertilizerMinorsService } from './service-fertilizer-minors.service';
-import { CreateServiceFertilizerMinorDto } from './dto/create-service-fertilizer-minor.dto';
-import { UpdateServiceFertilizerMinorDto } from './dto/update-service-fertilizer-minor.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateServiceFertilizerMinorDto } from './dto/create-service-fertilizer-minor.dto';
+import { UpdateServiceFertilizerMinorDto } from './dto/update-service-fertilizer-minor.dto';
+import { ServiceFertilizerMinorsService } from './service-fertilizer-minors.service';
 
 @Controller('service-fertilizer-minors')
 export class ServiceFertilizerMinorsController {
   constructor(
-    private readonly serviceFertilizerMinorsService: ServiceFertilizerMinorsService,
+    private readonly serviceFertilizerMinorsService: ServiceFertilizerMinorsService
   ) {}
 
   @UseGuards(AuthGuard)
   @Post()
   create(
     @Body() createServiceFertilizerMinorDto: CreateServiceFertilizerMinorDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.serviceFertilizerMinorsService.create(
       createServiceFertilizerMinorDto,
@@ -52,7 +53,7 @@ export class ServiceFertilizerMinorsController {
   update(
     @Param('id') id: string,
     @Body() updateServiceFertilizerMinorDto: UpdateServiceFertilizerMinorDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.serviceFertilizerMinorsService.update(
       +id,

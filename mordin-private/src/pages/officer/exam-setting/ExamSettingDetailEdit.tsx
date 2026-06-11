@@ -460,4 +460,3 @@ const ExamSettingDetailEdit = () => {
 };
 
 export default ExamSettingDetailEdit;
-

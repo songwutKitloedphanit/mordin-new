@@ -1,4 +1,4 @@
-﻿import { HotTable, HotTableRef } from '@handsontable/react-wrapper';
+import { HotTable, HotTableRef } from '@handsontable/react-wrapper';
 import { registerAllModules } from 'handsontable/registry';
 import React, { useRef, useState, useMemo } from 'react';
 
@@ -17,7 +17,6 @@ const keyBlank = (r: any) => `blank:${r.analysisStandardResultId}`;
 // โฌ๏ธ เปลี่ยนคีย์ CRM ให้ผูกกับ standard_certificates (standardId + laboratoryId)
 const keyCrmCert = (r: any) => `crmcert:${r.standardId}:${r.laboratoryId}`; // กันชนกับ sample / blank
 const isNumericKey = (k: string) => Number.isFinite(Number(k));
-
 
 /* ===========================
   Types
@@ -48,14 +47,16 @@ export const GetResultComponent: React.FC<Props> = ({
   onCancel,
 }) => {
   const hotSampleRef = useRef<HotTableRef>(null);
-  const hotBlankRef  = useRef<HotTableRef>(null);
-  const hotCrmRef    = useRef<HotTableRef>(null);
+  const hotBlankRef = useRef<HotTableRef>(null);
+  const hotCrmRef = useRef<HotTableRef>(null);
 
   /* ======== Sample: sort by code ======== */
   const sortedAnalysisService = useMemo(
     () =>
       [...analysisService].sort((a, b) =>
-        (a.qrCode.book.sampleCode || '').localeCompare(b.qrCode.book.sampleCode || '')
+        (a.qrCode.book.sampleCode || '').localeCompare(
+          b.qrCode.book.sampleCode || ''
+        )
       ),
     [analysisService]
   );
@@ -93,54 +94,61 @@ export const GetResultComponent: React.FC<Props> = ({
   }, [crmService]);
 
   /* ======== initial input values ======== */
-  const [inputValues, setInputValues] = useState<{ [key: string]: string }>(() => {
-    const init: Record<string, string> = {};
+  const [inputValues, setInputValues] = useState<{ [key: string]: string }>(
+    () => {
+      const init: Record<string, string> = {};
 
-    // Sample
-    sortedAnalysisService.forEach((sample, index) => {
-      const rowId = (index + 1).toString();
-      sample.result.forEach(result => {
-        const key =
-          result.resultId?.toString() ||
-          `${rowId}_${result.laboratorySetting.laboratory.shortNameBefore}`;
-        if (result.preValue !== null && result.preValue !== undefined) {
-          init[key] = String(result.preValue);
-        }
+      // Sample
+      sortedAnalysisService.forEach((sample, index) => {
+        const rowId = (index + 1).toString();
+        sample.result.forEach(result => {
+          const key =
+            result.resultId?.toString() ||
+            `${rowId}_${result.laboratorySetting.laboratory.shortNameBefore}`;
+          if (result.preValue !== null && result.preValue !== undefined) {
+            init[key] = String(result.preValue);
+          }
+        });
       });
-    });
 
-    // Blank
-    blankService.forEach(row => {
-      row.result.forEach((r: any) => {
-        const key = keyBlank(r);
-        if (r.preValue !== null && r.preValue !== undefined) {
-          init[key] = String(r.preValue);
-        }
+      // Blank
+      blankService.forEach(row => {
+        row.result.forEach((r: any) => {
+          const key = keyBlank(r);
+          if (r.preValue !== null && r.preValue !== undefined) {
+            init[key] = String(r.preValue);
+          }
+        });
       });
-    });
 
-    // CRM -> ใช้ค่า certificateValue (ของ standard_certificates)
-    crmService.forEach(row => {
-      row.result.forEach((r: any) => {
-        const key = keyCrmCert(r);
-        if (r.certificateValue !== null && r.certificateValue !== undefined) {
-          init[key] = String(r.certificateValue);
-        }
+      // CRM -> ใช้ค่า certificateValue (ของ standard_certificates)
+      crmService.forEach(row => {
+        row.result.forEach((r: any) => {
+          const key = keyCrmCert(r);
+          if (r.certificateValue !== null && r.certificateValue !== undefined) {
+            init[key] = String(r.certificateValue);
+          }
+        });
       });
-    });
 
-    return init;
-  });
+      return init;
+    }
+  );
 
   const [editedResults, setEditedResults] = useState<LabResult[]>([]);
-  const [showConfirm, setShowConfirm] = useState<{ type: 'cancel' | 'delete'; show: boolean; index?: number } | null>(null);
+  const [showConfirm, setShowConfirm] = useState<{
+    type: 'cancel' | 'delete';
+    show: boolean;
+    index?: number;
+  } | null>(null);
 
   /* ======== Sample rows with sampleId ======== */
   const sampleResults = useMemo(
-    () => sortedAnalysisService.map((result, index) => ({
-      qrCode: result.qrCode,
-      result: result.result.map(res => ({ ...res, sampleId: index + 1 })),
-    })) as sampleResults[],
+    () =>
+      sortedAnalysisService.map((result, index) => ({
+        qrCode: result.qrCode,
+        result: result.result.map(res => ({ ...res, sampleId: index + 1 })),
+      })) as sampleResults[],
     [sortedAnalysisService]
   );
 
@@ -159,8 +167,8 @@ export const GetResultComponent: React.FC<Props> = ({
 
         const newResultItem: any = {
           shortNameBefore: headerShort,
-          resultId: resultIdAny,          // number | 'blank:<id>' | 'crmcert:<standardId>:<labId>'
-          preValue: value,                // โ ๏ธ ใช้ช่องนี้เป็น carrier แม้ CRM จะหมายถึง certificateValue
+          resultId: resultIdAny, // number | 'blank:<id>' | 'crmcert:<standardId>:<labId>'
+          preValue: value, // ใช้ช่องนี้เป็น carrier แม้ CRM จะหมายถึง certificateValue
         };
 
         if (existing) {
@@ -169,12 +177,21 @@ export const GetResultComponent: React.FC<Props> = ({
           );
           existing.results.push(newResultItem);
         } else {
-          updatedEditedResults.push({ id: rowId, examId: '-', results: [newResultItem] } as any);
+          updatedEditedResults.push({
+            id: rowId,
+            examId: '-',
+            results: [newResultItem],
+          } as any);
         }
       } else if (currentValue === '' && value === '') {
         updatedEditedResults = updatedEditedResults.map((r: any) =>
           r.id === rowId
-            ? { ...r, results: r.results.filter((x: any) => String(x.resultId) !== String(key)) }
+            ? {
+                ...r,
+                results: r.results.filter(
+                  (x: any) => String(x.resultId) !== String(key)
+                ),
+              }
             : r
         );
       }
@@ -193,9 +210,11 @@ export const GetResultComponent: React.FC<Props> = ({
       const rowId = String(index + 1);
       const row = [rowId, sample.qrCode.book.sampleCode || `S-${index + 1}`];
       headersSample.forEach(h => {
-        const cell = sample.result.find(r => r.laboratorySetting.laboratory.shortNameBefore === h);
+        const cell = sample.result.find(
+          r => r.laboratorySetting.laboratory.shortNameBefore === h
+        );
         const key = cell?.resultId ? String(cell.resultId) : '';
-        row.push(key ? inputValues[key] ?? '' : '');
+        row.push(key ? (inputValues[key] ?? '') : '');
       });
       return row;
     });
@@ -210,18 +229,24 @@ export const GetResultComponent: React.FC<Props> = ({
     let rid = 0;
 
     blankService.forEach((row, sIdx) => {
-      const reps = Array.from(new Set((row.result || []).map((r: any) => r.repeatNumber ?? 1))).sort((a, b) => a - b);
+      const reps = Array.from(
+        new Set((row.result || []).map((r: any) => r.repeatNumber ?? 1))
+      ).sort((a, b) => a - b);
       reps.forEach(rep => {
         rid += 1;
         meta.push({ serviceIdx: sIdx, rep });
         const data: string[] = [String(rid), `${row.code}/${rep}`];
         headersBlank.forEach(h => {
-          const cell = row.result.find((r: any) =>
-            (r.repeatNumber ?? 1) === rep &&
-            r.laboratorySetting.laboratory.shortNameBefore === h
+          const cell = row.result.find(
+            (r: any) =>
+              (r.repeatNumber ?? 1) === rep &&
+              r.laboratorySetting.laboratory.shortNameBefore === h
           );
           const key = cell ? keyBlank(cell) : '';
-          const display = key ? (inputValues[key] ?? (cell?.preValue != null ? String(cell.preValue) : '')) : '';
+          const display = key
+            ? (inputValues[key] ??
+              (cell?.preValue != null ? String(cell.preValue) : ''))
+            : '';
           data.push(display);
         });
         body.push(data);
@@ -239,20 +264,25 @@ export const GetResultComponent: React.FC<Props> = ({
     let rid = 0;
 
     crmService.forEach((row, sIdx) => {
-      const reps = Array.from(new Set((row.result || []).map((r: any) => r.repeatNumber ?? 1))).sort((a, b) => a - b);
+      const reps = Array.from(
+        new Set((row.result || []).map((r: any) => r.repeatNumber ?? 1))
+      ).sort((a, b) => a - b);
       reps.forEach(rep => {
         rid += 1;
         meta.push({ serviceIdx: sIdx, rep });
         const data: string[] = [String(rid), `${row.code}/${rep}`];
         headersCrm.forEach(h => {
-          const cell = row.result.find((r: any) =>
-            (r.repeatNumber ?? 1) === rep &&
-            r.laboratorySetting.laboratory.shortNameBefore === h
+          const cell = row.result.find(
+            (r: any) =>
+              (r.repeatNumber ?? 1) === rep &&
+              r.laboratorySetting.laboratory.shortNameBefore === h
           );
           const key = cell ? keyCrmCert(cell) : '';
           const display = key
             ? (inputValues[key] ??
-              (cell?.certificateValue != null ? String(cell.certificateValue) : ''))
+              (cell?.certificateValue != null
+                ? String(cell.certificateValue)
+                : ''))
             : '';
           data.push(display);
         });
@@ -271,10 +301,16 @@ export const GetResultComponent: React.FC<Props> = ({
       const examId = sample.qrCode.book.sampleCode || `S-${index + 1}`;
       const results = headersSample
         .map(h => {
-          const cell = sample.result.find(r => r.laboratorySetting.laboratory.shortNameBefore === h);
+          const cell = sample.result.find(
+            r => r.laboratorySetting.laboratory.shortNameBefore === h
+          );
           const key = cell?.resultId ? String(cell.resultId) : '';
           return key
-            ? { shortNameBefore: h, resultId: Number(key), preValue: inputValues[key] ?? '' }
+            ? {
+                shortNameBefore: h,
+                resultId: Number(key),
+                preValue: inputValues[key] ?? '',
+              }
             : null;
         })
         .filter(Boolean) as any[];
@@ -288,13 +324,18 @@ export const GetResultComponent: React.FC<Props> = ({
       const examId = `${src.code}/${m.rep}`;
       const results = headersBlank
         .map(h => {
-          const cell = src.result.find((r: any) =>
-            (r.repeatNumber ?? 1) === m.rep &&
-            r.laboratorySetting.laboratory.shortNameBefore === h
+          const cell = src.result.find(
+            (r: any) =>
+              (r.repeatNumber ?? 1) === m.rep &&
+              r.laboratorySetting.laboratory.shortNameBefore === h
           );
           if (!cell) return null;
           const key = keyBlank(cell);
-          return { shortNameBefore: h, resultId: key as any, preValue: inputValues[key] ?? '' };
+          return {
+            shortNameBefore: h,
+            resultId: key as any,
+            preValue: inputValues[key] ?? '',
+          };
         })
         .filter(Boolean) as any[];
       return { id: rowId, examId, results } as any;
@@ -307,13 +348,18 @@ export const GetResultComponent: React.FC<Props> = ({
       const examId = `${src.code}/${m.rep}`;
       const results = headersCrm
         .map(h => {
-          const cell = src.result.find((r: any) =>
-            (r.repeatNumber ?? 1) === m.rep &&
-            r.laboratorySetting.laboratory.shortNameBefore === h
+          const cell = src.result.find(
+            (r: any) =>
+              (r.repeatNumber ?? 1) === m.rep &&
+              r.laboratorySetting.laboratory.shortNameBefore === h
           );
           if (!cell) return null;
           const key = keyCrmCert(cell);
-          return { shortNameBefore: h, resultId: key as any, preValue: inputValues[key] ?? '' };
+          return {
+            shortNameBefore: h,
+            resultId: key as any,
+            preValue: inputValues[key] ?? '',
+          };
         })
         .filter(Boolean) as any[];
       return { id: rowId, examId, results } as any;
@@ -347,7 +393,9 @@ export const GetResultComponent: React.FC<Props> = ({
 
     const filtered = withExam
       .map((item: any) => {
-        const valid = item.results.filter((x: any) => x.preValue !== null && x.preValue !== '');
+        const valid = item.results.filter(
+          (x: any) => x.preValue !== null && x.preValue !== ''
+        );
         return { ...item, results: valid };
       })
       .filter((x: any) => x.results.length > 0);
@@ -380,8 +428,11 @@ export const GetResultComponent: React.FC<Props> = ({
           {/* SAMPLE */}
           <div className="private-card">
             <div className="private-card-header">
-              <h4 className="private-card-title">ผลวิเคราะห์ (Sample)
-                <span className="text-secondary ms-2">บันทึกเฉพาะที่กรอกค่า</span>
+              <h4 className="private-card-title">
+                ผลวิเคราะห์ (Sample)
+                <span className="text-secondary ms-2">
+                  บันทึกเฉพาะที่กรอกค่า
+                </span>
               </h4>
             </div>
             <div className="private-card-body">
@@ -402,13 +453,16 @@ export const GetResultComponent: React.FC<Props> = ({
                   columns={[
                     { data: 0, readOnly: true },
                     { data: 1, readOnly: true },
-                    ...headersSample.map((_h: string, idx: number) => ({ data: idx + 2 })),
+                    ...headersSample.map((_h: string, idx: number) => ({
+                      data: idx + 2,
+                    })),
                   ]}
                   afterChange={(changes, source) => {
                     if (!changes || source === 'loadData') return;
                     const changeList: [string, string, string, string][] = [];
                     changes.forEach(([row, col, _oldVal, newVal]) => {
-                      const rowIndex = Number(row), colIndex = Number(col);
+                      const rowIndex = Number(row),
+                        colIndex = Number(col);
                       const rowId = String(rowIndex + 1);
                       const header = (hotSample[0] as string[])[colIndex];
                       if (!header || colIndex < 2) return;
@@ -416,33 +470,49 @@ export const GetResultComponent: React.FC<Props> = ({
                       const headerShort = header;
                       const sampleIndex = rowIndex;
                       const cell = sampleResults[sampleIndex]?.result.find(
-                        r => r.laboratorySetting.laboratory.shortNameBefore === headerShort
+                        r =>
+                          r.laboratorySetting.laboratory.shortNameBefore ===
+                          headerShort
                       );
                       if (!cell) return;
 
                       const key = cell.resultId ? String(cell.resultId) : '';
                       if (!key) return;
-                      changeList.push([key, String(newVal ?? ''), rowId, headerShort]);
+                      changeList.push([
+                        key,
+                        String(newVal ?? ''),
+                        rowId,
+                        headerShort,
+                      ]);
                     });
                     if (changeList.length) handleInputChange(changeList);
                   }}
-                  afterPaste={(data) => {
-                    const startRow = 0, startCol = 2;
+                  afterPaste={data => {
+                    const startRow = 0,
+                      startCol = 2;
                     const changeList: [string, string, string, string][] = [];
                     data.forEach((rowVals, rOffset) => {
                       rowVals.forEach((val, cOffset) => {
-                        const rowIndex = startRow + rOffset, colIndex = startCol + cOffset;
+                        const rowIndex = startRow + rOffset,
+                          colIndex = startCol + cOffset;
                         const rowId = String(rowIndex + 1);
                         const header = (hotSample[0] as string[])[colIndex];
                         if (!header) return;
                         const headerShort = header;
                         const cell = sampleResults[rowIndex]?.result.find(
-                          r => r.laboratorySetting.laboratory.shortNameBefore === headerShort
+                          r =>
+                            r.laboratorySetting.laboratory.shortNameBefore ===
+                            headerShort
                         );
                         if (!cell) return;
                         const key = cell.resultId ? String(cell.resultId) : '';
                         if (!key) return;
-                        changeList.push([key, String(val ?? ''), rowId, headerShort]);
+                        changeList.push([
+                          key,
+                          String(val ?? ''),
+                          rowId,
+                          headerShort,
+                        ]);
                       });
                     });
                     if (changeList.length) handleInputChange(changeList);
@@ -455,8 +525,11 @@ export const GetResultComponent: React.FC<Props> = ({
           {/* BLANK */}
           <div className="private-card mt-4">
             <div className="private-card-header">
-              <h4 className="private-card-title">ผลวิเคราะห์ (Blank)
-                <span className="text-secondary ms-2">บันทึกเฉพาะที่กรอกค่า</span>
+              <h4 className="private-card-title">
+                ผลวิเคราะห์ (Blank)
+                <span className="text-secondary ms-2">
+                  บันทึกเฉพาะที่กรอกค่า
+                </span>
               </h4>
             </div>
             <div className="private-card-body">
@@ -477,13 +550,16 @@ export const GetResultComponent: React.FC<Props> = ({
                   columns={[
                     { data: 0, readOnly: true },
                     { data: 1, readOnly: true },
-                    ...headersBlank.map((_h: string, idx: number) => ({ data: idx + 2 })),
+                    ...headersBlank.map((_h: string, idx: number) => ({
+                      data: idx + 2,
+                    })),
                   ]}
                   afterChange={(changes, source) => {
                     if (!changes || source === 'loadData') return;
                     const changeList: [string, string, string, string][] = [];
                     changes.forEach(([row, col, _oldVal, newVal]) => {
-                      const rowIndex = Number(row), colIndex = Number(col);
+                      const rowIndex = Number(row),
+                        colIndex = Number(col);
                       const rowId = String(rowIndex + 1);
                       if (colIndex < 2) return;
 
@@ -495,21 +571,29 @@ export const GetResultComponent: React.FC<Props> = ({
                       const cell = src?.result.find(
                         (r: any) =>
                           (r.repeatNumber ?? 1) === meta.rep &&
-                          r.laboratorySetting.laboratory.shortNameBefore === headerShort
+                          r.laboratorySetting.laboratory.shortNameBefore ===
+                            headerShort
                       );
                       if (!cell) return;
 
                       const key = keyBlank(cell);
-                      changeList.push([key, String(newVal ?? ''), rowId, headerShort]);
+                      changeList.push([
+                        key,
+                        String(newVal ?? ''),
+                        rowId,
+                        headerShort,
+                      ]);
                     });
                     if (changeList.length) handleInputChange(changeList);
                   }}
-                  afterPaste={(data) => {
-                    const startRow = 0, startCol = 2;
+                  afterPaste={data => {
+                    const startRow = 0,
+                      startCol = 2;
                     const changeList: [string, string, string, string][] = [];
                     data.forEach((rowVals, rOffset) => {
                       rowVals.forEach((val, cOffset) => {
-                        const rowIndex = startRow + rOffset, colIndex = startCol + cOffset;
+                        const rowIndex = startRow + rOffset,
+                          colIndex = startCol + cOffset;
                         const rowId = String(rowIndex + 1);
                         const headerShort = headersBlank[colIndex - 2];
                         const meta = blankMeta[rowIndex];
@@ -519,12 +603,18 @@ export const GetResultComponent: React.FC<Props> = ({
                         const cell = src?.result.find(
                           (r: any) =>
                             (r.repeatNumber ?? 1) === meta.rep &&
-                            r.laboratorySetting.laboratory.shortNameBefore === headerShort
+                            r.laboratorySetting.laboratory.shortNameBefore ===
+                              headerShort
                         );
                         if (!cell) return;
 
                         const key = keyBlank(cell);
-                        changeList.push([key, String(val ?? ''), rowId, headerShort]);
+                        changeList.push([
+                          key,
+                          String(val ?? ''),
+                          rowId,
+                          headerShort,
+                        ]);
                       });
                     });
                     if (changeList.length) handleInputChange(changeList);
@@ -537,8 +627,11 @@ export const GetResultComponent: React.FC<Props> = ({
           {/* CRM */}
           <div className="private-card mt-4">
             <div className="private-card-header">
-              <h4 className="private-card-title">ผลวิเคราะห์ (Standard / CRM)
-                <span className="text-secondary ms-2">บันทึกเฉพาะที่กรอกค่า</span>
+              <h4 className="private-card-title">
+                ผลวิเคราะห์ (Standard / CRM)
+                <span className="text-secondary ms-2">
+                  บันทึกเฉพาะที่กรอกค่า
+                </span>
               </h4>
             </div>
             <div className="private-card-body">
@@ -559,14 +652,17 @@ export const GetResultComponent: React.FC<Props> = ({
                   columns={[
                     { data: 0, readOnly: true },
                     { data: 1, readOnly: true },
-                    ...headersCrm.map((_h: string, idx: number) => ({ data: idx + 2 })),
+                    ...headersCrm.map((_h: string, idx: number) => ({
+                      data: idx + 2,
+                    })),
                   ]}
                   // โ… ใช้ keyCrmCert และบันทึกค่าไปยัง certificateValue (ผ่าน preValue carrier)
                   afterChange={(changes, source) => {
                     if (!changes || source === 'loadData') return;
                     const changeList: [string, string, string, string][] = [];
                     changes.forEach(([row, col, _oldVal, newVal]) => {
-                      const rowIndex = Number(row), colIndex = Number(col);
+                      const rowIndex = Number(row),
+                        colIndex = Number(col);
                       const rowId = String(rowIndex + 1);
                       if (colIndex < 2) return;
 
@@ -578,21 +674,29 @@ export const GetResultComponent: React.FC<Props> = ({
                       const cell = src?.result.find(
                         (r: any) =>
                           (r.repeatNumber ?? 1) === meta.rep &&
-                          r.laboratorySetting.laboratory.shortNameBefore === headerShort
+                          r.laboratorySetting.laboratory.shortNameBefore ===
+                            headerShort
                       );
                       if (!cell) return;
 
                       const key = keyCrmCert(cell);
-                      changeList.push([key, String(newVal ?? ''), rowId, headerShort]);
+                      changeList.push([
+                        key,
+                        String(newVal ?? ''),
+                        rowId,
+                        headerShort,
+                      ]);
                     });
                     if (changeList.length) handleInputChange(changeList);
                   }}
-                  afterPaste={(data) => {
-                    const startRow = 0, startCol = 2;
+                  afterPaste={data => {
+                    const startRow = 0,
+                      startCol = 2;
                     const changeList: [string, string, string, string][] = [];
                     data.forEach((rowVals, rOffset) => {
                       rowVals.forEach((val, cOffset) => {
-                        const rowIndex = startRow + rOffset, colIndex = startCol + cOffset;
+                        const rowIndex = startRow + rOffset,
+                          colIndex = startCol + cOffset;
                         const rowId = String(rowIndex + 1);
                         const headerShort = headersCrm[colIndex - 2];
                         const meta = crmMeta[rowIndex];
@@ -602,12 +706,18 @@ export const GetResultComponent: React.FC<Props> = ({
                         const cell = src?.result.find(
                           (r: any) =>
                             (r.repeatNumber ?? 1) === meta.rep &&
-                            r.laboratorySetting.laboratory.shortNameBefore === headerShort
+                            r.laboratorySetting.laboratory.shortNameBefore ===
+                              headerShort
                         );
                         if (!cell) return;
 
                         const key = keyCrmCert(cell);
-                        changeList.push([key, String(val ?? ''), rowId, headerShort]);
+                        changeList.push([
+                          key,
+                          String(val ?? ''),
+                          rowId,
+                          headerShort,
+                        ]);
                       });
                     });
                     if (changeList.length) handleInputChange(changeList);
@@ -617,18 +727,28 @@ export const GetResultComponent: React.FC<Props> = ({
 
               <div className="private-action-footer">
                 <div className="row row-demo-grid">
-                  <button type="button" className="btn btn-success" style={{ width: '120px' }} onClick={handleSubmit}>
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    style={{ width: '120px' }}
+                    onClick={handleSubmit}
+                  >
                     ต่อไป
                   </button>
-                  <button type="button" className="btn btn-danger ms-auto" style={{ width: '120px' }}
-                          onClick={() => setShowConfirm({ type: 'cancel', show: true })}>
+                  <button
+                    type="button"
+                    className="btn btn-danger ms-auto"
+                    style={{ width: '120px' }}
+                    onClick={() =>
+                      setShowConfirm({ type: 'cancel', show: true })
+                    }
+                  >
                     ยกเลิก
                   </button>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -644,4 +764,3 @@ export const GetResultComponent: React.FC<Props> = ({
     </>
   );
 };
-

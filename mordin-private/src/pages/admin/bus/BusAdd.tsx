@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -19,7 +19,7 @@ const KPI_CONFIG = [
     key: 'totalBuses' as keyof BusSummary,
     label: 'รถให้บริการ',
     icon: 'fas fa-bus-alt',
-    accent: '#6861CE',
+    accent: '#7a5af5',
     unit: 'คัน',
   },
 ];
@@ -74,7 +74,8 @@ const BusAdd = () => {
       licensePlate: bus.licensePlate.trim() === '' ? 'กรุณาระบุทะเบียนรถ' : '',
       registrationProvinceCode:
         bus.registrationProvinceCode > 0 ? '' : 'กรุณาเลือกจังหวัดจดทะเบียน',
-      workingArea: bus.workingArea.trim() === '' ? 'กรุณาระบุพื้นที่ปฏิบัติงาน' : '',
+      workingArea:
+        bus.workingArea.trim() === '' ? 'กรุณาระบุพื้นที่ปฏิบัติงาน' : '',
     };
     setErrors(newErrors);
     if (Object.values(newErrors).some(msg => msg !== '')) return;
@@ -333,4 +334,3 @@ const BusAdd = () => {
 };
 
 export default BusAdd;
-

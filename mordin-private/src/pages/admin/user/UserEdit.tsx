@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -177,27 +177,16 @@ const UserEdit: React.FC = () => {
       <div className="row">
         <div className="col-md-12">
           <div className="private-card">
-            <div className="private-card-header">
-              <div className="row row-demo-grid">
-                <div
-                  className="col-md-4 col-sm-6 col-6"
-                  style={{ textAlign: 'left' }}
-                >
-                  <h4 className="private-card-title">
-                    Edit User ({selectUser.email || '-'})
-                  </h4>
-                </div>
-                <div
-                  className="col-md-4 col-sm-6 col-6 ms-auto"
-                  style={{ textAlign: 'right' }}
-                >
-                  <GenButtonCircle
-                    color={B_LIST.list.color}
-                    icon={B_LIST.list.icon}
-                    link="/admin/user"
-                  />
-                </div>
-              </div>
+            <div className="private-card-header d-flex align-items-center justify-content-between">
+              <h4 className="private-card-title mb-0">
+                <i className="fas fa-user-pen me-2" />
+                แก้ไขผู้ใช้งาน{selectUser.email ? ` — ${selectUser.email}` : ''}
+              </h4>
+              <GenButtonCircle
+                color={B_LIST.list.color}
+                icon={B_LIST.list.icon}
+                link="/admin/user"
+              />
             </div>
 
             <div className="private-card-body">
@@ -205,12 +194,12 @@ const UserEdit: React.FC = () => {
                 <GenFormText1
                   id="user-email"
                   name="email"
-                  label="Email Address"
+                  label="อีเมล"
                   value={selectUser.email || ''}
                   onChange={handleChange}
                   isRequired
-                  placeholder="Enter Address (email)"
-                  remark="ใช้เพื่อยืนยันตัวตน"
+                  placeholder="อีเมลผู้ใช้งาน"
+                  remark="ใช้เพื่อยืนยันตัวตน (แก้ไขไม่ได้)"
                   errorMessage={errors.email}
                   readOnly={true}
                 />
@@ -218,11 +207,11 @@ const UserEdit: React.FC = () => {
                 <GenFormText1
                   id="firstName"
                   name="firstName"
-                  label="First Name"
+                  label="ชื่อ"
                   value={selectUser.firstName || ''}
                   onChange={handleChange}
                   isRequired
-                  placeholder="Enter First Name"
+                  placeholder="ชื่อ"
                   errorMessage={errors.firstName}
                   readOnly={true}
                 />
@@ -230,11 +219,11 @@ const UserEdit: React.FC = () => {
                 <GenFormText1
                   id="lastName"
                   name="lastName"
-                  label="Last Name"
+                  label="นามสกุล"
                   value={selectUser.lastName || ''}
                   onChange={handleChange}
                   isRequired
-                  placeholder="Enter Last Name"
+                  placeholder="นามสกุล"
                   errorMessage={errors.lastName}
                   readOnly={true}
                 />
@@ -242,7 +231,7 @@ const UserEdit: React.FC = () => {
                 <GenFormSelect
                   id="department"
                   name="departmentId"
-                  label="Department"
+                  label="แผนก"
                   value={selectUser.departmentId?.toString() || ''}
                   options={departmentOptions}
                   onChange={handleSelectChange}
@@ -251,7 +240,7 @@ const UserEdit: React.FC = () => {
                 />
 
                 <GenFormRadioGroup
-                  label="Roles"
+                  label="บทบาท / สิทธิ์การใช้งาน"
                   name="role"
                   options={roleOptions}
                   value={selectUser.role || ''}
@@ -261,20 +250,20 @@ const UserEdit: React.FC = () => {
 
                 <div className="private-action-footer d-flex justify-content-between mt-4">
                   <button
-                    className="btn btn-success"
-                    style={{ width: '150px' }}
+                    className="btn btn-primary px-4"
                     onClick={handleSubmit}
                     type="button"
                   >
-                    Edit User
+                    <i className="fas fa-save me-2" />
+                    บันทึกการแก้ไข
                   </button>
                   <button
-                    className="btn btn-danger"
-                    style={{ width: '150px' }}
+                    className="btn btn-outline-secondary px-4"
                     onClick={() => setShowConfirm({ type: 'cancel' })}
                     type="button"
                   >
-                    Cancel
+                    <i className="fas fa-times me-2" />
+                    ยกเลิก
                   </button>
                   {showConfirm && (
                     <ConfirmAlert
@@ -296,4 +285,3 @@ const UserEdit: React.FC = () => {
 };
 
 export default UserEdit;
-

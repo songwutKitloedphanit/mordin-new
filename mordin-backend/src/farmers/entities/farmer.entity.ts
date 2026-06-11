@@ -67,17 +67,6 @@ export class Farmer {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  setCreatedAt() {
-    const now = Date.now();
-    this.updatedAt = now;
-  }
-
-  @BeforeUpdate()
-  updateUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
   @ManyToOne(() => Factory)
   @JoinColumn({ name: 'factory_id' })
   factory: Factory;
@@ -92,4 +81,38 @@ export class Farmer {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  normalizeBirthDate() {
+    if (this.birthDate) {
+      const bDate: any = this.birthDate;
+      if (typeof bDate === 'string') {
+        const parts = bDate.split('-');
+        if (parts.length === 3) {
+          const year = parseInt(parts[0], 10);
+          if (year > 2400) {
+            const ceYear = year - 543;
+            this.birthDate = `${ceYear}-${parts[1]}-${parts[2]}`;
+          }
+        }
+      } else if (bDate instanceof Date) {
+        const year = bDate.getFullYear();
+        if (year > 2400) {
+          bDate.setFullYear(year - 543);
+        }
+      }
+    }
+  }
+
+  @BeforeInsert()
+  setCreatedAt() {
+    const now = Date.now();
+    this.updatedAt = now;
+  }
+
+  @BeforeUpdate()
+  updateUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

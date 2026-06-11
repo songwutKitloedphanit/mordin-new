@@ -8,11 +8,12 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { SoilGradesService } from './soil-grades.service';
-import { CreateSoilGradeDto } from './dto/create-soil-grade.dto';
-import { UpdateSoilGradeDto } from './dto/update-soil-grade.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateSoilGradeDto } from './dto/create-soil-grade.dto';
+import { UpdateSoilGradeDto } from './dto/update-soil-grade.dto';
+import { SoilGradesService } from './soil-grades.service';
 
 @Controller('soil-grades')
 export class SoilGradesController {
@@ -45,6 +46,7 @@ export class SoilGradesController {
   findOne(@Param('id') id: string) {
     return this.soilGradesService.findOne(+id);
   }
+
   @UseGuards(AuthGuard)
   @Patch()
   update(
@@ -53,6 +55,7 @@ export class SoilGradesController {
   ) {
     return this.soilGradesService.update(updateSoilGradeDto, userId);
   }
+
   @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {

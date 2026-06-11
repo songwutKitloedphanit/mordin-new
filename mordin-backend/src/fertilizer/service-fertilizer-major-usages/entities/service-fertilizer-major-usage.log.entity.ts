@@ -1,13 +1,8 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import {
-  Column,
-  Entity,
-  PrimaryColumn,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('service_fertilizer_major_usages_logs')
-export class ServiceFertilizerMajorUsageLog extends BaseLogEntity{
+export class ServiceFertilizerMajorUsageLog extends BaseLogEntity {
   @PrimaryColumn()
   serviceFertilizerMajorUsageId: number;
 

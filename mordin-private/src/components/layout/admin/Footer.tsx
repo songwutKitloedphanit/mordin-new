@@ -2,7 +2,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="private-layout-footer border-t border-[#DED7CC] bg-[#FFFDF8] px-6 py-4 text-sm text-[#667085] transition-colors lg:px-10">
+    <footer className="private-layout-footer border-t border-[#DED7CC] bg-[#ffffff] px-6 py-4 text-sm text-[#667085] transition-colors lg:px-10">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <nav>
           <ul className="m-0 flex list-none flex-wrap items-center gap-4 p-0">

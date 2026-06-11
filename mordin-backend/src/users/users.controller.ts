@@ -1,20 +1,21 @@
 import {
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  UseGuards, 
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateDepartmentDto } from './dto/create-department.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateDepartmentDto } from './dto/create-department.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
@@ -53,7 +54,8 @@ export class UsersController {
 
   @UseGuards(AuthGuard)
   @Delete('/departments/:id')
-  removeDepartment(@Param('id', ParseIntPipe) id: number) {  // << ใส่ ParseIntPipe ด้วย
+  removeDepartment(@Param('id', ParseIntPipe) id: number) {
+    // << ใส่ ParseIntPipe ด้วย
     return this.usersService.removeDepartment(id);
   }
 

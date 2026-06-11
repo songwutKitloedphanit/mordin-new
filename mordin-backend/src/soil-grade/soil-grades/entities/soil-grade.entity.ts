@@ -10,7 +10,6 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
@@ -36,12 +35,6 @@ export class SoilGrade {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
@@ -52,16 +45,20 @@ export class SoilGrade {
   @JoinColumn({ name: 'laboratory_id' })
   laboratory: Laboratory;
 
-  @ManyToOne(() => ServiceType, (serviceType) => serviceType.soilGrades, {
+  @ManyToOne(() => ServiceType, serviceType => serviceType.soilGrades, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'service_type_id' })
   serviceType: ServiceType;
 
-  @OneToMany(
-    () => SoilGradeLevel,
-    (soilGradeLevel) => soilGradeLevel.soilGrade,
-    { cascade: true },
-  )
+  @OneToMany(() => SoilGradeLevel, soilGradeLevel => soilGradeLevel.soilGrade, {
+    cascade: true,
+  })
   soilGradeLevels: SoilGradeLevel[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

@@ -1,8 +1,8 @@
+import { Subdistrict } from '../address';
 import { BaseSearchAndPaginationParams } from '../common/BaseSearch';
 import { FarmerInfo } from '../Farmer';
 import { LaboratorySettingInfo } from '../laboratory/LaboratorySetting';
 import { LandInfoInterface } from '../Land';
-import { Subdistrict } from '../address';
 import { ResultGradeLevel } from '../result-grade/ResultGradeLevel';
 import { sampleBlankResultInfo } from '../sample-blank/sampleBlankResult';
 import { ServiceAreaInfo } from '../service-area/ServiceAreas';

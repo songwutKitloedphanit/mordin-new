@@ -1,18 +1,15 @@
 /* eslint-disable prettier/prettier */
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateServiceFertilizerMajorUsageDto } from './dto/create-service-fertilizer-major-usage.dto';
 import { UpdateServiceFertilizerMajorUsageDto } from './dto/update-service-fertilizer-major-usage.dto';
 import { ServiceFertilizerMajorUsage } from './entities/service-fertilizer-major-usage.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UsageType } from '../usage-types/entities/usage-type.entity';
 import { ServiceFertilizerMajorUsageLog } from './entities/service-fertilizer-major-usage.log.entity';
 
 @Injectable()
 export class ServiceFertilizerMajorUsagesService {
-  exists(serviceCategoryId: number, usageTypeId: number, arg2: number) {
-    throw new Error('Method not implemented.');
-  }
   constructor(
     @InjectRepository(ServiceFertilizerMajorUsage)
     private readonly servFerMajorUsageRepo: Repository<ServiceFertilizerMajorUsage>,
@@ -20,6 +17,11 @@ export class ServiceFertilizerMajorUsagesService {
     @InjectRepository(ServiceFertilizerMajorUsageLog)
     private readonly servFerMajorUsageLog: Repository<ServiceFertilizerMajorUsageLog>,
   ) {}
+
+exists(serviceCategoryId: number, usageTypeId: number, arg2: number) {
+    throw new Error('Method not implemented.');
+  }
+  
 
   create(
     createServiceFertilizerMajorUsageDto: CreateServiceFertilizerMajorUsageDto,
@@ -92,7 +94,7 @@ export class ServiceFertilizerMajorUsagesService {
       throw new NotFoundException('ServiceFertilizerMajorUsage not found');
     }
 
-    serviceFertilizerMajorUsage.removedBy = userId;
+    (serviceFertilizerMajorUsage as any).removedBy = userId;
 
     await this.servFerMajorUsageRepo.remove(serviceFertilizerMajorUsage);
   }
@@ -104,10 +106,10 @@ export class ServiceFertilizerMajorUsagesService {
     updateUid: number,
   ) {
     const serviceFertilizerMajorUsage = this.servFerMajorUsageRepo.create({
-      serviceCategoryId: serviceCategoryId,
-      usageTypeId: usageTypeId,
-      soilGradeLevelId: soilGradeLevelId,
-      updateUid: updateUid,
+      serviceCategoryId,
+      usageTypeId,
+      soilGradeLevelId,
+      updateUid,
     });
     return this.servFerMajorUsageRepo.save(serviceFertilizerMajorUsage);
   }

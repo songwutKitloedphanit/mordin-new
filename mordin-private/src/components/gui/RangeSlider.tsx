@@ -18,24 +18,24 @@ type SliderHandleProps = {
 
 const handleRenderWithTooltip =
   (tooltipValues: number[]) =>
-    (node: ReactElement, props: SliderHandleProps): ReactElement => {
-      const { index } = props;
-      const value = tooltipValues?.[index];
+  (node: ReactElement, props: SliderHandleProps): ReactElement => {
+    const { index } = props;
+    const value = tooltipValues?.[index];
 
-      return (
-        <Tooltip
-          prefixCls="rc-tooltip"
-          overlay={
-            <span>{typeof value === 'number' ? value.toFixed(2) : ''}</span>
-          }
-          trigger={['hover']}
-          placement="top"
-          key={index}
-        >
-          {node}
-        </Tooltip>
-      );
-    };
+    return (
+      <Tooltip
+        prefixCls="rc-tooltip"
+        overlay={
+          <span>{typeof value === 'number' ? value.toFixed(2) : ''}</span>
+        }
+        trigger={['hover']}
+        placement="top"
+        key={index}
+      >
+        {node}
+      </Tooltip>
+    );
+  };
 
 export const DoubleRangeSlider = ({
   min,

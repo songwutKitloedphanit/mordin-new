@@ -341,4 +341,3 @@ const ExamSettingEdit: React.FC = () => {
 };
 
 export default ExamSettingEdit;
-

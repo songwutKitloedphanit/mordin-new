@@ -31,32 +31,51 @@ export const B_LIST = {
   print: { color: 'btn-primary', icon: 'fas fa-print', link: '#' },
 };
 
-// ฟังก์ชัน GenCard1
+// สี bg-* (Kaiadmin เดิม) -> สี accent ของ exec-kpi-card (โทนเดียวกับ mockup)
+const KPI_ACCENTS: Record<string, string> = {
+  'bg-primary': '#005092',
+  'bg-secondary': '#51637a',
+  'bg-info': '#0aa2c0',
+  'bg-success': '#18a05c',
+  'bg-warning': '#d98f0c',
+  'bg-danger': '#d9483b',
+  'bg-purple': '#7a5af5',
+};
+
+// ฟังก์ชัน GenCard1 — การ์ด KPI สรุปตัวเลข (สไตล์เดียวกับ ManagementKpiCard)
 export const GenCard1: React.FC<{
   color: string;
   icon: string;
   num: string | number;
   name: string;
   desc: string;
-}> = ({ color, icon, num, name, desc }) => (
-  <div className="col-sm-6 col-lg-3">
-    <div className="card p-3">
-      <div className="d-flex align-items-center">
-        <span className={`stamp stamp-md ${color} me-3`}>
-          <i className={icon}></i>
-        </span>
+}> = ({ color, icon, num, name, desc }) => {
+  const accent = KPI_ACCENTS[color.trim()] ?? '#005092';
+  return (
+    <div className="col-sm-6 col-lg-3 mb-3">
+      <div
+        className="exec-kpi-card h-100"
+        style={
+          {
+            '--kpi-accent': accent,
+            '--kpi-icon-bg': `${accent}1a`,
+          } as React.CSSProperties
+        }
+      >
         <div>
-          <h5 className="mb-1">
-            <b>
-              {num} <small>{name}</small>
-            </b>
-          </h5>
-          <small className="text-muted">{desc}</small>
+          <div className="exec-kpi-label">{name}</div>
+          <div className="exec-kpi-value-group">
+            <span className="exec-kpi-number">{num}</span>
+          </div>
+          {desc && <div className="exec-kpi-desc">{desc}</div>}
+        </div>
+        <div className="exec-kpi-icon">
+          <i className={icon} />
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ฟังก์ชัน GenButtonCircle
 export const GenButtonCircle: React.FC<{
@@ -75,7 +94,12 @@ export const GenButtonCircle: React.FC<{
     // ถ้าเป็น external link ใช้ <a> tag แทน NavLink
     if (isExternal) {
       return (
-        <a href={link} className={buttonClass} target="_blank" rel="noopener noreferrer">
+        <a
+          href={link}
+          className={buttonClass}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {icon && <i className={icon}></i>}
           {children}
         </a>

@@ -1,11 +1,12 @@
-﻿import JSZip from 'jszip';
+import JSZip from 'jszip';
 import { useRef, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
-import Swal from 'sweetalert2';
+import { swalError, swalLoading, swalClose } from '@/utils/swal';
 
 import { B_LIST, GenButtonCircle } from '../../../components/gui/GuiButton';
 
+import SampleFlow from '@/components/gui/SampleFlow';
 import LeafletMap, { MapMarkerData } from '@/components/map/LeafletMap';
 import { AnalysisReportInfoSummaryCard } from '@/components/pages/analysis-report/AnalysisReportSummaryCard';
 import AnalysisResultTable from '@/components/pages/analysis-report/AnalysisResultTable';
@@ -56,7 +57,12 @@ interface PrintQRCodeProps {
   isLoadingFile?: boolean;
 }
 
-const PrintQRCode = ({ onPrint, onPrintReport, isReportApproved, isLoadingFile }: PrintQRCodeProps) => {
+const PrintQRCode = ({
+  onPrint,
+  onPrintReport,
+  isReportApproved,
+  isLoadingFile,
+}: PrintQRCodeProps) => {
   return (
     <div className="col-md-4">
       <div className="private-card">
@@ -90,7 +96,10 @@ const PrintQRCode = ({ onPrint, onPrintReport, isReportApproved, isLoadingFile }
             <button
               type="button"
               className={`btn ${isReportApproved ? 'btn-secondary' : 'btn-light'}`}
-              style={{ width: '180px', cursor: isReportApproved ? 'pointer' : 'not-allowed' }}
+              style={{
+                width: '180px',
+                cursor: isReportApproved ? 'pointer' : 'not-allowed',
+              }}
               onClick={onPrintReport}
               disabled={!isReportApproved || isLoadingFile}
             >
@@ -171,10 +180,9 @@ const AnalysisReportInfo = () => {
     } catch (error) {
       console.error('Error loading analysis report:', error);
       setLocation([]);
-      Swal.fire(
+      swalError(
         'เกิดข้อผิดพลาด',
-        'ไม่สามารถโหลดข้อมูลรายงานการวิเคราะห์ได้',
-        'error'
+        'ไม่สามารถโหลดข้อมูลรายงานการวิเคราะห์ได้'
       );
     } finally {
       setLoading(false);
@@ -215,20 +223,13 @@ const AnalysisReportInfo = () => {
 
   const handlePrintReport = async () => {
     if (!sampleCode) return;
-    
-    Swal.fire({
-      title: 'กำลังเตรียมไฟล์...',
-      text: 'กรุณารอสักครู่',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+
+    swalLoading('กำลังเตรียมไฟล์…');
 
     try {
       setDownloadingReport(true);
       const zipBlob = await getReportsPdf({ sampleCodes: [sampleCode] });
-      
+
       if (zipBlob.type === 'application/json') {
         const text = await zipBlob.text();
         const error = JSON.parse(text);
@@ -238,7 +239,7 @@ const AnalysisReportInfo = () => {
       const zip = await JSZip.loadAsync(zipBlob);
       const fileNames = Object.keys(zip.files);
       let pdfBuffer: ArrayBuffer | null = null;
-      
+
       for (const fileName of fileNames) {
         if (fileName.toLowerCase().endsWith('.pdf')) {
           pdfBuffer = await zip.files[fileName].async('arraybuffer');
@@ -253,12 +254,12 @@ const AnalysisReportInfo = () => {
       const pdfBlobFile = new Blob([pdfBuffer], { type: 'application/pdf' });
       const blobUrl = URL.createObjectURL(pdfBlobFile);
       window.open(blobUrl, '_blank');
-      
-      Swal.close();
+
+      swalClose();
     } catch (error) {
       console.error('Failed to print report', error);
-      Swal.close();
-      Swal.fire('ข้อผิดพลาด', 'ไม่สามารถสร้างหรือเปิดไฟล์ Report ได้', 'error');
+      swalClose();
+      swalError('ข้อผิดพลาด', 'ไม่สามารถสร้างหรือเปิดไฟล์ Report ได้');
     } finally {
       setDownloadingReport(false);
     }
@@ -268,6 +269,11 @@ const AnalysisReportInfo = () => {
     <>
       {/* Cards Section */}
       <AnalysisReportInfoSummaryCard />
+
+      {/* Timeline สถานะตัวอย่าง */}
+      {!loading && reportData.qrCode?.status && (
+        <SampleFlow status={reportData.qrCode.status} />
+      )}
 
       {/* Farmer and Plot Info Section */}
       <div className="row">
@@ -482,9 +488,7 @@ const AnalysisReportInfo = () => {
                   </div>
                 </div>
               ) : !hasValidLocation ? (
-                <div className="text-center p-5 text-muted">
-                  ไม่พบพิกัดแปลง
-                </div>
+                <div className="text-center p-5 text-muted">ไม่พบพิกัดแปลง</div>
               ) : (
                 <LeafletMap markers={location} />
               )}
@@ -506,21 +510,21 @@ const AnalysisReportInfo = () => {
         <InfoTable
           title="การรับบริการ"
           data={{
-            'รหัสตัวอย่าง': reportData.sampleCode || '-',
+            รหัสตัวอย่าง: reportData.sampleCode || '-',
             'วัน-เวลา ส่งดินวิเคราะห์': TimeStampToDate(
               reportData.sampleReceivedAt
             ),
-            'ประเภทการรับบริการ': reportData.serviceType?.name,
-            'ทดสอบ':
+            ประเภทการรับบริการ: reportData.serviceType?.name,
+            ทดสอบ:
               reportData?.results
                 ?.map(res => res.laboratorySetting.laboratory.shortNameAfter)
                 .join(', ') || '-',
           }}
           loading={loading}
         />
-        <PrintQRCode 
-          onPrint={() => handlePrint()} 
-          onPrintReport={handlePrintReport} 
+        <PrintQRCode
+          onPrint={() => handlePrint()}
+          onPrintReport={handlePrintReport}
           isReportApproved={reportData?.qrCode?.status === 'approved'}
           isLoadingFile={downloadingReport}
         />
@@ -578,4 +582,3 @@ const AnalysisReportInfo = () => {
   );
 };
 export default AnalysisReportInfo;
-

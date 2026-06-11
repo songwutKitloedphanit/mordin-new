@@ -10,15 +10,16 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { QrCodesService } from './qr-codes.service';
-import { CreateQrCodeDto } from './dto/create-qr-code.dto';
-import { UpdateQrCodeDto } from './dto/update-qr-code.dto';
-import { ReceiveSampleDto } from './dto/receive-sample.dto';
-import { ApproveQrCodeDto } from './dto/approve-qr-code.dto';
-import { SearchQrCodeDto } from './dto/search-qr-code.dto';
-import { QrCodeSummaryDto } from './dto/qr-code-summary.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { ApproveQrCodeDto } from './dto/approve-qr-code.dto';
+import { CreateQrCodeDto } from './dto/create-qr-code.dto';
+import { QrCodeSummaryDto } from './dto/qr-code-summary.dto';
+import { ReceiveSampleDto } from './dto/receive-sample.dto';
+import { SearchQrCodeDto } from './dto/search-qr-code.dto';
+import { UpdateQrCodeDto } from './dto/update-qr-code.dto';
+import { QrCodesService } from './qr-codes.service';
 
 @Controller('qr-codes')
 export class QrCodesController {
@@ -32,7 +33,10 @@ export class QrCodesController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createQrCodeDto: CreateQrCodeDto, @User('sub')  userId: number) {
+  create(
+    @Body() createQrCodeDto: CreateQrCodeDto,
+    @User('sub') userId: number
+  ) {
     return this.qrCodesService.create(createQrCodeDto, userId);
   }
 
@@ -53,6 +57,7 @@ export class QrCodesController {
   async getQrCodeSummary(): Promise<QrCodeSummaryDto> {
     return this.qrCodesService.getQrCodeSummary();
   }
+
   @UseGuards(AuthGuard)
   @Get('collected')
   findCollectedQrCodes() {
@@ -89,7 +94,11 @@ export class QrCodesController {
 
   @UseGuards(AuthGuard)
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateQrCodeDto: UpdateQrCodeDto, @User('sub')  userId: number) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateQrCodeDto: UpdateQrCodeDto,
+    @User('sub') userId: number
+  ) {
     return this.qrCodesService.update(id, updateQrCodeDto, userId);
   }
 
@@ -98,7 +107,7 @@ export class QrCodesController {
   receiveSampleByEncryptedCode(
     @Param('code') code: string,
     @Body() receiveSampleDto: ReceiveSampleDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.qrCodesService.receiveQrCodeSampleByEncryptedCode(
       code,
@@ -112,7 +121,7 @@ export class QrCodesController {
   receiveSampleByDecryptedCode(
     @Param('code') code: string,
     @Body() receiveSampleDto: ReceiveSampleDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.qrCodesService.receiveQrCodeSampleByDecryptedCode(
       code,
@@ -140,7 +149,7 @@ export class QrCodesController {
   generateQrCode(
     @Param('number', ParseIntPipe) number: number,
     @Body() createQrCodeDto: CreateQrCodeDto,
-    @User('sub')  userId: number
+    @User('sub') userId: number
   ) {
     return this.qrCodesService.generateQrCode(number, createQrCodeDto, userId);
   }

@@ -1,15 +1,5 @@
-import { Subdistrict } from 'src/address/subdistricts/entities/subdistrict.entity';
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import {
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('shops_logs')
 export class ShopLog extends BaseLogEntity {
@@ -55,5 +45,4 @@ export class ShopLog extends BaseLogEntity {
 
   @Column({ name: 'created_at', type: 'bigint' })
   createdAt: number;
-
 }

@@ -1,9 +1,10 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateFertilizerMinorDto } from './create-fertilizer-minor.dto';
 import { IsNumber, IsString } from 'class-validator';
 
+import { CreateFertilizerMinorDto } from './create-fertilizer-minor.dto';
+
 export class UpdateFertilizerMinorDto extends PartialType(
-  CreateFertilizerMinorDto,
+  CreateFertilizerMinorDto
 ) {
   @IsString()
   name: string;

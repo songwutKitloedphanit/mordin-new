@@ -1,27 +1,29 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateServiceTypeDto } from './dto/create-service-type.dto';
-import { UpdateServiceTypeDto } from './dto/update-service-type.dto';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { ServiceType } from './entities/service-type.entity';
-import { DataSource, In, IsNull, Repository } from 'typeorm';
-import { ServiceLaboratory } from '../service-laboratories/entities/service-laboratory.entity';
-import { ServiceCategory } from '../service-categories/entities/service-category.entity';
-import { SoilGradesService } from 'src/soil-grade/soil-grades/soil-grades.service';
-import { SoilGradeLevelsService } from 'src/soil-grade/soil-grade-levels/soil-grade-levels.service';
-import { ServiceFertilizerMinorsService } from 'src/fertilizer/service-fertilizer-minors/service-fertilizer-minors.service';
-import { UsageType } from 'src/fertilizer/usage-types/entities/usage-type.entity';
-import { SoilGradeLevel } from 'src/soil-grade/soil-grade-levels/entities/soil-grade-level.entity';
-import { SoilGrade } from 'src/soil-grade/soil-grades/entities/soil-grade.entity';
-import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
 import { FertilizerMajor } from 'src/fertilizer/fertilizer-majors/entities/fertilizer-major.entity';
 import { FertilizerMinor } from 'src/fertilizer/fertilizer-minors/entities/fertilizer-minor.entity';
-import { ServiceFertilizerMajorUsagesService } from 'src/fertilizer/service-fertilizer-major-usages/service-fertilizer-major-usages.service';
-import { ResultGradesService } from 'src/result-grade/result-grades/result-grades.service';
-import { ResultGrade } from 'src/result-grade/result-grades/entities/result-grade.entity';
-import { ServiceFertilizerMinor } from 'src/fertilizer/service-fertilizer-minors/entities/service-fertilizer-minor.entity';
 import { ServiceFertilizerMajorUsage } from 'src/fertilizer/service-fertilizer-major-usages/entities/service-fertilizer-major-usage.entity';
+import { ServiceFertilizerMajorUsagesService } from 'src/fertilizer/service-fertilizer-major-usages/service-fertilizer-major-usages.service';
+import { ServiceFertilizerMinor } from 'src/fertilizer/service-fertilizer-minors/entities/service-fertilizer-minor.entity';
+import { ServiceFertilizerMinorsService } from 'src/fertilizer/service-fertilizer-minors/service-fertilizer-minors.service';
+import { UsageType } from 'src/fertilizer/usage-types/entities/usage-type.entity';
+import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
+import { ResultGrade } from 'src/result-grade/result-grades/entities/result-grade.entity';
+import { ResultGradesService } from 'src/result-grade/result-grades/result-grades.service';
+import { SoilGradeLevel } from 'src/soil-grade/soil-grade-levels/entities/soil-grade-level.entity';
+import { SoilGradeLevelsService } from 'src/soil-grade/soil-grade-levels/soil-grade-levels.service';
+import { SoilGrade } from 'src/soil-grade/soil-grades/entities/soil-grade.entity';
+import { SoilGradesService } from 'src/soil-grade/soil-grades/soil-grades.service';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
+
+import { ServiceCategory } from '../service-categories/entities/service-category.entity';
+import { ServiceLaboratory } from '../service-laboratories/entities/service-laboratory.entity';
+
+import { CreateServiceTypeDto } from './dto/create-service-type.dto';
 import { ServiceTypesSummaryDTO } from './dto/service-types-summary.dto';
+import { UpdateServiceTypeDto } from './dto/update-service-type.dto';
+import { ServiceType } from './entities/service-type.entity';
 import { ServiceTypeLog } from './entities/service-type.log.entity';
 
 @Injectable()
@@ -104,7 +106,7 @@ export class ServiceTypesService {
       if (createDto.serviceLaboratories?.length) {
         const serviceLabsToCreate = createDto.serviceLaboratories.map(labDto =>
           servLabRepo.create({
-            serviceTypeId: serviceTypeId,
+            serviceTypeId,
             laboratoryId: labDto.laboratoryId,
             isDisplay: labDto.isDisplay ?? true,
           })
@@ -126,7 +128,7 @@ export class ServiceTypesService {
       const servFerMinorRepo = manager.getRepository(ServiceFertilizerMinor);
       const servFerMinorsToCreate = allFerMinors.map(ferMinor =>
         servFerMinorRepo.create({
-          serviceTypeId: serviceTypeId,
+          serviceTypeId,
           fertilizerMinorId: ferMinor.fertilizerMinorId,
           unitId: ferMinor.unitId,
           updateUid: Uid,
@@ -144,7 +146,7 @@ export class ServiceTypesService {
 
       soilGradesToCreate.push(
         soilGradeRepo.create({
-          serviceTypeId: serviceTypeId,
+          serviceTypeId,
           parameter: 'Total Score',
           updateUid: Uid,
         })
@@ -156,7 +158,7 @@ export class ServiceTypesService {
           if (lab) {
             soilGradesToCreate.push(
               soilGradeRepo.create({
-                serviceTypeId: serviceTypeId,
+                serviceTypeId,
                 laboratoryId: lab.laboratoryId,
                 parameter: `${lab.shortNameAfter} (${lab.unitAfter})`,
                 updateUid: Uid,
@@ -164,7 +166,7 @@ export class ServiceTypesService {
             );
             resultGradesToCreate.push(
               resultGradeRepo.create({
-                serviceTypeId: serviceTypeId,
+                serviceTypeId,
                 laboratoryId: lab.laboratoryId,
                 updatedUid: Uid,
               })
@@ -239,7 +241,7 @@ export class ServiceTypesService {
 
       // --- STEP 4: ดึงข้อมูลล่าสุดกลับไปแสดงผล ---
       return manager.getRepository(ServiceType).findOne({
-        where: { serviceTypeId: serviceTypeId },
+        where: { serviceTypeId },
         // relations ที่ต้องการให้แสดงผลกลับไป (เหมือนใน findOne)
         relations: [
           'serviceCategories',
@@ -656,11 +658,12 @@ export class ServiceTypesService {
     }
 
     // 2. แนบ userId เข้าไปใน property ที่เรานิยามไว้ใน .d.ts
-    servType.removedBy = userId;
+    (servType as any).removedBy = userId;
 
     // 3. ส่ง Entity object ที่แก้ไขแล้วไปให้ .remove()
     await this.servTypeRepo.remove(servType);
   }
+
   async getSummary(): Promise<ServiceTypesSummaryDTO> {
     const [totalServiceTypes, totalServiceLaboratories] = await Promise.all([
       this.servTypeRepo.count(),
@@ -672,6 +675,7 @@ export class ServiceTypesService {
       totalServiceLaboratories,
     };
   }
+
   getLogs() {
     return this.servTypeLog.find();
   }

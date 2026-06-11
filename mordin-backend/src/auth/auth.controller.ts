@@ -1,60 +1,94 @@
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { isAxiosError } from 'axios';
+import { FileLoggerService } from 'src/logger/file-logger.service';
+import { UpdateProfileDto } from 'src/users/dto/update-profile.dto';
+import { UserRoles } from 'src/users/enums/user.enum';
+import { UsersService } from 'src/users/users.service';
+
+import { AuthGuard, RequestWithAuth } from './auth.guard';
+import { csvHeader } from './auth.module';
 import { AuthService } from './auth.service';
 import { AuthenRequest } from './interfaces/authen.request';
-import { BaseResponse } from './interfaces/response';
-import { isAxiosError } from 'axios';
-import { AuthGuard, RequestWithAuth } from './auth.guard';
-import { UsersService } from 'src/users/users.service';
-import { FileLoggerService } from 'src/logger/file-logger.service';
-import { csvHeader } from './auth.module';
-import { ConfigService } from '@nestjs/config';
-import { UserRoles } from 'src/users/enums/user.enum';
 import { AuthenProfileResponse } from './interfaces/authen.response';
-import { UpdateProfileDto } from 'src/users/dto/update-profile.dto';
+import { BaseResponse } from './interfaces/response';
+
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UsersService,
     private readonly fileLoggerService: FileLoggerService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
+
+  private handleError(error: unknown): never {
+    if (isAxiosError(error)) {
+      const response = error.response?.data;
+      const statusCode =
+        error.response?.status || HttpStatus.SERVICE_UNAVAILABLE;
+
+      throw new HttpException(
+        {
+          code: statusCode,
+          message: response?.message || 'Service Unavailable',
+        },
+        statusCode
+      );
+    } else {
+      throw new HttpException(
+        {
+          code: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Internal Server Error',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() body: AuthenRequest): Promise<BaseResponse<{ access_token: string }>> {
+  async login(
+    @Body() body: AuthenRequest
+  ): Promise<BaseResponse<{ access_token: string }>> {
     const timestamp = Date.now();
     const date = new Date(timestamp).toISOString().split('T')[0];
     let _response: AuthenProfileResponse | undefined;
     try {
-      const isDevMode = this.configService.get<string>('ADMIN_USERNAME') === body.username ||
-                        ['admin@KU', 'staff@KU', 'exclusive@KU'].includes(body.username);
-      const response = isDevMode 
-        ? await this.authService.mockLogin(body) 
+      const isDevMode =
+        this.configService.get<string>('ADMIN_USERNAME') === body.username;
+      const response = isDevMode
+        ? await this.authService.mockLogin(body)
         : await this.authService.login(body);
 
-      const { code, message, result: userInfo } = _response = response;
+      const { code, message, result: userInfo } = (_response = response);
 
       if (code !== HttpStatus.OK) {
-        throw new HttpException({
-          code,
-          message,
-        }, code);
-      }
-
-      let expectedRole = UserRoles.Executive;
-      if (body.username === 'admin@KU' || body.username === this.configService.get<string>('ADMIN_USERNAME')) {
-        expectedRole = UserRoles.Admin;
-      } else if (body.username === 'staff@KU') {
-        expectedRole = UserRoles.Staff;
-      } else if (body.username === 'exclusive@KU') {
-        expectedRole = UserRoles.Executive;
+        throw new HttpException(
+          {
+            code,
+            message,
+          },
+          code
+        );
       }
 
       const user = await this.userService.findOrCreateUser(
         body.username,
         Array.isArray(userInfo) ? userInfo[0] : userInfo,
-        expectedRole,
+        isDevMode ? UserRoles.Admin : UserRoles.Executive
       );
 
       const token = await this.authService.generateTokens({
@@ -62,13 +96,13 @@ export class AuthController {
         username: user.username,
         email: user.email,
         role: user.role,
-      })
-      
+      });
+
       this.fileLoggerService.save<typeof csvHeader>({
         type: 'csvAndRaw',
         csvData: {
           userId: user.userId,
-          timestamp: timestamp,
+          timestamp,
         },
         csvFilePath: `history/${date}.csv`,
         data: response,
@@ -80,20 +114,22 @@ export class AuthController {
         message: 'Login Successful',
         data: {
           access_token: token.access_token,
-        }
+        },
       };
     } catch (error) {
       this.fileLoggerService.save<typeof csvHeader>({
         type: 'csvAndRaw',
         csvData: {
           userId: body.username,
-          timestamp: timestamp,
+          timestamp,
         },
         csvFilePath: `history/${date}.csv`,
         data:
           error instanceof HttpException && _response
             ? _response
-            : isAxiosError(error) ? error.response?.data : error,
+            : isAxiosError(error)
+              ? error.response?.data
+              : error,
         rawFilePath: `fail/${body.username}_${timestamp}`,
       });
 
@@ -126,11 +162,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async updateProfile(
     @Req() req: RequestWithAuth,
-    @Body() updateProfileDto: UpdateProfileDto,
+    @Body() updateProfileDto: UpdateProfileDto
   ) {
     const user = await this.userService.updateProfile(
       Number(req.user.sub),
-      updateProfileDto,
+      updateProfileDto
     );
 
     return {
@@ -138,23 +174,5 @@ export class AuthController {
       message: 'Profile updated successfully',
       data: user,
     };
-  }
-
-  private handleError(error: unknown): never {
-    if (isAxiosError(error)) {
-      const response = error.response?.data;
-      const statusCode = error.response?.status || HttpStatus.SERVICE_UNAVAILABLE;
-
-      throw new HttpException({
-        code: statusCode,
-        message: response?.message || 'Service Unavailable',
-      }, statusCode);
-    } else {
-      throw new HttpException({
-        code: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Internal Server Error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
   }
 }

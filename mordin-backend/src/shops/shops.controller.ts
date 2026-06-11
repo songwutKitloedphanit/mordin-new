@@ -1,3 +1,6 @@
+import { createReadStream, existsSync } from 'fs';
+import { extname, join } from 'path';
+
 import {
   Controller,
   Get,
@@ -12,18 +15,16 @@ import {
   UploadedFiles,
   Res,
   NotFoundException,
-  StreamableFile,
 } from '@nestjs/common';
-import { ShopsService } from './shops.service';
-import { CreateShopDto } from './dto/create-shop.dto';
-import { UpdateShopDto } from './dto/update-shop.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
+import { diskStorage } from 'multer';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { createReadStream, existsSync } from 'fs';
-import { Response } from 'express';
+
+import { CreateShopDto } from './dto/create-shop.dto';
+import { UpdateShopDto } from './dto/update-shop.dto';
+import { ShopsService } from './shops.service';
 
 const storage = diskStorage({
   destination: './uploads',
@@ -38,14 +39,14 @@ const storage = diskStorage({
 
 @Controller('shops')
 export class ShopsController {
-  constructor(private readonly shopsService: ShopsService) { }
+  constructor(private readonly shopsService: ShopsService) {}
   @UseGuards(AuthGuard)
   @Post()
   @UseInterceptors(FilesInterceptor('images', 10, { storage }))
   create(
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() createShopDto: CreateShopDto,
-    @User('sub') userId: number,
+    @User('sub') userId: number
   ) {
     if (files && files.length > 0) {
       // Take only the first image
@@ -108,7 +109,7 @@ export class ShopsController {
     @Param('id', ParseIntPipe) id: number,
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() updateShopDto: UpdateShopDto,
-    @User('sub') userId: number,
+    @User('sub') userId: number
   ) {
     // If new file uploaded, replace the old image
     if (files && files.length > 0) {

@@ -240,10 +240,10 @@ class FarmerAPI
         }
     }
 
-    public static function publicLookupByNamePhone($firstName, $phoneNumber)
+    public static function publicLookupByNamePhone($phoneNumber, $birthDate)
     {
         $url = self::getBaseUrl() . 'farmers/public-lookup-by-name-phone';
-        $data = ['firstName' => $firstName, 'phoneNumber' => $phoneNumber];
+        $data = ['phone' => $phoneNumber, 'birthDate' => $birthDate];
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

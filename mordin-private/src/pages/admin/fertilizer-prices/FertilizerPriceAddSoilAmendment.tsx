@@ -235,4 +235,3 @@ const FertilizerPriceAddSoilAmendment: React.FC = () => {
 };
 
 export default FertilizerPriceAddSoilAmendment;
-

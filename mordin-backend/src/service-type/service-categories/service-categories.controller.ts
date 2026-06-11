@@ -8,17 +8,19 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { ServiceCategoriesService } from './service-categories.service';
-import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
-import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+
+import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
+import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
+import { ServiceCategoriesService } from './service-categories.service';
 
 @Controller('service-categories')
 export class ServiceCategoriesController {
   constructor(
     private readonly serviceCategoriesService: ServiceCategoriesService
   ) {}
+
   @UseGuards(AuthGuard)
   @Post()
   create(
@@ -40,20 +42,27 @@ export class ServiceCategoriesController {
   findOne(@Param('id') id: string) {
     return this.serviceCategoriesService.findOne(+id);
   }
+
   @UseGuards(AuthGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
     @Body() updateServiceCategoryDto: UpdateServiceCategoryDto,
-    @User('sub') userId: number,
+    @User('sub') userId: number
   ) {
-    return this.serviceCategoriesService.update(+id, updateServiceCategoryDto,userId);
+    return this.serviceCategoriesService.update(
+      +id,
+      updateServiceCategoryDto,
+      userId
+    );
   }
+
   @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.serviceCategoriesService.remove(+id);
   }
+
   @Get('/log')
   getLogs() {
     return this.serviceCategoriesService.getLogs();

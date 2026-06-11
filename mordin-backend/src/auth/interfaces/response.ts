@@ -10,6 +10,6 @@ export class BaseResponse<T = string> {
   @ApiProperty({ required: false })
   data?: T;
 
-  @ApiProperty({ required: false})
+  @ApiProperty({ required: false })
   error?: string;
 }

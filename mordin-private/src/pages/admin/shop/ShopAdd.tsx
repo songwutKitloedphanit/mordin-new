@@ -1,4 +1,4 @@
-﻿import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -26,7 +26,7 @@ const KPI_CONFIG = [
     key: 'totalShops' as keyof ShopSummary,
     label: 'ร้านค้าทั้งหมด',
     icon: 'fas fa-store',
-    accent: '#31CE36',
+    accent: '#18a05c',
     unit: 'ร้าน',
   },
 ];
@@ -57,12 +57,21 @@ const ShopAdd = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [defaultCenter, setDefaultCenter] = useState({ lat: 13.736717, lng: 100.523186 });
+  const [defaultCenter, setDefaultCenter] = useState({
+    lat: 13.736717,
+    lng: 100.523186,
+  });
   const [location, setLocation] = useState<{ lat: number; lng: number }>();
 
-  const [provinceOptions, setProvinceOptions] = useState<{ value: string; name: string }[]>([]);
-  const [districtOptions, setDistrictOptions] = useState<{ value: string; name: string }[]>([]);
-  const [subdistrictOptions, setSubdistrictOptions] = useState<SubdistrictOption[]>([]);
+  const [provinceOptions, setProvinceOptions] = useState<
+    { value: string; name: string }[]
+  >([]);
+  const [districtOptions, setDistrictOptions] = useState<
+    { value: string; name: string }[]
+  >([]);
+  const [subdistrictOptions, setSubdistrictOptions] = useState<
+    SubdistrictOption[]
+  >([]);
 
   const [selectedProvinceId, setSelectedProvinceId] = useState('');
   const [selectedDistrictId, setSelectedDistrictId] = useState('');
@@ -90,13 +99,20 @@ const ShopAdd = () => {
 
   const handleProvinceChange = async (e: ChangeEvent<HTMLSelectElement>) => {
     const provinceId = e.target.value;
-    const provinceName = provinceOptions.find(p => p.value === provinceId)?.name || '';
+    const provinceName =
+      provinceOptions.find(p => p.value === provinceId)?.name || '';
     setSelectedProvinceId(provinceId);
     setSelectedDistrictId('');
     setSelectedSubdistrictId('');
     setDistrictOptions([]);
     setSubdistrictOptions([]);
-    setForm(prev => ({ ...prev, province: provinceName, district: '', subdistrict: '', zipcode: '' }));
+    setForm(prev => ({
+      ...prev,
+      province: provinceName,
+      district: '',
+      subdistrict: '',
+      zipcode: '',
+    }));
     if (provinceId) {
       try {
         const districts = await getDistrictsByProvinceCode(Number(provinceId));
@@ -114,22 +130,36 @@ const ShopAdd = () => {
 
   const handleDistrictChange = async (e: ChangeEvent<HTMLSelectElement>) => {
     const districtId = e.target.value;
-    const districtName = districtOptions.find(d => d.value === districtId)?.name || '';
+    const districtName =
+      districtOptions.find(d => d.value === districtId)?.name || '';
     setSelectedDistrictId(districtId);
     setSelectedSubdistrictId('');
     setSubdistrictOptions([]);
-    setForm(prev => ({ ...prev, district: districtName, subdistrict: '', zipcode: '' }));
+    setForm(prev => ({
+      ...prev,
+      district: districtName,
+      subdistrict: '',
+      zipcode: '',
+    }));
     if (districtId) {
       try {
         const subs = await getSubdistrictsByDistrictCode(Number(districtId));
         setSubdistrictOptions(
-          subs.map((s: { code: number; nameTh: string; zipCode?: string; latitude?: number; longitude?: number }) => ({
-            value: String(s.code),
-            name: s.nameTh,
-            zipCode: s.zipCode,
-            latitude: s.latitude,
-            longitude: s.longitude,
-          }))
+          subs.map(
+            (s: {
+              code: number;
+              nameTh: string;
+              zipCode?: string;
+              latitude?: number;
+              longitude?: number;
+            }) => ({
+              value: String(s.code),
+              name: s.nameTh,
+              zipCode: s.zipCode,
+              latitude: s.latitude,
+              longitude: s.longitude,
+            })
+          )
         );
       } catch (err) {
         console.error(err);
@@ -142,9 +172,16 @@ const ShopAdd = () => {
     const selectedSub = subdistrictOptions.find(s => s.value === subdistrictId);
     setSelectedSubdistrictId(subdistrictId);
     if (selectedSub) {
-      setForm(prev => ({ ...prev, subdistrict: selectedSub.name, zipcode: selectedSub.zipCode || '' }));
+      setForm(prev => ({
+        ...prev,
+        subdistrict: selectedSub.name,
+        zipcode: selectedSub.zipCode || '',
+      }));
       if (selectedSub.latitude && selectedSub.longitude) {
-        setDefaultCenter({ lat: selectedSub.latitude, lng: selectedSub.longitude });
+        setDefaultCenter({
+          lat: selectedSub.latitude,
+          lng: selectedSub.longitude,
+        });
         setLocation({ lat: selectedSub.latitude, lng: selectedSub.longitude });
       }
     } else {
@@ -374,14 +411,19 @@ const ShopAdd = () => {
                 placeholder="ระบุลิงก์ Google Map"
                 isRequired={false}
                 value={form.shopAddress}
-                onChange={e => setForm({ ...form, shopAddress: e.target.value })}
+                onChange={e =>
+                  setForm({ ...form, shopAddress: e.target.value })
+                }
               />
               <GenFormSelect
                 id="province"
                 name="province"
                 label="จังหวัด"
                 isRequired
-                options={[{ value: '', name: 'เลือกจังหวัด' }, ...provinceOptions]}
+                options={[
+                  { value: '', name: 'เลือกจังหวัด' },
+                  ...provinceOptions,
+                ]}
                 value={selectedProvinceId}
                 onChange={handleProvinceChange}
               />
@@ -393,7 +435,10 @@ const ShopAdd = () => {
                 name="district"
                 label="อำเภอ"
                 isRequired
-                options={[{ value: '', name: 'เลือกอำเภอ' }, ...districtOptions]}
+                options={[
+                  { value: '', name: 'เลือกอำเภอ' },
+                  ...districtOptions,
+                ]}
                 value={selectedDistrictId}
                 onChange={handleDistrictChange}
               />
@@ -405,7 +450,10 @@ const ShopAdd = () => {
                 name="subdistrict"
                 label="ตำบล"
                 isRequired
-                options={[{ value: '', name: 'เลือกตำบล' }, ...subdistrictOptions]}
+                options={[
+                  { value: '', name: 'เลือกตำบล' },
+                  ...subdistrictOptions,
+                ]}
                 value={selectedSubdistrictId}
                 onChange={handleSubdistrictChange}
               />
@@ -515,4 +563,3 @@ const ShopAdd = () => {
 };
 
 export default ShopAdd;
-

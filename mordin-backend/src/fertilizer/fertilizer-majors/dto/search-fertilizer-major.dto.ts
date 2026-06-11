@@ -1,5 +1,5 @@
-import { BaseSearchDto } from "src/common/dto/base-search.dto";
+import { BaseSearchDto } from 'src/common/dto/base-search.dto';
 
 export class SearchFertilizerMajorDto extends BaseSearchDto {
-    override sortBy: string = 'fertilizerMajorId';
+  override sortBy: string = 'fertilizerMajorId';
 }

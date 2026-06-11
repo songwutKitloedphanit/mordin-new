@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
-import { StandardCertificatesService } from './standard-certificates.service';
-import { StandardCertificatesController } from './standard-certificates.controller';
-import { StandardCertificate } from './entities/standard-certificate.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Laboratory } from 'src/laboratory/laboratories/entities/laboratory.entity';
+
 import { Standard } from '../standards/entities/standard.entity';
+
+import { StandardCertificate } from './entities/standard-certificate.entity';
 import { StandardCertificateLog } from './entities/standard-certificate.log.entity';
+import { StandardCertificatesController } from './standard-certificates.controller';
+import { StandardCertificatesService } from './standard-certificates.service';
 
 @Module({
   imports: [
@@ -13,11 +15,11 @@ import { StandardCertificateLog } from './entities/standard-certificate.log.enti
       StandardCertificate,
       Standard,
       Laboratory,
-      StandardCertificateLog
+      StandardCertificateLog,
     ]),
   ],
   controllers: [StandardCertificatesController],
   providers: [StandardCertificatesService],
   exports: [StandardCertificatesService],
 })
-export class StandardCertificatesModule { }
+export class StandardCertificatesModule {}

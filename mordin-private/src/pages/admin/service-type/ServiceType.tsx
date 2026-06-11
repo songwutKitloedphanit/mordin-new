@@ -51,7 +51,9 @@ const ServiceType = () => {
                     key={t.serviceTypeId}
                     className="col-xl-3 col-lg-4 col-md-6"
                   >
-                    <div className={`private-pricing-card private-pricing-card-${t.color}`}>
+                    <div
+                      className={`private-pricing-card private-pricing-card-${t.color}`}
+                    >
                       <div className="pricing-header">
                         <div className="d-flex align-items-start justify-content-between mb-2">
                           <h3 className="fw-bold mb-0">{t.name}</h3>
@@ -132,4 +134,3 @@ const ServiceType = () => {
 };
 
 export default ServiceType;
-

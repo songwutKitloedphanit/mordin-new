@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
-import { StandardsService } from './standards.service';
-import { StandardsController } from './standards.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Standard } from './entities/standard.entity';
-import { StandardCertificate } from '../standard-certificates/entities/standard-certificate.entity';
-import { StandardLog } from './entities/standard.log.entity';
+
 import { AnalysisStandard } from '../analysis-standards/entities/analysis-standard.entity';
+import { StandardCertificate } from '../standard-certificates/entities/standard-certificate.entity';
+
+import { Standard } from './entities/standard.entity';
+import { StandardLog } from './entities/standard.log.entity';
+import { StandardsController } from './standards.controller';
+import { StandardsService } from './standards.service';
 
 @Module({
   imports: [
@@ -13,10 +15,10 @@ import { AnalysisStandard } from '../analysis-standards/entities/analysis-standa
       Standard,
       StandardCertificate,
       StandardLog,
-      AnalysisStandard
-    ])
+      AnalysisStandard,
+    ]),
   ],
   controllers: [StandardsController],
   providers: [StandardsService],
 })
-export class StandardsModule { }
+export class StandardsModule {}

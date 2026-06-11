@@ -138,5 +138,3 @@ const TableWithCheckbox = ({
 };
 
 export default TableWithCheckbox;
-
-

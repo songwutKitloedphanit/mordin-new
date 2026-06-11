@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import Swal from 'sweetalert2';
 
 import { swalConfirm, swalConfirmDelete } from '@/utils/swal';
 
@@ -19,18 +18,19 @@ const ConfirmAlert: React.FC<ConfirmAlertProps> = ({
   onCancel,
 }) => {
   useEffect(() => {
-    const fire = action === 'delete'
-      ? swalConfirmDelete(title, text)
-      : swalConfirm(title, text);
+    const fire =
+      action === 'delete'
+        ? swalConfirmDelete(title, text)
+        : swalConfirm(title, text);
 
     fire.then(result => {
       if (result.isConfirmed) {
         onConfirm();
-      } else if (result.dismiss === Swal.DismissReason.cancel && onCancel) {
+      } else if (onCancel) {
         onCancel();
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;

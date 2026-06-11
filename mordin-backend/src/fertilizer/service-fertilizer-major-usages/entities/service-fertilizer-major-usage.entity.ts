@@ -51,22 +51,16 @@ export class ServiceFertilizerMajorUsage {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
 
   @ManyToOne(
     () => ServiceCategory,
-    (serviceCategory) => serviceCategory.serviceFertilizerMajorUsages,
+    serviceCategory => serviceCategory.serviceFertilizerMajorUsages,
     {
       onDelete: 'CASCADE',
-    },
+    }
   )
   @JoinColumn({ name: 'service_category_id' })
   serviceCategory: ServiceCategory;
@@ -82,4 +76,10 @@ export class ServiceFertilizerMajorUsage {
   @ManyToOne(() => FertilizerMajor)
   @JoinColumn({ name: 'fertilizer_major_id' })
   fertilizerMajor: FertilizerMajor;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

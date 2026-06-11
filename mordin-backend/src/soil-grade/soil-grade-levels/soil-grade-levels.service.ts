@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateSoilGradeLevelDto } from './dto/create-soil-grade-level.dto';
 import { UpdateSoilGradeLevelDto } from './dto/update-soil-grade-level.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { SoilGradeLevel } from './entities/soil-grade-level.entity';
-import { Repository } from 'typeorm';
 import { SoilGradeLevelLog } from './entities/soil-grade-level.log.entity';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class SoilGradeLevelsService {
     @InjectRepository(SoilGradeLevelLog)
     private readonly soilGradeLevelLog: Repository<SoilGradeLevelLog>
   ) {}
+
   create(createSoilGradeLevelDto: CreateSoilGradeLevelDto, Uid: number) {
     return 'This action adds a new soilGradeLevel';
   }
@@ -45,7 +47,7 @@ export class SoilGradeLevelsService {
     }
 
     // 2. แนบ userId เข้าไปใน property ที่เรานิยามไว้ใน .d.ts
-    soil_grade_level.removedBy = userId;
+    (soil_grade_level as any).removedBy = userId;
 
     // 3. ส่ง Entity object ที่แก้ไขแล้วไปให้ .remove()
     await this.soilGradeLevelRepo.remove(soil_grade_level);
@@ -59,13 +61,13 @@ export class SoilGradeLevelsService {
     ];
     for (const { level, score, cutoffText } of levelMappings) {
       const soilGradeLevel = this.soilGradeLevelRepo.create({
-        soilGradeId: soilGradeId,
+        soilGradeId,
         level,
         score,
         scoreName: cutoffText,
         cutoffValue: 0,
         cutoffText: '',
-        updateUid: updateUid,
+        updateUid,
       });
       await this.soilGradeLevelRepo.save(soilGradeLevel);
     }
@@ -82,13 +84,13 @@ export class SoilGradeLevelsService {
     ];
     for (const { level, score, cutoffText } of levelMappings) {
       const soilGradeLevel = this.soilGradeLevelRepo.create({
-        soilGradeId: soilGradeId,
+        soilGradeId,
         level,
         score,
         scoreName: cutoffText,
         cutoffValue: 0,
         cutoffText: '',
-        updateUid: updateUid,
+        updateUid,
       });
       await this.soilGradeLevelRepo.save(soilGradeLevel);
     }

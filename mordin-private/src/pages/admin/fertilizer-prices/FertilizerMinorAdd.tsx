@@ -247,4 +247,3 @@ const FertilizerMionorAdd: React.FC = () => {
 };
 
 export default FertilizerMionorAdd;
-

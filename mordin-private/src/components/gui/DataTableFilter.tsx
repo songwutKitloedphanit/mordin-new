@@ -114,8 +114,8 @@ export const DataTableFilter: React.FC<DataTableFilterProps> = ({
                   const rawText =
                     typeof d === 'object'
                       ? $(d as Node)
-                        .text()
-                        .trim()
+                          .text()
+                          .trim()
                       : String(d).trim();
                   if (rawText && !isHtml(rawText)) {
                     const escapedText = $('<div>').text(rawText).html();

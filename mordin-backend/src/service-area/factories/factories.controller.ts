@@ -14,6 +14,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { User } from 'src/auth/decorators/user.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { UserRoles } from 'src/users/enums/user.enum';
+
 import { CreateFactoryDto } from './dto/create-factory.dto';
 import { UpdateFactoryDto } from './dto/update-factory.dto';
 import { FactoriesService } from './factories.service';
@@ -82,10 +83,7 @@ export class FactoriesController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRoles.Admin)
   @Delete(':id')
-  remove(
-    @Param('id', ParseIntPipe) id: number,
-    @User('sub') userId: number
-  ) {
+  remove(@Param('id', ParseIntPipe) id: number, @User('sub') userId: number) {
     return this.factoriesService.remove(id, userId);
   }
 }

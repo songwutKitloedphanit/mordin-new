@@ -74,7 +74,7 @@ const LeafletMap = ({ markers, height = '500px' }: MapProps) => {
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#f5f5f5',
-          border: '1px solid #ddd'
+          border: '1px solid #ddd',
         }}
       >
         <p style={{ color: '#666', margin: 0 }}>ไม่พบข้อมูลพิกัด</p>

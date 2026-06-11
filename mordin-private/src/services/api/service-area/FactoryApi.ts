@@ -22,7 +22,10 @@ export async function getAllFactoriesManagement() {
 
 export async function createFactory(factoryFormData: FactoryCreateInterface) {
   try {
-    const response = await api.post('/factories', sanitizeFactory(factoryFormData));
+    const response = await api.post(
+      '/factories',
+      sanitizeFactory(factoryFormData)
+    );
     return response.data;
   } catch (error) {
     console.error('Can not create factories: ', error);
@@ -61,21 +64,12 @@ export async function updateFactoryById(
   }
 }
 
-function sanitizeFactory<T extends FactoryCreateInterface | FactoryUpdateInterface>(
-  factory: T
-) {
-  const sanitizeAreas = (areas: import('@/types/service-area/ServiceAreas').ServiceAreaInputInterface[] = []) =>
-    areas.map(
-      ({
-        clientKey: _clientKey,
-        isActive: _isActive,
-        isUsed: _isUsed,
-        effectiveFrom: _effectiveFrom,
-        effectiveTo: _effectiveTo,
-        supersededByServiceAreaId: _supersededByServiceAreaId,
-        ...area
-      }) => area
-    );
+function sanitizeFactory<
+  T extends FactoryCreateInterface | FactoryUpdateInterface,
+>(factory: T) {
+  const sanitizeAreas = (
+    areas: import('@/types/service-area/ServiceAreas').ServiceAreaInputInterface[] = []
+  ) => areas.map(({ clientKey: _clientKey, ...area }) => area);
   return {
     ...factory,
     serviceAreas: sanitizeAreas(factory.serviceAreas),

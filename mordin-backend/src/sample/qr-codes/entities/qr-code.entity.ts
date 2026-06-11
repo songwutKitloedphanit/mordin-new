@@ -1,5 +1,8 @@
 import { Book } from 'src/sample/books/entities/book.entity';
-import { QrCodeTypeEnum, SampleStatusEnum } from 'src/sample/enums/qr-code.enum';
+import {
+  QrCodeTypeEnum,
+  SampleStatusEnum,
+} from 'src/sample/enums/qr-code.enum';
 import { ServiceArea } from 'src/service-area/service-areas/entities/service-area.entity';
 import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -10,7 +13,6 @@ import {
   JoinColumn,
   ManyToOne,
   OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
@@ -36,10 +38,20 @@ export class QrCode {
   @Column({ name: 'service_calendar_id', type: 'int', nullable: true })
   serviceCalendarId: number;
 
-  @Column({ name: 'dirt_weight_om', type: 'float', nullable: true, default: 0.0025 })
+  @Column({
+    name: 'dirt_weight_om',
+    type: 'float',
+    nullable: true,
+    default: 0.0025,
+  })
   dirtWeightOm: number;
 
-  @Column({ name: 'dirt_weight_mehlich', type: 'float', nullable: true, default: 0.003 })
+  @Column({
+    name: 'dirt_weight_mehlich',
+    type: 'float',
+    nullable: true,
+    default: 0.003,
+  })
   dirtWeightMehlich: number;
 
   @Column({ name: 'first_name', type: 'varchar', length: 100, nullable: true })
@@ -51,9 +63,14 @@ export class QrCode {
   @Column({ name: 'phone_number', type: 'varchar', length: 10, nullable: true })
   phoneNumber: string;
 
-  @Column({ name: 'status', type: 'enum' , enum: SampleStatusEnum , default: SampleStatusEnum.DISTRIBUTED })
+  @Column({
+    name: 'status',
+    type: 'enum',
+    enum: SampleStatusEnum,
+    default: SampleStatusEnum.DISTRIBUTED,
+  })
   status: SampleStatusEnum;
-  
+
   @Column({
     type: 'varchar',
     length: 13,
@@ -83,7 +100,7 @@ export class QrCode {
   @JoinColumn({ name: 'service_area_id' })
   serviceArea: ServiceArea;
 
-  @OneToOne(() => Book, (book) => book.qrCode, {
+  @OneToOne(() => Book, book => book.qrCode, {
     cascade: true,
   })
   book: Book;

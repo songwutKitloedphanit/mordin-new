@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateMachineTypeDto } from './dto/create-machine-type.dto';
 import { UpdateMachineTypeDto } from './dto/update-machine-type.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { MachineType } from './entities/machine-type.entity';
-import { Repository } from 'typeorm';
 import { MachineTypeLog } from './entities/machine-type.log.entity';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class MachineTypesService {
     @InjectRepository(MachineTypeLog)
     private matchineTypeLog: Repository<MachineTypeLog>
   ) {}
+
   create(createMachineTypeDto: CreateMachineTypeDto, Uid: number) {
     const machineType = this.machineTypeRepository.create({
       ...createMachineTypeDto,
@@ -33,7 +35,11 @@ export class MachineTypesService {
     });
   }
 
-  async update(id: number, updateMachineTypeDto: UpdateMachineTypeDto, Uid: number) {
+  async update(
+    id: number,
+    updateMachineTypeDto: UpdateMachineTypeDto,
+    Uid: number
+  ) {
     const machineType = await this.machineTypeRepository.findOneBy({
       machineTypeId: id,
     });
@@ -47,7 +53,7 @@ export class MachineTypesService {
   }
 
   async remove(id: number): Promise<void> {
-    const userId = 99; 
+    const userId = 99;
 
     const machineType = await this.machineTypeRepository.findOneBy({
       machineTypeId: id,
@@ -57,7 +63,7 @@ export class MachineTypesService {
       throw new NotFoundException('Machine type not found');
     }
 
-    machineType.removedBy = userId; 
+    (machineType as any).removedBy = userId;
 
     await this.machineTypeRepository.remove(machineType);
   }

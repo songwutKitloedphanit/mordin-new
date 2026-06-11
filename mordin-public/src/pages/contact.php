@@ -16,9 +16,19 @@ $mitrLocation = [
 include_once COMPONENT_PATH . 'lib_header.php';
 ?>
 
+<link rel="stylesheet" href="/assets/css/leaflet.css">
+
+<div class="ag-page-banner">
+  <div class="container-xl ag-page-banner-inner">
+    <div class="ag-kicker"><i class="bi bi-envelope-fill me-1"></i>Contact</div>
+    <h1>ติดต่อเรา</h1>
+    <p>ท่านสามารถสอบถามข้อมูลต่าง ๆ ทางช่องทางออนไลน์ ทางโทรศัพท์ หรืออีเมล</p>
+  </div>
+</div>
+
 <section id="contact" class="contact section">
 
-    <div class="mb-5" data-aos="fade-up" data-aos-delay="200">
+    <div class="mb-5 scroll-reveal">
         <?php
         $mapId = 'contact-map';
         $mapHeight = '400px';
@@ -37,7 +47,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
         ?>
     </div>
 
-    <div class="container" data-aos="fade-up" data-aos-delay="100">
+    <div class="container scroll-reveal stagger-1">
 
         <div class="section-title mb-4">
             <h2>ติดต่อเรา</h2>
@@ -46,7 +56,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
 
         <div class="row gy-4">
 
-            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="col-lg-4 col-md-6 scroll-reveal stagger-1">
                 <div class="info-item d-flex">
                     <i class="bi bi-geo-alt"></i>
                     <div>
@@ -58,7 +68,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="col-lg-4 col-md-6 scroll-reveal stagger-2">
                 <div class="info-item d-flex">
                     <i class="bi bi-telephone"></i>
                     <div>
@@ -70,7 +80,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+            <div class="col-lg-4 col-md-6 scroll-reveal stagger-3">
                 <div class="info-item d-flex">
                     <i class="bi bi-envelope"></i>
                     <div>

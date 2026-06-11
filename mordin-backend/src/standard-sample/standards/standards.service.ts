@@ -1,12 +1,18 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { AnalysisStandard } from '../analysis-standards/entities/analysis-standard.entity';
+import { StandardCertificate } from '../standard-certificates/entities/standard-certificate.entity';
+
 import { CreateStandardDto } from './dto/create-standard.dto';
 import { UpdateStandardDto } from './dto/update-standard.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Standard } from './entities/standard.entity';
-import { Repository } from 'typeorm';
-import { StandardCertificate } from '../standard-certificates/entities/standard-certificate.entity';
 import { StandardLog } from './entities/standard.log.entity';
-import { AnalysisStandard } from '../analysis-standards/entities/analysis-standard.entity';
 
 @Injectable()
 export class StandardsService {
@@ -21,7 +27,7 @@ export class StandardsService {
 
     @InjectRepository(AnalysisStandard)
     private readonly analysisStandardRepo: Repository<AnalysisStandard>
-  ) { }
+  ) {}
 
   async create(createStandardDto: CreateStandardDto, Uid: number) {
     const { standardName, standardCertificates } = createStandardDto;
@@ -110,7 +116,7 @@ export class StandardsService {
     }
 
     // 2. แนบ userId เข้าไปใน property ที่เรานิยามไว้ใน .d.ts
-    standard.removedBy = userId;
+    (standard as any).removedBy = userId;
 
     // 3. ส่ง Entity object ที่แก้ไขแล้วไปให้ .remove()
     await this.standardRepo.remove(standard);

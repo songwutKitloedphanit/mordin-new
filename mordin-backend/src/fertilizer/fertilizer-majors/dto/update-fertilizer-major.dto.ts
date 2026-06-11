@@ -1,18 +1,18 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateFertilizerMajorDto } from './create-fertilizer-major.dto';
 import {
   IsEnum,
   IsInt,
   IsNumber,
   IsOptional,
   IsString,
-  MaxLength,
   Min,
 } from 'class-validator';
 import { FertilizerMajorTypes } from 'src/fertilizer/enums/fertilizer.enum';
 
+import { CreateFertilizerMajorDto } from './create-fertilizer-major.dto';
+
 export class UpdateFertilizerMajorDto extends PartialType(
-  CreateFertilizerMajorDto,
+  CreateFertilizerMajorDto
 ) {
   @IsEnum(FertilizerMajorTypes)
   type: FertilizerMajorTypes;

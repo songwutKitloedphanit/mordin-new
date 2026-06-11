@@ -1,11 +1,7 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import {
-  Column,
-  Entity,
-  PrimaryColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 @Entity('laboratory_setting_details_logs')
-export class LaboratorySettingDetailLog extends BaseLogEntity{
+export class LaboratorySettingDetailLog extends BaseLogEntity {
   @PrimaryColumn({ name: 'laboratory_setting_id' })
   laboratorySettingId: number;
 

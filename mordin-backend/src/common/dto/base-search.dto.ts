@@ -23,10 +23,12 @@ export class BaseSearchDto {
   // ต้อง override ใน dto ที่ extend BaseSearchDto เพราะต้อง deafault ตาม field ทีของ entity นั้นๆ
   @IsOptional()
   @IsString()
-  sortBy?: string; 
+  sortBy?: string;
 
   @IsOptional()
-  @Transform(({ value }) => value?.toUpperCase?.() === 'DESC' ? 'DESC' : 'ASC')
+  @Transform(({ value }) =>
+    value?.toUpperCase?.() === 'DESC' ? 'DESC' : 'ASC'
+  )
   @IsIn(['ASC', 'DESC'])
   order?: 'ASC' | 'DESC' = 'ASC';
 }

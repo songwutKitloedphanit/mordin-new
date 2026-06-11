@@ -163,87 +163,87 @@ const ServiceFertilizerMajor = ({
                   </div>
                 </div>
               ) : // ตรวจสอบว่ามีข้อมูลใน ratonCane หรือไม่
-                isEmpty ? (
-                  <p className="text-center text-muted">
-                    ยังไม่มีการบันทึกข้อมูล
-                  </p>
-                ) : (
-                  <table className="table table-bordered">
-                    <thead>
-                      <tr>
-                        <th rowSpan={2}>เกรดดิน</th>
-                        {tHeadItems?.map(
-                          (serviceFertilizerMajorUsages, index) => (
-                            <React.Fragment key={index}>
-                              <th rowSpan={2}>
-                                {serviceFertilizerMajorUsages?.usageType?.name}
-                              </th>
-                              <th rowSpan={2}>
-                                อัตราการใช้ (
-                                {
-                                  serviceFertilizerMajorUsages?.fertilizerMajor
-                                    ?.unit?.name
-                                }
-                                )
-                              </th>
-                            </React.Fragment>
-                          )
-                        )}
-                        <th colSpan={3} className="text-center">
-                          ธาตุอาหารรวม
-                        </th>
-                        <th rowSpan={2}>ต้นทุนปุ๋ยต่อไร่ (บาท)</th>
-                      </tr>
-                      <tr>
-                        <th>N</th>
-                        <th>P</th>
-                        <th>K</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {soilGrades?.map((grade, index) => (
-                        <tr key={index}>
-                          <td>{grade?.scoreName}</td>
-                          {Array.from({
-                            length: Math.max(
-                              ...soilGrades.map(
-                                item => item.serviceFertilizerMajorUsages.length
+              isEmpty ? (
+                <p className="text-center text-muted">
+                  ยังไม่มีการบันทึกข้อมูล
+                </p>
+              ) : (
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th rowSpan={2}>เกรดดิน</th>
+                      {tHeadItems?.map(
+                        (serviceFertilizerMajorUsages, index) => (
+                          <React.Fragment key={index}>
+                            <th rowSpan={2}>
+                              {serviceFertilizerMajorUsages?.usageType?.name}
+                            </th>
+                            <th rowSpan={2}>
+                              อัตราการใช้ (
+                              {
+                                serviceFertilizerMajorUsages?.fertilizerMajor
+                                  ?.unit?.name
+                              }
                               )
-                            ),
-                          }).map((_, index) => (
-                            <React.Fragment key={index}>
-                              {grade.serviceFertilizerMajorUsages[index] ? (
-                                <>
-                                  <td>
-                                    {
-                                      grade?.serviceFertilizerMajorUsages[index]
-                                        ?.fertilizerMajor?.formular
-                                    }
-                                  </td>
-                                  <td>
-                                    {
-                                      grade?.serviceFertilizerMajorUsages[index]
-                                        ?.fertilizerMajor?.quantity
-                                    }
-                                  </td>
-                                </>
-                              ) : (
-                                <>
-                                  <td>-</td>
-                                  <td>-</td>
-                                </>
-                              )}
-                            </React.Fragment>
-                          ))}
-                          <td>{grade?.N ? grade.N : "-"}</td>
-                          <td>{grade?.P ? grade.P : "-"}</td>
-                          <td>{grade?.K ? grade.K : "-"}</td>
-                          <td>{grade?.total ? grade.total : "-"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                            </th>
+                          </React.Fragment>
+                        )
+                      )}
+                      <th colSpan={3} className="text-center">
+                        ธาตุอาหารรวม
+                      </th>
+                      <th rowSpan={2}>ต้นทุนปุ๋ยต่อไร่ (บาท)</th>
+                    </tr>
+                    <tr>
+                      <th>N</th>
+                      <th>P</th>
+                      <th>K</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {soilGrades?.map((grade, index) => (
+                      <tr key={index}>
+                        <td>{grade?.scoreName}</td>
+                        {Array.from({
+                          length: Math.max(
+                            ...soilGrades.map(
+                              item => item.serviceFertilizerMajorUsages.length
+                            )
+                          ),
+                        }).map((_, index) => (
+                          <React.Fragment key={index}>
+                            {grade.serviceFertilizerMajorUsages[index] ? (
+                              <>
+                                <td>
+                                  {
+                                    grade?.serviceFertilizerMajorUsages[index]
+                                      ?.fertilizerMajor?.formular
+                                  }
+                                </td>
+                                <td>
+                                  {
+                                    grade?.serviceFertilizerMajorUsages[index]
+                                      ?.fertilizerMajor?.quantity
+                                  }
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td>-</td>
+                                <td>-</td>
+                              </>
+                            )}
+                          </React.Fragment>
+                        ))}
+                        <td>{grade?.N ? grade.N : '-'}</td>
+                        <td>{grade?.P ? grade.P : '-'}</td>
+                        <td>{grade?.K ? grade.K : '-'}</td>
+                        <td>{grade?.total ? grade.total : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>
@@ -253,4 +253,3 @@ const ServiceFertilizerMajor = ({
 };
 
 export default ServiceFertilizerMajor;
-

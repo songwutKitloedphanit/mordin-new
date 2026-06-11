@@ -11,37 +11,39 @@ import {
   BadRequestException,
   UseGuards,
 } from '@nestjs/common';
-import { ResultsService } from './results.service';
-import { CreateResultDto } from './dto/create-result.dto';
-import { UpdateResultDto } from './dto/update-result.dto';
-import { InputResultDto } from './dto/input-result.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
-import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { User } from 'src/auth/decorators/user.decorator';
+import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
+import { Repository } from 'typeorm';
+
+import { CreateResultDto } from './dto/create-result.dto';
+import { InputResultDto } from './dto/input-result.dto';
+import { UpdateResultDto } from './dto/update-result.dto';
+import { ResultsService } from './results.service';
 
 @Controller('results')
 export class ResultsController {
   constructor(
     private readonly resultsService: ResultsService,
     @InjectRepository(ServiceCalendar)
-    private readonly calRepo: Repository<ServiceCalendar>,
-  ) { }
+    private readonly calRepo: Repository<ServiceCalendar>
+  ) {}
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createResultDto: CreateResultDto, @User('sub')  userId: number) {
+  create(
+    @Body() createResultDto: CreateResultDto,
+    @User('sub') userId: number
+  ) {
     return this.resultsService.create(createResultDto, userId);
   }
 
   @UseGuards(AuthGuard)
   @Post('upload/csv')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadCsvAndUpdateResults(
-    @UploadedFile() file: Express.Multer.File
-  ) {
+  async uploadCsvAndUpdateResults(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('CSV file is required.');
 
     // 1) parse filename: Labresult_2025-07-12_1.csv
@@ -59,7 +61,7 @@ export class ResultsController {
 
     // 2) look up the calendar
     const cal = await this.calRepo.findOne({
-      where: { date, busId }
+      where: { date, busId },
     });
     if (!cal) {
       throw new BadRequestException(
@@ -76,7 +78,7 @@ export class ResultsController {
 
   @UseGuards(AuthGuard)
   @Patch('input')
-  inputPreValue(@Body() inputs: InputResultDto[] , @User('sub')  userId: number) {
+  inputPreValue(@Body() inputs: InputResultDto[], @User('sub') userId: number) {
     return this.resultsService.updateResultFromPreValue(inputs, userId);
   }
 
@@ -97,8 +99,12 @@ export class ResultsController {
 
   @UseGuards(AuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateResultDto: UpdateResultDto, @User('sub')  userId: number) {
-    return this.resultsService.update(+id, updateResultDto , userId);
+  update(
+    @Param('id') id: string,
+    @Body() updateResultDto: UpdateResultDto,
+    @User('sub') userId: number
+  ) {
+    return this.resultsService.update(+id, updateResultDto, userId);
   }
 
   @UseGuards(AuthGuard)

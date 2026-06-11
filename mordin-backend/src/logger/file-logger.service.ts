@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as os from 'os';
+import * as path from 'path';
+
+import { Injectable } from '@nestjs/common';
+
 import {
   CsvData,
   CsvHeader,
@@ -22,7 +24,7 @@ export class FileLoggerService {
   async saveCSV(
     csvData: CsvData<typeof this.config.csvHeader>,
     csvFilePath: string,
-    rawFilePath?: string,
+    rawFilePath?: string
   ) {
     const fullCsvPath = path.join(this.logDir, this.config.name, csvFilePath);
     const csvDir = path.dirname(fullCsvPath);
@@ -59,10 +61,16 @@ export class FileLoggerService {
   async saveRawData(data: any, filePath?: string) {
     const rawFileName = filePath || `log_${Date.now()}`;
 
-    const fullRawFilePath = path.join(this.logDir, this.config.name, rawFileName);
+    const fullRawFilePath = path.join(
+      this.logDir,
+      this.config.name,
+      rawFileName
+    );
 
     const hasExtension = path.extname(fullRawFilePath) !== '';
-    const finalPath = hasExtension ? fullRawFilePath : `${fullRawFilePath}.json`;
+    const finalPath = hasExtension
+      ? fullRawFilePath
+      : `${fullRawFilePath}.json`;
 
     const rawFileDir = path.dirname(finalPath);
 
@@ -79,7 +87,11 @@ export class FileLoggerService {
     if (data.type === 'csvAndRaw') {
       _rawFilePath = await this.saveRawData(data.data, data.rawFilePath);
     }
-    const _csvFilePath = await this.saveCSV(data.csvData, data.csvFilePath, _rawFilePath);
+    const _csvFilePath = await this.saveCSV(
+      data.csvData,
+      data.csvFilePath,
+      _rawFilePath
+    );
     return {
       csvFilePath: _csvFilePath,
       rawFilePath: _rawFilePath,

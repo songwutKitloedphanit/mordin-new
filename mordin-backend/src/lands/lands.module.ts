@@ -1,13 +1,14 @@
 /* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { LandsService } from './lands.service';
-import { LandsController } from './lands.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Land } from './entities/land.entity';
-import { FertilizerMajorLandScore } from 'src/sample/fertilizer-major-land-scores/entities/fertilizer-major-land-score.entity';
-import { Book } from 'src/sample/books/entities/book.entity';
-import { LandLog } from './entities/land.log.entity';
 import { Farmer } from 'src/farmers/entities/farmer.entity';
+import { Book } from 'src/sample/books/entities/book.entity';
+import { FertilizerMajorLandScore } from 'src/sample/fertilizer-major-land-scores/entities/fertilizer-major-land-score.entity';
+
+import { Land } from './entities/land.entity';
+import { LandLog } from './entities/land.log.entity';
+import { LandsController } from './lands.controller';
+import { LandsService } from './lands.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([

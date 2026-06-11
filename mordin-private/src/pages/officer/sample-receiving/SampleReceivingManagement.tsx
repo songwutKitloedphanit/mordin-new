@@ -1,5 +1,6 @@
-﻿import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { swalError } from '@/utils/swal';
 
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
 import { GenFormDate2, GenFormSelect } from '@/components/gui/GuiForm';
@@ -12,11 +13,7 @@ import {
 } from '@/services/api/qr-code/QrCodeApi';
 import { searchServiceCalendars } from '@/services/api/ServiceCalendarApi';
 import { Bus } from '@/types/Bus';
-import {
-  Book,
-  QrCodeInfo,
-  SampleStatusEnum,
-} from '@/types/qr-code/QrCode';
+import { Book, QrCodeInfo, SampleStatusEnum } from '@/types/qr-code/QrCode';
 import {
   CalendarInfoInterface,
   SearchServiceCalendar,
@@ -52,10 +49,25 @@ interface ReceivingSummaryCounts {
 type KpiItem = { label: string; icon: string; accent: string; unit: string };
 
 const KPI_CONFIG: KpiItem[] = [
-  { label: 'รายการทั้งหมด', icon: 'fas fa-layer-group', accent: '#6c757d', unit: 'รายการ' },
-  { label: 'คิวรอรับ', icon: 'fas fa-clipboard-list', accent: '#F39C12', unit: 'รายการ' },
-  { label: 'รอนำส่ง', icon: 'fas fa-inbox', accent: '#337AB7', unit: 'รายการ' },
-  { label: 'รับแล้ว', icon: 'fas fa-check-circle', accent: '#26C281', unit: 'รายการ' },
+  {
+    label: 'รายการทั้งหมด',
+    icon: 'fas fa-layer-group',
+    accent: '#005092',
+    unit: 'รายการ',
+  },
+  {
+    label: 'คิวรอรับ',
+    icon: 'fas fa-clipboard-list',
+    accent: '#d98f0c',
+    unit: 'รายการ',
+  },
+  { label: 'รอนำส่ง', icon: 'fas fa-inbox', accent: '#0aa2c0', unit: 'รายการ' },
+  {
+    label: 'รับแล้ว',
+    icon: 'fas fa-check-circle',
+    accent: '#18a05c',
+    unit: 'รายการ',
+  },
 ];
 
 interface PairingScannerModalProps {
@@ -72,7 +84,11 @@ const PairingScannerModal: React.FC<PairingScannerModalProps> = ({
   return (
     <div
       className="modal fade show"
-      style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}
+      style={{
+        display: 'block',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        zIndex: 1060,
+      }}
     >
       <div className="modal-dialog modal-lg modal-dialog-centered">
         <div className="modal-content">
@@ -107,7 +123,80 @@ const PairingScannerModal: React.FC<PairingScannerModalProps> = ({
             />
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface GeneralScannerModalProps {
+  onClose: () => void;
+  onScan: (decryptedCode: string) => void;
+}
+
+const GeneralScannerModal: React.FC<GeneralScannerModalProps> = ({
+  onClose,
+  onScan,
+}) => {
+  return (
+    <div
+      className="modal fade show"
+      style={{
+        display: 'block',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        zIndex: 1060,
+      }}
+    >
+      <div className="modal-dialog modal-lg modal-dialog-centered">
+        <div className="modal-content">
+          <div className="modal-header bg-primary text-white">
+            <h5 className="modal-title text-white">
+              <i className="fas fa-qrcode me-2" />
+              สแกน QR Code บนถุงตัวอย่าง
+            </h5>
+            <button
+              type="button"
+              className="btn-close btn-close-white"
+              onClick={onClose}
+            />
+          </div>
+          <div className="modal-body d-flex justify-content-center align-items-center flex-column">
+            <p className="text-muted mb-3">
+              กรุณาสแกน QR Code ที่ติดอยู่บนถุงตัวอย่างดินเพื่อตรวจรับเข้าระบบ
+            </p>
+            <QrScanner
+              readerId="qr-reader-general"
+              fps={15}
+              qrbox={250}
+              onScanSuccess={async (decodedText, scannerInstance) => {
+                const parts = decodedText.split('/');
+                const code = parts[parts.length - 1];
+                try {
+                  const response = await getDecryptQrCode(code);
+                  await scannerInstance.stop();
+                  scannerInstance.clear();
+                  onScan(response);
+                } catch (error) {
+                  console.error('Error decrypting QR:', error);
+                }
+              }}
+              onScanError={() => {}}
+            />
+          </div>
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+            >
               ยกเลิก
             </button>
           </div>
@@ -124,12 +213,19 @@ const SampleReceivingManagement: React.FC = () => {
 
   const [serviceDate, setServiceDate] = useState(today);
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null);
-  const [serviceCalendars, setServiceCalendars] = useState<CalendarInfoInterface[]>([]);
-  const [matchCalendar, setMatchCalendar] = useState<CalendarInfoInterface[]>([]);
+  const [serviceCalendars, setServiceCalendars] = useState<
+    CalendarInfoInterface[]
+  >([]);
+  const [matchCalendar, setMatchCalendar] = useState<CalendarInfoInterface[]>(
+    []
+  );
   const [buses, setBuses] = useState<Bus[]>([]);
-  const [selectedServiceCalendar, setSelectedServiceCalendar] = useState<CalendarInfoInterface | null>(null);
+  const [selectedServiceCalendar, setSelectedServiceCalendar] =
+    useState<CalendarInfoInterface | null>(null);
   const [markedDates, setMarkedDates] = useState<string[]>([]);
-  const [searchParam, setSearchParam] = useState<SearchServiceCalendar>({} as SearchServiceCalendar);
+  const [searchParam, setSearchParam] = useState<SearchServiceCalendar>(
+    {} as SearchServiceCalendar
+  );
 
   const [bookingList, setBookingList] = useState<Book[]>([]);
   const [isPairing, setIsPairing] = useState<Book | null>(null);
@@ -141,6 +237,32 @@ const SampleReceivingManagement: React.FC = () => {
     receivedTotal: 0,
   });
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [scanInputValue, setScanInputValue] = useState('');
+  const [isGeneralScanning, setIsGeneralScanning] = useState(false);
+
+  const handleQuickScanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scanInputValue.trim()) return;
+    try {
+      const parts = scanInputValue.trim().split('/');
+      const cleanCode = parts[parts.length - 1];
+      const decryptedCode = await getDecryptQrCode(cleanCode);
+      if (decryptedCode) {
+        setScanInputValue('');
+        navigate(
+          buildReceivingPath(cleanCode, {
+            serviceCalendarId: selectedServiceCalendar?.serviceCalendarId,
+          })
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      swalError(
+        'ไม่พบรหัส QR',
+        'ไม่สามารถค้นหาหรือถอดรหัส QR Code นี้ได้ หรือรหัสถูกใช้งานไปแล้ว'
+      );
+    }
+  };
 
   useEffect(() => {
     const fetchCalendar = async () => {
@@ -148,8 +270,9 @@ const SampleReceivingManagement: React.FC = () => {
       const calData = await searchServiceCalendars(payload);
       setServiceCalendars(calData.data);
       setMarkedDates(
-        calData.data.map((c: { date: string | number | Date }) =>
-          new Date(c.date).toISOString().split('T')[0]
+        calData.data.map(
+          (c: { date: string | number | Date }) =>
+            new Date(c.date).toISOString().split('T')[0]
         )
       );
     };
@@ -215,7 +338,8 @@ const SampleReceivingManagement: React.FC = () => {
             limit: 1,
           }),
           searchQrCode({
-            receivedServiceCalendarId: selectedServiceCalendar.serviceCalendarId,
+            receivedServiceCalendarId:
+              selectedServiceCalendar.serviceCalendarId,
             ...RECEIVED_SEARCH,
             page: 1,
             limit: 1,
@@ -313,8 +437,7 @@ const SampleReceivingManagement: React.FC = () => {
     const params = new URLSearchParams();
     if (options?.serviceCalendarId)
       params.set('serviceCalendarId', String(options.serviceCalendarId));
-    if (options?.bookId)
-      params.set('bookId', String(options.bookId));
+    if (options?.bookId) params.set('bookId', String(options.bookId));
     const query = params.toString();
     return `/officer/sample-receiving/${qrCode}${query ? `?${query}` : ''}`;
   };
@@ -352,7 +475,8 @@ const SampleReceivingManagement: React.FC = () => {
   const filteredBookings = pendingBookings.filter(book => {
     if (!bookingSearchTerm) return true;
     const term = bookingSearchTerm.toLowerCase();
-    const fullName = `${book.farmer?.firstName} ${book.farmer?.lastName}`.toLowerCase();
+    const fullName =
+      `${book.farmer?.firstName} ${book.farmer?.lastName}`.toLowerCase();
     const phone = (book.farmer?.phone || '').toLowerCase();
     const landCode = (book.land?.landCode || '').toLowerCase();
     const nid = (book.farmer?.thaiNationalId || '').toLowerCase();
@@ -365,7 +489,26 @@ const SampleReceivingManagement: React.FC = () => {
   });
 
   return (
-    <>
+    <div className="private-page-transition">
+      {/* Page Header */}
+      <div className="page-header d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-4">
+        <div>
+          <h1 className="h3 fw-bold text-dark mb-1">รับตัวอย่างดิน</h1>
+          <p className="text-muted mb-0">
+            สแกน QR บนถุงตัวอย่างเพื่อตรวจรับเข้าระบบวิเคราะห์
+          </p>
+        </div>
+        {selectedServiceCalendar && pendingBookingCount > 0 && (
+          <span
+            className="private-chip private-chip-amber fw-bold"
+            style={{ fontSize: '0.85rem', padding: '7px 14px' }}
+          >
+            <i className="fas fa-hourglass-half me-1" />
+            รอรับอีก {pendingBookingCount} ตัวอย่าง
+          </span>
+        )}
+      </div>
+
       {/* KPI Cards */}
       <div className="row g-3 mb-4">
         {KPI_CONFIG.map((cfg, i) => (
@@ -394,8 +537,8 @@ const SampleReceivingManagement: React.FC = () => {
                     <div
                       className="rounded-circle flex-shrink-0"
                       style={{
-                        width: 64,
-                        height: 64,
+                        width: 56,
+                        height: 56,
                         backgroundColor: 'rgba(128,128,128,0.1)',
                       }}
                     />
@@ -411,19 +554,26 @@ const SampleReceivingManagement: React.FC = () => {
                   <div className="d-flex align-items-center justify-content-between">
                     <div>
                       <div
-                        className="text-muted fw-semibold text-uppercase mb-2"
-                        style={{ fontSize: '0.85rem', letterSpacing: '0.6px' }}
+                        className="text-muted fw-semibold text-uppercase mb-1"
+                        style={{ fontSize: '0.8rem', letterSpacing: '0.5px' }}
                       >
                         {cfg.label}
                       </div>
                       <div className="d-flex align-items-baseline gap-1">
                         <span
                           className="fw-bold"
-                          style={{ fontSize: '3.5rem', lineHeight: 1 }}
+                          style={{
+                            fontSize: '2.5rem',
+                            lineHeight: 1,
+                            color: '#1a202c',
+                          }}
                         >
                           {kpiValues[i]}
                         </span>
-                        <span className="text-muted" style={{ fontSize: '1rem' }}>
+                        <span
+                          className="text-muted fw-medium"
+                          style={{ fontSize: '0.875rem' }}
+                        >
                           {cfg.unit}
                         </span>
                       </div>
@@ -431,14 +581,14 @@ const SampleReceivingManagement: React.FC = () => {
                     <div
                       className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                       style={{
-                        width: 64,
-                        height: 64,
-                        backgroundColor: `${cfg.accent}1a`,
+                        width: 56,
+                        height: 56,
+                        backgroundColor: `${cfg.accent}12`,
                       }}
                     >
                       <i
                         className={cfg.icon}
-                        style={{ color: cfg.accent, fontSize: '1.8rem' }}
+                        style={{ color: cfg.accent, fontSize: '1.5rem' }}
                       />
                     </div>
                   </div>
@@ -449,66 +599,122 @@ const SampleReceivingManagement: React.FC = () => {
         ))}
       </div>
 
-      {/* Date & Bus selectors */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="private-card">
-            <div className="private-card-header d-flex align-items-center justify-content-between">
+      {/* Main split-pane layout */}
+      <div className="row g-4">
+        {/* Left column: Parameters & Quick Scan */}
+        <div className="col-lg-4 col-md-5">
+          {/* Card 1: Service Round Selection */}
+          <div className="private-card mb-4">
+            <div className="private-card-header">
               <h4 className="private-card-title mb-0">
-                <i className="fas fa-calendar-alt me-2" />
-                เลือกวันที่และรถ
+                <i className="fas fa-calendar-alt me-2 text-primary" />
+                รอบบริการที่เลือก
               </h4>
             </div>
             <div className="private-card-body">
-              <div className="row">
-                <div className="col-md-4">
-                  <GenFormDate2
-                    isRequired={false}
-                    id="serviceDate"
-                    name="serviceDate"
-                    label="วันที่ให้บริการ"
-                    value={serviceDate}
-                    onChange={setServiceDate}
-                    desc={`ค่าเริ่มต้น คือ วันนี้ (${new Date().toLocaleDateString('th-TH')})`}
-                    markedDates={markedDates}
-                    onMonthYearChange={(year, month) =>
-                      setSearchParam({ year, month })
-                    }
-                  />
-                </div>
-                <div className="col-md-4">
-                  <GenFormSelect
-                    isRequired={false}
-                    id="vehicle"
-                    name="vehicle"
-                    label="รถที่ให้บริการ"
-                    options={buses.map(bus => ({
-                      value: bus.busId,
-                      name: `${bus.busNumber}-${bus.busName} (${bus.licensePlate})`,
-                    }))}
-                    value={selectedBusId ?? undefined}
-                    onChange={e => setSelectedBusId(Number(e.target.value))}
-                  />
-                </div>
+              <div className="d-flex flex-column gap-3">
+                <GenFormDate2
+                  isRequired={false}
+                  id="serviceDate"
+                  name="serviceDate"
+                  label="วันที่ให้บริการ"
+                  value={serviceDate}
+                  onChange={setServiceDate}
+                  desc={`ค่าเริ่มต้น คือ วันนี้ (${new Date().toLocaleDateString('th-TH')})`}
+                  markedDates={markedDates}
+                  onMonthYearChange={(year, month) =>
+                    setSearchParam({ year, month })
+                  }
+                />
+                <GenFormSelect
+                  isRequired={false}
+                  id="vehicle"
+                  name="vehicle"
+                  label="รถที่ให้บริการ"
+                  options={buses.map(bus => ({
+                    value: bus.busId,
+                    name: `${bus.busNumber}-${bus.busName} (${bus.licensePlate})`,
+                  }))}
+                  value={selectedBusId ?? undefined}
+                  onChange={e => setSelectedBusId(Number(e.target.value))}
+                />
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {selectedServiceCalendar ? (
-        <>
-          {/* Section: รายชื่อผู้จองคิวล่วงหน้า */}
-          <div className="row mt-4">
-            <div className="col-12">
+          {/* Card 2: Quick Scan / Keyboard input */}
+          {selectedServiceCalendar && (
+            <div className="private-card">
+              <div className="private-card-header">
+                <h4 className="private-card-title mb-0">
+                  <i className="fas fa-barcode me-2 text-success" />
+                  สแกนรับถุงตัวอย่างดิน
+                </h4>
+              </div>
+              <div className="private-card-body">
+                {/* Scan-zone hero (mockup .scan-zone) */}
+                <div className="private-scan-zone mb-3">
+                  <div className="private-scan-zone-icon">
+                    <i className="fas fa-qrcode" />
+                  </div>
+                  <div className="fw-bold mb-1" style={{ fontSize: '0.98rem' }}>
+                    สแกน QR Code บนถุงตัวอย่าง
+                  </div>
+                  <div
+                    className="text-muted mb-3"
+                    style={{ fontSize: '0.82rem' }}
+                  >
+                    ระบบจะพาเข้าไปตรวจรับ คัดกรองข้อมูลเกษตรกร
+                    และผูกพิกัดแปลงอัตโนมัติ
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                    onClick={() => setIsGeneralScanning(true)}
+                  >
+                    <i className="fas fa-camera" />
+                    เปิดกล้องสแกนรับดิน
+                  </button>
+                </div>
+
+                <form onSubmit={handleQuickScanSubmit}>
+                  <label className="form-label fw-semibold text-dark small mb-1">
+                    <i className="fas fa-keyboard me-1 text-muted" />
+                    หรือป้อนรหัส / ยิงสแกนเนอร์ลงช่องนี้
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="สแกน หรือ พิมพ์รหัสที่นี่..."
+                      value={scanInputValue}
+                      onChange={e => setScanInputValue(e.target.value)}
+                    />
+                    <button type="submit" className="btn btn-primary">
+                      <i className="fas fa-arrow-right" />
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right column: Tables */}
+        <div className="col-lg-8 col-md-7">
+          {selectedServiceCalendar ? (
+            <>
+              {/* Section: รายชื่อผู้จองคิวล่วงหน้า */}
               <div className="private-card private-card-accent-primary">
                 <div
-                  className="private-card-header bg-primary text-white sample-receiving-booking-header d-flex align-items-center justify-content-between"
+                  className="private-card-header bg-primary text-white sample-receiving-booking-header d-flex align-items-center justify-content-between py-3"
                   style={{ cursor: 'pointer' }}
                   onClick={() => setIsBookingOpen(!isBookingOpen)}
                 >
                   <div className="d-flex align-items-center">
-                    <i className={`fas fa-chevron-${isBookingOpen ? 'down' : 'right'} me-3`} />
+                    <i
+                      className={`fas fa-chevron-${isBookingOpen ? 'down' : 'right'} me-3`}
+                    />
                     <h4 className="private-card-title text-white mb-0">
                       <i className="fas fa-clipboard-list me-2" />
                       รายชื่อผู้จองคิวล่วงหน้า (Booking)
@@ -545,7 +751,10 @@ const SampleReceivingManagement: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="table-responsive" style={{ maxHeight: 400, overflowY: 'auto' }}>
+                    <div
+                      className="table-responsive"
+                      style={{ maxHeight: 350, overflowY: 'auto' }}
+                    >
                       <table className="table table-striped table-hover mb-0 align-middle">
                         <thead className="sticky-top">
                           <tr>
@@ -554,7 +763,9 @@ const SampleReceivingManagement: React.FC = () => {
                             <th>ชื่อแปลง</th>
                             <th>รหัสแปลง</th>
                             <th>วันที่จอง</th>
-                            <th className="text-center" style={{ width: 180 }}>ดำเนินการ</th>
+                            <th className="text-center" style={{ width: 140 }}>
+                              ดำเนินการ
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -563,25 +774,35 @@ const SampleReceivingManagement: React.FC = () => {
                               <tr key={book.bookId}>
                                 <td>
                                   <div className="fw-bold text-primary">
-                                    {book.farmer?.firstName} {book.farmer?.lastName}
+                                    {book.farmer?.firstName}{' '}
+                                    {book.farmer?.lastName}
                                   </div>
                                   <small className="text-muted">
-                                    {formatThaiNationalId(book.farmer?.thaiNationalId ?? '')}
+                                    {formatThaiNationalId(
+                                      book.farmer?.thaiNationalId ?? ''
+                                    )}
                                   </small>
                                 </td>
                                 <td>{book.farmer?.phone || '-'}</td>
                                 <td>{book.land?.name || '-'}</td>
                                 <td>
                                   {book.land?.landCode ? (
-                                    <span className="badge bg-info text-dark">{book.land.landCode}</span>
-                                  ) : '-'}
+                                    <span className="private-chip private-chip-blue">
+                                      {book.land.landCode}
+                                    </span>
+                                  ) : (
+                                    '-'
+                                  )}
                                 </td>
                                 <td>{TimeStampToDate(book.bookedAt)}</td>
                                 <td className="text-center">
                                   <button
                                     type="button"
-                                    className="btn btn-warning btn-sm fw-bold text-dark shadow-sm"
-                                    onClick={e => { e.stopPropagation(); setIsPairing(book); }}
+                                    className="btn btn-warning btn-sm fw-bold text-dark shadow-sm px-3"
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      setIsPairing(book);
+                                    }}
                                   >
                                     <i className="fas fa-qrcode me-1" />
                                     รับงาน
@@ -591,15 +812,18 @@ const SampleReceivingManagement: React.FC = () => {
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={6} className="text-center py-5 text-muted">
+                              <td
+                                colSpan={6}
+                                className="text-center py-4 text-muted"
+                              >
                                 {bookingSearchTerm ? (
                                   <>
-                                    <i className="fas fa-search-minus fs-2 mb-2 d-block opacity-50" />
+                                    <i className="fas fa-search-minus fs-3 mb-2 d-block opacity-50" />
                                     ไม่พบข้อมูลที่ตรงกับ "{bookingSearchTerm}"
                                   </>
                                 ) : (
                                   <>
-                                    <i className="fas fa-check-circle fs-2 mb-2 d-block text-success opacity-50" />
+                                    <i className="fas fa-check-circle fs-3 mb-2 d-block text-success opacity-50" />
                                     ไม่มีรายการจองค้างรับสำหรับวันนี้
                                   </>
                                 )}
@@ -612,16 +836,12 @@ const SampleReceivingManagement: React.FC = () => {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
 
-          {/* Section: QR Code ที่มีข้อมูลแล้ว (รอนำส่ง) */}
-          <div className="row mt-4">
-            <div className="col-12">
-              <div className="private-card">
-                <div className="private-card-header d-flex align-items-center justify-content-between">
+              {/* Section: QR Code ที่มีข้อมูลแล้ว (รอนำส่ง) */}
+              <div className="private-card mt-4">
+                <div className="private-card-header d-flex align-items-center justify-content-between py-3">
                   <h4 className="private-card-title mb-0">
-                    <i className="fas fa-inbox me-2" />
+                    <i className="fas fa-inbox me-2 text-primary" />
                     QR Code ที่มีข้อมูลแล้ว (รอนำส่ง)
                   </h4>
                 </div>
@@ -634,22 +854,26 @@ const SampleReceivingManagement: React.FC = () => {
                       {
                         header: 'รับดิน',
                         accessor: collected => (
-                          <GenButtonCircle
-                            icon="fa fa-plus"
-                            color="btn-warning text-white"
-                            onClick={() =>
-                              navigate(
-                                buildReceivingPath(collected.qrCode, {
-                                  serviceCalendarId: selectedServiceCalendar.serviceCalendarId,
-                                }),
-                                {
-                                  state: {
-                                    serviceCalendarId: selectedServiceCalendar.serviceCalendarId,
-                                  },
-                                }
-                              )
-                            }
-                          />
+                          <div className="d-flex justify-content-center">
+                            <GenButtonCircle
+                              icon="fa fa-plus"
+                              color="btn-warning text-white"
+                              onClick={() =>
+                                navigate(
+                                  buildReceivingPath(collected.qrCode, {
+                                    serviceCalendarId:
+                                      selectedServiceCalendar.serviceCalendarId,
+                                  }),
+                                  {
+                                    state: {
+                                      serviceCalendarId:
+                                        selectedServiceCalendar.serviceCalendarId,
+                                    },
+                                  }
+                                )
+                              }
+                            />
+                          </div>
                         ),
                       },
                       {
@@ -669,12 +893,15 @@ const SampleReceivingManagement: React.FC = () => {
                         header: 'เก็บดินวันที่',
                         accessor: collected =>
                           collected.book?.collectSampleAt
-                            ? convertTimestampToDate(collected.book.collectSampleAt)
+                            ? convertTimestampToDate(
+                                collected.book.collectSampleAt
+                              )
                             : '-',
                       },
                       {
                         header: 'แก้ไขล่าสุด',
-                        accessor: collected => TimeStampToDate(collected.createdAt),
+                        accessor: collected =>
+                          TimeStampToDate(collected.createdAt),
                         sortable: true,
                         sortKey: 'createdAt',
                       },
@@ -682,16 +909,12 @@ const SampleReceivingManagement: React.FC = () => {
                   />
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Section: รับตัวอย่างดินแล้ว */}
-          <div className="row">
-            <div className="col-12">
-              <div className="private-card">
-                <div className="private-card-header d-flex align-items-center justify-content-between">
+              {/* Section: รับตัวอย่างดินแล้ว */}
+              <div className="private-card mt-4">
+                <div className="private-card-header d-flex align-items-center justify-content-between py-3">
                   <h4 className="private-card-title mb-0">
-                    <i className="fas fa-check-circle me-2" />
+                    <i className="fas fa-check-circle me-2 text-success" />
                     รับตัวอย่างดินแล้ว
                   </h4>
                 </div>
@@ -699,22 +922,33 @@ const SampleReceivingManagement: React.FC = () => {
                   {/* Filter bar */}
                   <div className="d-flex flex-wrap gap-3 align-items-center mb-3 pb-3 border-bottom">
                     <div className="d-flex align-items-center gap-2">
-                      <label className="form-label small mb-0 text-nowrap">สถานะ:</label>
+                      <span className="small text-muted fw-semibold">
+                        สถานะ:
+                      </span>
                       <select
                         className="form-select form-select-sm w-auto"
                         value={filterReceivedStatus}
                         onChange={e => setFilterReceivedStatus(e.target.value)}
                       >
                         <option value="">ทุกสถานะ</option>
-                        <option value={SampleStatusEnum.RECEIVED}>รับแล้ว</option>
-                        <option value={SampleStatusEnum.ANALYZING}>กำลังวิเคราะห์</option>
-                        <option value={SampleStatusEnum.ANALYZED}>วิเคราะห์แล้ว</option>
-                        <option value={SampleStatusEnum.APPROVED}>อนุมัติแล้ว</option>
+                        <option value={SampleStatusEnum.RECEIVED}>
+                          รับแล้ว
+                        </option>
+                        <option value={SampleStatusEnum.ANALYZING}>
+                          กำลังวิเคราะห์
+                        </option>
+                        <option value={SampleStatusEnum.ANALYZED}>
+                          วิเคราะห์แล้ว
+                        </option>
+                        <option value={SampleStatusEnum.APPROVED}>
+                          อนุมัติแล้ว
+                        </option>
                       </select>
                       {filterReceivedStatus && (
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-secondary"
+                          className="btn btn-sm btn-outline-secondary py-0 px-2"
+                          style={{ height: '28px' }}
                           onClick={() => setFilterReceivedStatus('')}
                         >
                           <i className="fas fa-times me-1" />
@@ -764,15 +998,17 @@ const SampleReceivingManagement: React.FC = () => {
                       {
                         header: 'จัดการ',
                         accessor: collected => (
-                          <GenButtonCircle
-                            icon={B_LIST.info.icon}
-                            color={B_LIST.info.color}
-                            onClick={() =>
-                              navigate(
-                                `/officer/analysis-report/${collected.book?.sampleCode}`
-                              )
-                            }
-                          />
+                          <div className="d-flex justify-content-center">
+                            <GenButtonCircle
+                              icon={B_LIST.info.icon}
+                              color={B_LIST.info.color}
+                              onClick={() =>
+                                navigate(
+                                  `/officer/analysis-report/${collected.book?.sampleCode}`
+                                )
+                              }
+                            />
+                          </div>
                         ),
                       },
                       {
@@ -786,14 +1022,34 @@ const SampleReceivingManagement: React.FC = () => {
                   />
                 </div>
               </div>
+            </>
+          ) : (
+            <div
+              className="alert alert-light text-center shadow-sm py-5 border rounded"
+              style={{ backgroundColor: '#ffffff' }}
+            >
+              <i className="fas fa-calendar-day fa-3x mb-3 text-muted opacity-50" />
+              <h5 className="fw-semibold text-dark">ไม่พบรอบบริการในวันนี้</h5>
+              <p className="text-muted small mb-0">
+                กรุณาเลือกวันที่หรือรอบบริการที่มีรถให้บริการเพื่อจัดการการรับดิน
+              </p>
             </div>
-          </div>
-        </>
-      ) : (
-        <div className="mt-4 alert alert-light text-center shadow-sm">
-          <i className="fas fa-calendar-day me-2" />
-          ไม่พบข้อมูลการให้บริการในวันนี้
+          )}
         </div>
+      </div>
+
+      {isGeneralScanning && (
+        <GeneralScannerModal
+          onClose={() => setIsGeneralScanning(false)}
+          onScan={decryptedCode => {
+            setIsGeneralScanning(false);
+            navigate(
+              buildReceivingPath(decryptedCode, {
+                serviceCalendarId: selectedServiceCalendar?.serviceCalendarId,
+              })
+            );
+          }}
+        />
       )}
 
       {isPairing && (
@@ -803,10 +1059,8 @@ const SampleReceivingManagement: React.FC = () => {
           targetName={`${isPairing.farmer?.firstName} ${isPairing.farmer?.lastName}`}
         />
       )}
-    </>
+    </div>
   );
 };
 
 export default SampleReceivingManagement;
-
-

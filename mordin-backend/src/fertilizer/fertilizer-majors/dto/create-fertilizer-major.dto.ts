@@ -4,7 +4,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  MaxLength,
   Min,
 } from 'class-validator';
 import { FertilizerMajorTypes } from 'src/fertilizer/enums/fertilizer.enum';

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
+
 import {
   AuditOutbox,
   AuditOutboxAction,
@@ -16,92 +17,6 @@ export class AuditOutboxService {
     @InjectDataSource() private readonly dataSource: DataSource,
     @InjectDataSource('logs') private readonly logsDataSource: DataSource
   ) {}
-
-  enqueue(
-    manager: EntityManager,
-    entityType: AuditOutboxEntityType,
-    entityId: number,
-    action: AuditOutboxAction,
-    actorUid: number,
-    beforePayload: AuditSnapshot | null,
-    afterPayload: AuditSnapshot | null
-  ) {
-    return manager.insert(AuditOutbox, {
-      entityType,
-      entityId,
-      action,
-      actorUid,
-      beforePayload: beforePayload as any,
-      afterPayload: afterPayload as any,
-      status: 'pending',
-      attempts: 0,
-    });
-  }
-
-  async getSummary() {
-    const [row] = await this.dataSource.query(`
-      SELECT
-        COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
-        COUNT(*) FILTER (WHERE status = 'failed')::int AS failed,
-        MIN(created_at) FILTER (WHERE status = 'pending') AS oldest_pending
-      FROM audit_outbox
-    `);
-    return {
-      pending: row.pending,
-      failed: row.failed,
-      oldestPending: row.oldest_pending,
-    };
-  }
-
-  @Cron(CronExpression.EVERY_5_SECONDS)
-  async processPending(): Promise<void> {
-    if (!this.dataSource.isInitialized || !this.logsDataSource.isInitialized) {
-      return;
-    }
-
-    const runner = this.dataSource.createQueryRunner();
-    await runner.connect();
-    await runner.startTransaction();
-    try {
-      const events: Record<string, any>[] = await runner.query(`
-        SELECT *
-        FROM audit_outbox
-        WHERE status = 'pending'
-        ORDER BY created_at
-        FOR UPDATE SKIP LOCKED
-        LIMIT 50
-      `);
-
-      for (const event of events) {
-        try {
-          await this.projectEvent(event);
-          await runner.query(
-            `UPDATE audit_outbox
-             SET status = 'processed', processed_at = NOW(), last_error = NULL
-             WHERE audit_event_id = $1`,
-            [event.audit_event_id]
-          );
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message.slice(0, 2000) : String(error);
-          await runner.query(
-            `UPDATE audit_outbox
-             SET attempts = attempts + 1,
-                 status = CASE WHEN attempts + 1 >= 10 THEN 'failed' ELSE 'pending' END,
-                 last_error = $2
-             WHERE audit_event_id = $1`,
-            [event.audit_event_id, message]
-          );
-        }
-      }
-      await runner.commitTransaction();
-    } catch (error) {
-      await runner.rollbackTransaction();
-      throw error;
-    } finally {
-      await runner.release();
-    }
-  }
 
   private async projectEvent(event: Record<string, any>): Promise<void> {
     const auditEventId = event.audit_event_id;
@@ -176,6 +91,94 @@ export class AuditOutboxService {
             event.action,
           ]
         );
+      }
+      await runner.commitTransaction();
+    } catch (error) {
+      await runner.rollbackTransaction();
+      throw error;
+    } finally {
+      await runner.release();
+    }
+  }
+
+  enqueue(
+    manager: EntityManager,
+    entityType: AuditOutboxEntityType,
+    entityId: number,
+    action: AuditOutboxAction,
+    actorUid: number,
+    beforePayload: AuditSnapshot | null,
+    afterPayload: AuditSnapshot | null
+  ) {
+    return manager.insert(AuditOutbox, {
+      entityType,
+      entityId,
+      action,
+      actorUid,
+      beforePayload: beforePayload as any,
+      afterPayload: afterPayload as any,
+      status: 'pending',
+      attempts: 0,
+    });
+  }
+
+  async getSummary() {
+    const [row] = await this.dataSource.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
+        COUNT(*) FILTER (WHERE status = 'failed')::int AS failed,
+        MIN(created_at) FILTER (WHERE status = 'pending') AS oldest_pending
+      FROM audit_outbox
+    `);
+    return {
+      pending: row.pending,
+      failed: row.failed,
+      oldestPending: row.oldest_pending,
+    };
+  }
+
+  @Cron(CronExpression.EVERY_5_SECONDS)
+  async processPending(): Promise<void> {
+    if (!this.dataSource.isInitialized || !this.logsDataSource.isInitialized) {
+      return;
+    }
+
+    const runner = this.dataSource.createQueryRunner();
+    await runner.connect();
+    await runner.startTransaction();
+    try {
+      const events: Record<string, any>[] = await runner.query(`
+        SELECT *
+        FROM audit_outbox
+        WHERE status = 'pending'
+        ORDER BY created_at
+        FOR UPDATE SKIP LOCKED
+        LIMIT 50
+      `);
+
+      for (const event of events) {
+        try {
+          await this.projectEvent(event);
+          await runner.query(
+            `UPDATE audit_outbox
+             SET status = 'processed', processed_at = NOW(), last_error = NULL
+             WHERE audit_event_id = $1`,
+            [event.audit_event_id]
+          );
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message.slice(0, 2000)
+              : String(error);
+          await runner.query(
+            `UPDATE audit_outbox
+             SET attempts = attempts + 1,
+                 status = CASE WHEN attempts + 1 >= 10 THEN 'failed' ELSE 'pending' END,
+                 last_error = $2
+             WHERE audit_event_id = $1`,
+            [event.audit_event_id, message]
+          );
+        }
       }
       await runner.commitTransaction();
     } catch (error) {

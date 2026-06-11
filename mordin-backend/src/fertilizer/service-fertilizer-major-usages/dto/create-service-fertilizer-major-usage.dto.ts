@@ -1,10 +1,4 @@
-import {
-  IsInt,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsPositive,
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsPositive } from 'class-validator';
 
 export class CreateServiceFertilizerMajorUsageDto {
   @IsInt()

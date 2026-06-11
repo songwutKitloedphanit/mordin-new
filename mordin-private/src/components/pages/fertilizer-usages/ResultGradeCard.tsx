@@ -79,4 +79,3 @@ const ResultGradeCard: React.FC<ResultGradeCardProps> = ({
 };
 
 export default ResultGradeCard;
-

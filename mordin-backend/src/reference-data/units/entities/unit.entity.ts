@@ -28,13 +28,13 @@ export class Unit {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'update_uid' })
+  updateUser: User;
+
   @BeforeInsert()
   @BeforeUpdate()
   setUpdatedAt() {
     this.updatedAt = Date.now();
   }
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'update_uid' })
-  updateUser: User;
 }

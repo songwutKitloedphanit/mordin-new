@@ -34,7 +34,12 @@ export class Result {
   @Column({ name: 'recorded_at', type: 'bigint', nullable: true })
   recordedAt: number;
 
-  @Column({ name: 'recorded_type', enum: RecordTypeEnum, type: 'enum', nullable: true })
+  @Column({
+    name: 'recorded_type',
+    enum: RecordTypeEnum,
+    type: 'enum',
+    nullable: true,
+  })
   recordedType: RecordTypeEnum;
 
   @Column({ name: 'recorded_uid', type: 'int', nullable: true })

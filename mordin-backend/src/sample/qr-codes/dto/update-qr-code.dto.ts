@@ -1,73 +1,90 @@
-import { IsDecimal, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  IsDecimal,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class UpdateQrCodeDto {
-    @IsOptional()
-    @IsNumber()
-    farmerId?: number;
+  @IsOptional()
+  @IsString()
+  birthDate?: string;
 
-    @IsOptional()
-    @IsNumber()
-    landId?: number;
+  @IsOptional()
+  @IsNumber()
+  farmerId?: number;
 
-    @IsString()
-    @IsNotEmpty()
-    firstName: string;
+  @IsOptional()
+  @IsNumber()
+  landId?: number;
 
-    @IsString()
-    @IsNotEmpty()
-    lastName: string;
+  @IsString()
+  @IsNotEmpty()
+  firstName: string;
 
-    @IsString()
-    @IsNotEmpty()
-    phoneNumber: string;
+  @IsString()
+  @IsNotEmpty()
+  lastName: string;
 
-    @IsString()
-    thaiNationalId: string;
+  @IsString()
+  @IsNotEmpty()
+  phoneNumber: string;
 
-    @IsNumber()
-    serviceAreaId: number;
+  @IsString()
+  thaiNationalId: string;
 
-    @IsString()
-    landCode: string;
+  @IsNumber()
+  serviceAreaId: number;
 
-    @IsString()
-    landName: string;
+  @IsString()
+  landCode: string;
 
-    @IsOptional()
-    @IsNumber()
-    areaSize?: number;
+  @IsString()
+  landName: string;
 
-    @IsOptional()
-    @IsString()
-    subdistrictCode?: string;
+  @IsOptional()
+  @IsNumber()
+  areaSize?: number;
 
-    @IsOptional()
-    @IsNumber()
-    zipCode?: number;
+  @IsOptional()
+  @IsString()
+  subdistrictCode?: string;
 
-    @IsNumber()
-    serviceTypeId: number;
+  @IsOptional()
+  @IsNumber()
+  zipCode?: number;
 
-    @IsOptional()
-    @IsNumber()
-    dirtWeightOm?: number;
+  @IsNumber()
+  serviceTypeId: number;
 
-    @IsOptional()
-    @IsNumber()
-    dirtWeightMehlich?: number;
+  @IsOptional()
+  @IsNumber()
+  dirtWeightOm?: number;
 
-    @IsDecimal({
-        decimal_digits: '1,6',
-    }, {
-        message: 'latitude must be a decimal with up to 6 digits after the decimal point',
-    })
-    latitude: string;
+  @IsOptional()
+  @IsNumber()
+  dirtWeightMehlich?: number;
 
-    @IsDecimal({
-        decimal_digits: '1,6',
-    }, {
-        message: 'longitude must be a decimal with up to 6 digits after the decimal point',
-    })
-    longitude: string;
+  @IsDecimal(
+    {
+      decimal_digits: '1,6',
+    },
+    {
+      message:
+        'latitude must be a decimal with up to 6 digits after the decimal point',
+    }
+  )
+  latitude: string;
 
+  @IsDecimal(
+    {
+      decimal_digits: '1,6',
+    },
+    {
+      message:
+        'longitude must be a decimal with up to 6 digits after the decimal point',
+    }
+  )
+  longitude: string;
 }

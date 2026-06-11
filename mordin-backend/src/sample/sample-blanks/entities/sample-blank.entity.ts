@@ -40,16 +40,14 @@ export class SampleBlank {
   @Column({ name: 'updated_at', type: 'bigint' })
   updatedAt: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setUpdatedAt() {
-    this.updatedAt = Date.now();
-  }
-
-  @OneToMany(() => SampleBlankResult, (sampleResult) => sampleResult.sampleBlank, {
+  @OneToMany(
+    () => SampleBlankResult,
+    sampleResult => sampleResult.sampleBlank,
+    {
       cascade: true,
-    })
-    sampleBlankResult: SampleBlankResult[];
+    }
+  )
+  sampleBlankResult: SampleBlankResult[];
 
   @ManyToOne(() => ServiceCalendar, {
     onDelete: 'CASCADE',
@@ -60,4 +58,10 @@ export class SampleBlank {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'update_uid' })
   updateUser: User;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setUpdatedAt() {
+    this.updatedAt = Date.now();
+  }
 }

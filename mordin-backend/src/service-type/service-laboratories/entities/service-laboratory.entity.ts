@@ -15,15 +15,15 @@ export class ServiceLaboratory {
 
   @ManyToOne(
     () => ServiceType,
-    (serviceType) => serviceType.serviceLaboratories,
+    serviceType => serviceType.serviceLaboratories,
     {
       onDelete: 'CASCADE',
-    },
+    }
   )
   @JoinColumn({ name: 'service_type_id' })
   serviceType: ServiceType;
 
-  @ManyToOne(() => Laboratory, (lab) => lab.serviceLaboratories, {
+  @ManyToOne(() => Laboratory, lab => lab.serviceLaboratories, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'laboratory_id' })

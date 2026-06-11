@@ -1,5 +1,3 @@
-import { SoilGrade } from '../entities/soil-grade.entity';
-
 declare module '../entities/soil-grade.entity' {
   // ขยาย interface ของ Class 'Bus'
   interface SoilGrade {

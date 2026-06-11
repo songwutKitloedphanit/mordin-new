@@ -52,8 +52,53 @@ if (isset($serviceTypes['error'])) {
     echo '<section class="section public-price-page"><div class="container"><div class="public-empty-state"><p class="text-danger">ไม่สามารถดึงข้อมูลประเภทบริการได้</p></div></div></section>';
 } else {
     $displayedServiceTypes = array_filter($serviceTypes, fn($service) => $service['isDisplay'] ?? false);
+    $displayedLaboratoryCount = is_array($laboratories) ? count($laboratories) : 0;
+    $freeServiceCount = 0;
+    $categoryNameSet = [];
+
+    foreach ($displayedServiceTypes as $service) {
+        if (($service['price'] ?? 0) == 0) {
+            $freeServiceCount++;
+        }
+
+        foreach (($service['serviceCategories'] ?? []) as $category) {
+            if (($category['isDisplay'] ?? false) && !empty($category['name'])) {
+                $categoryNameSet[$category['name']] = true;
+            }
+        }
+    }
     ?>
-    <section class="section public-price-page">
+    <section class="section public-modern-page-hero public-price-hero">
+        <div class="container">
+            <div class="public-modern-hero-grid">
+                <div class="public-modern-hero-copy scroll-reveal">
+                    <span class="public-modern-kicker"><i class="bi bi-card-checklist"></i> Service Pricing</span>
+                    <h1>บริการและอัตราค่าวิเคราะห์ดิน</h1>
+                    <p>เลือกประเภทบริการที่ต้องการตรวจ วิเคราะห์รายการแล็บที่รวมอยู่ในแพ็กเกจ และไปยังปฏิทินเพื่อจองรอบบริการที่สะดวก</p>
+                </div>
+                <div class="public-modern-metrics scroll-reveal stagger-1">
+                    <div class="public-modern-metric">
+                        <span><?= count($displayedServiceTypes) ?></span>
+                        <p>บริการที่แสดง</p>
+                    </div>
+                    <div class="public-modern-metric">
+                        <span><?= $freeServiceCount ?></span>
+                        <p>บริการฟรี</p>
+                    </div>
+                    <div class="public-modern-metric">
+                        <span><?= count($categoryNameSet) ?></span>
+                        <p>หมวดบริการ</p>
+                    </div>
+                    <div class="public-modern-metric">
+                        <span><?= $displayedLaboratoryCount ?></span>
+                        <p>รายการวิเคราะห์</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section public-price-page pt-0">
         <div class="container">
             <div class="row gy-4 justify-content-center align-items-stretch public-price-grid">
                 <?php foreach ($displayedServiceTypes as $service): ?>
@@ -64,7 +109,7 @@ if (isset($serviceTypes['error'])) {
                     $serviceColorSoft = publicHexToRgba($serviceColor, '0.10');
                     $serviceColorBorder = publicHexToRgba($serviceColor, '0.24');
                     ?>
-                    <div class="col-xl-3 col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="col-xl-3 col-lg-4 col-md-6 scroll-reveal stagger-<?= (($priceIdx = isset($priceIdx) ? $priceIdx + 1 : 0) % 5) + 1 ?>">
                         <div class="card-pricing2 public-price-card private-style-price-card card-<?php echo htmlspecialchars($serviceColorToken, ENT_QUOTES, 'UTF-8'); ?>" style="--service-color: <?php echo htmlspecialchars($serviceColor, ENT_QUOTES, 'UTF-8'); ?>; --service-color-soft: <?php echo htmlspecialchars($serviceColorSoft, ENT_QUOTES, 'UTF-8'); ?>; --service-color-border: <?php echo htmlspecialchars($serviceColorBorder, ENT_QUOTES, 'UTF-8'); ?>;">
                             <div class="pricing-header public-price-card-hero">
                                 <h3 class="fw-bold mb-3 text-white">
@@ -103,7 +148,7 @@ if (isset($serviceTypes['error'])) {
                                     ?>
                                 </ul>
                                 <a href="calendar" class="btn btn-lg fw-bold public-price-cta">
-                                    จองคิววิเคราะห์
+                                    <i class="bi bi-calendar-check-fill"></i> จองคิววิเคราะห์
                                 </a>
                             </div>
                         </div>

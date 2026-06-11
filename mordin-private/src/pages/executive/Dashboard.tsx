@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import HorizontalBarChart, {
@@ -16,8 +16,10 @@ import {
   StatusNotice,
 } from '@/components/pages/executive/ExecutiveDashboardUI';
 import ExecutiveReportToolbar from '@/components/pages/executive/ExecutiveReportToolbar';
+import UpcomingServiceRounds from '@/components/pages/executive/UpcomingServiceRounds';
 import EmptyState from '@/components/ui/EmptyState';
 import LoadingState from '@/components/ui/LoadingState';
+import { useAuth } from '@/contexts/AuthContext';
 import { getDistrictsByProvinceCode } from '@/services/api/address/DistrictApi';
 import { getAllProvinces } from '@/services/api/address/ProvinceApi';
 import { getSubdistrictsByDistrictCode } from '@/services/api/address/SubdistrictApi';
@@ -46,6 +48,15 @@ const yearList = [
     name: (currentBuddhistYear - 1).toString(),
   },
 ];
+
+// คำทักทายตามช่วงเวลา (mockup: "สวัสดีตอนเช้า, คุณสมชาย 👋")
+const getTimeGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 11) return 'สวัสดีตอนเช้า';
+  if (hour >= 11 && hour < 16) return 'สวัสดีตอนบ่าย';
+  if (hour >= 16 && hour < 20) return 'สวัสดีตอนเย็น';
+  return 'สวัสดี';
+};
 
 // ไอคอนสัญลักษณ์ของสารปรับปรุงดินแต่ละชนิด (จับคู่จากคำในชื่อ)
 const MINOR_ICONS: { keyword: string; icon: string }[] = [
@@ -172,6 +183,7 @@ const FormulaTable = ({
 };
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   // อ่านค่าจาก URL "ครั้งเดียว" ตอน mount เพื่อใช้ตั้งค่าเริ่มต้น (หลังจากนั้นเราเป็นคนเขียน URL เอง)
   const initialUrlRef = useRef<{ tab: TabKey; filters: SelectedSearch } | null>(
@@ -613,69 +625,76 @@ const Dashboard = () => {
 
   return (
     <div className="executive-report-content">
-      <ExecutiveReportToolbar
-        title="รายงานภาพรวมผลการวิเคราะห์ดินและคำแนะนำการปรับปรุงดิน"
-        filters={reportFilters}
-        disabled={!hasSuccessfulLoad || isDashboardLoading}
-        buildReportData={() => ({
-          soilInsight,
-          fertilizerInsight,
-          improveInsight,
-          graphData: graphData.map(el => ({
-            elementName: el.elementName,
-            BarChartDataItem: el.BarChartDataItem.map(bar => ({
-              label: bar.label,
-              value: bar.value,
-            })),
-          })),
-          pieChartData,
-          prepareData,
-        })}
-      />
-
-      {/* ===================== EXECUTIVE BRIEF ===================== */}
-      {/* สรุปภาพรวมเห็นทันทีโดยไม่ต้องเลื่อน: KPI + ข้อสรุปเด่น + เงื่อนไขที่กรอง */}
-      <section className="exec-brief mb-4">
-        <div className="exec-brief-head">
-          <div>
-            <h4 className="exec-brief-title">
-              <i className="fas fa-clipboard-list text-primary me-2"></i>
-              สรุปภาพรวม
-            </h4>
-          </div>
-          {activeFilters.length > 0 && (
-            <div className="exec-brief-chips executive-report-no-print">
-              {activeFilters.map(filter => (
-                <span key={filter.label} className="exec-brief-chip">
-                  <span className="exec-brief-chip-label">{filter.label}</span>
-                  {filter.value}
-                </span>
-              ))}
-            </div>
-          )}
+      {/* ===================== PAGE HEADER (greeting — ไม่ติดไปใน print) ===================== */}
+      <div className="exec-page-header executive-report-no-print">
+        <div>
+          <h2 className="exec-page-title">
+            {getTimeGreeting()}
+            {user?.firstName ? `, คุณ${user.firstName}` : ''} 👋
+          </h2>
+          <p className="exec-page-subtitle">
+            รายงานภาพรวมการวิเคราะห์ดินและคำแนะนำปุ๋ย ·
+            ข้อมูลรวมผลการวิเคราะห์ดินและคำแนะนำการปรับปรุงดิน จากการสแกน QR
+            และรถวิเคราะห์เคลื่อนที่
+          </p>
         </div>
+        <ExecutiveReportToolbar
+          title="รายงานภาพรวมผลการวิเคราะห์ดินและคำแนะนำการปรับปรุงดิน"
+          filters={reportFilters}
+          disabled={!hasSuccessfulLoad || isDashboardLoading}
+          buildReportData={() => ({
+            soilInsight,
+            fertilizerInsight,
+            improveInsight,
+            graphData: graphData.map(el => ({
+              elementName: el.elementName,
+              BarChartDataItem: el.BarChartDataItem.map(bar => ({
+                label: bar.label,
+                value: bar.value,
+              })),
+            })),
+            pieChartData,
+            prepareData,
+          })}
+        />
+      </div>
 
+      {/* ===================== KPI SUMMARY ===================== */}
+      <section className="mb-4">
+        {activeFilters.length > 0 && (
+          <div className="exec-brief-chips executive-report-no-print mb-3">
+            {activeFilters.map(filter => (
+              <span key={filter.label} className="exec-brief-chip">
+                <span className="exec-brief-chip-label">{filter.label}:</span>
+                {filter.value}
+              </span>
+            ))}
+          </div>
+        )}
         <DashboardSummary />
       </section>
 
       {/* ===================== ตัวกรอง (ยุบได้) ===================== */}
-      <div className="private-card mb-4 executive-report-no-print">
+      <div className="exec-filter-card executive-report-no-print">
         <button
           type="button"
-          className="private-card-header exec-filter-toggle"
+          className="exec-filter-card-header"
           onClick={() => setIsFilterOpen(open => !open)}
           aria-expanded={isFilterOpen}
         >
-          <span className="private-card-title mb-0 d-flex align-items-center">
-            <i className="fas fa-filter me-2 text-primary"></i>
-            ตัวกรองข้อมูล
+          <span
+            className="d-flex align-items-center gap-2 fw-bold"
+            style={{ fontSize: '1rem' }}
+          >
+            <i className="fas fa-sliders text-primary"></i>
+            ตัวกรองข้อมูล / ค้นหาตามเงื่อนไข
           </span>
           <i
             className={`fas fa-chevron-${isFilterOpen ? 'up' : 'down'} text-body-secondary`}
           ></i>
         </button>
         {isFilterOpen && (
-          <div className="private-card-body">
+          <div className="exec-filter-card-body">
             {isFilterLoading && <LoadingState label="กำลังโหลดตัวกรอง..." />}
             <DashboardFilters
               lists={{
@@ -1006,21 +1025,42 @@ const Dashboard = () => {
 
           {isDashboardLoading && (
             <div
-              className="position-absolute d-flex align-items-start justify-content-center pt-5"
+              className="position-absolute d-flex align-items-center justify-content-center"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.72)',
+                background: 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(3px)',
+                WebkitBackdropFilter: 'blur(3px)',
                 inset: 0,
                 zIndex: 2,
+                borderRadius: '14px',
               }}
             >
-              <LoadingState label="กำลังโหลดข้อมูลแดชบอร์ด..." />
+              <div className="text-center">
+                <div
+                  className="spinner-border text-primary mb-2"
+                  role="status"
+                  style={{ width: '2rem', height: '2rem' }}
+                >
+                  <span className="visually-hidden">กำลังโหลด...</span>
+                </div>
+                <div
+                  className="text-body-secondary fw-semibold"
+                  style={{ fontSize: '0.9rem' }}
+                >
+                  กำลังโหลดข้อมูล...
+                </div>
+              </div>
             </div>
           )}
         </div>
       )}
+
+      {/* ===================== รอบบริการที่กำลังมาถึง (M5 — ไม่ติดไปใน print) ===================== */}
+      <section className="executive-report-no-print mt-4">
+        <UpcomingServiceRounds />
+      </section>
     </div>
   );
 };
 
 export default Dashboard;
-

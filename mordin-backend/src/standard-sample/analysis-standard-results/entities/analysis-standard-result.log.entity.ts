@@ -1,12 +1,13 @@
-import { RecordTypeEnum } from 'src/sample/enums/recode-type.enum';
-import { Column, Entity, PrimaryColumn } from 'typeorm';
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
 import { DecimalTransformer } from 'src/common/transformers/decimal.tranformer';
+import { RecordTypeEnum } from 'src/sample/enums/recode-type.enum';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('analysis_standard_results_logs')
 export class AnalysisStandardResultLog extends BaseLogEntity {
   @PrimaryColumn({ name: 'analysis_standard_result_id' })
   analysisStandardResultId: number;
+
   @Column({ name: 'analysis_standard_id', type: 'int' })
   analysisStandardId: number;
 
