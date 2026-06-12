@@ -50,7 +50,7 @@ $h = static function ($value) {
   <link href="/assets/css/public-auth.css?v=<?= $authCssVersion ?>" rel="stylesheet">
 </head>
 <body class="public-auth-body">
-  <main class="auth-shell <?= $isRegister ? 'register-active' : '' ?>" data-auth-shell>
+  <main class="auth-shell brand-replay <?= $isRegister ? 'register-active' : '' ?>" data-auth-shell>
     <a href="/" class="auth-home-link"><i class="bi bi-arrow-left"></i> กลับหน้าหลัก</a>
 
     <section class="auth-panel auth-panel-login" aria-labelledby="loginTitle">
@@ -246,6 +246,11 @@ $h = static function ($value) {
         if (window.innerWidth < 992 || !shell) return;
         event.preventDefault();
         var toRegister = link.href.indexOf('/register') !== -1;
+        if (shell.classList.contains('register-active') !== toRegister) {
+          shell.classList.remove('brand-replay');
+          void shell.offsetWidth; /* restart brand stagger animation */
+          shell.classList.add('brand-replay');
+        }
         shell.classList.toggle('register-active', toRegister);
         history.replaceState(null, '', link.href);
       });

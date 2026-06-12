@@ -20,7 +20,6 @@ import { LaboratoryModule } from './laboratory/laboratory.module';
 import { LandsModule } from './lands/lands.module';
 import { ReferenceDataModule } from './reference-data/reference-data.module';
 import { ResultGradeModule } from './result-grade/result-grade.module';
-import { StandardSampleModule } from './standard-sample/standard-sample.module';
 import { ResultsModule } from './sample/results/results.module';
 import { SampleModule } from './sample/sample.module';
 import { ServiceAreaModule } from './service-area/service-area.module';
@@ -28,6 +27,7 @@ import { ServiceCalendarsModule } from './service-calendars/service-calendars.mo
 import { ServiceTypeModule } from './service-type/service-type.module';
 import { ShopsModule } from './shops/shops.module';
 import { SoilGradeModule } from './soil-grade/soil-grade.module';
+import { StandardSampleModule } from './standard-sample/standard-sample.module';
 import { UsersModule } from './users/users.module';
 
 @Module({

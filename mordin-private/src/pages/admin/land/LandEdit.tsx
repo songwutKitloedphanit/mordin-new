@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import { GenButtonCircle } from '../../../components/gui/GuiButton';
 import { GenFormSelect, GenFormText1 } from '../../../components/gui/GuiForm';
@@ -19,6 +18,7 @@ import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import LeafletMapMarker from '@/components/map/LeafletMapMarker';
 import LandCard from '@/components/pages/land/LandCard';
 import { Subdistrict } from '@/types/address';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 const LandEdit: React.FC = () => {
   const { id } = useParams();
@@ -313,12 +313,17 @@ const LandEdit: React.FC = () => {
       const response = await updateLandById(Number(id), dataToSubmit);
       console.log('response Data');
       console.log(response);
-      swalSuccessTimer('สำเร็จ!', 'แก้ไขข้อมูลพื้นที่เกษตรกรเสร็จสิ้น').then(() => {
-        navigate('/admin/land');
-      });
+      swalSuccessTimer('สำเร็จ!', 'แก้ไขข้อมูลพื้นที่เกษตรกรเสร็จสิ้น').then(
+        () => {
+          navigate('/admin/land');
+        }
+      );
     } catch (error) {
       console.log(error);
-      swalError('เกิดข้อผิดพลาด!', 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล กรุณาลองใหม่');
+      swalError(
+        'เกิดข้อผิดพลาด!',
+        'เกิดข้อผิดพลาดในการแก้ไขข้อมูล กรุณาลองใหม่'
+      );
       return;
     }
   };

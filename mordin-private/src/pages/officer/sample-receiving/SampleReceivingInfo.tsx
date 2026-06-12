@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import { GenButtonCircle, B_LIST } from '../../../components/gui/GuiButton';
 
 import '../../../../public/assets/css/table.css';
+import CollectionWizardModal from './CollectionWizardModal';
+
 import LeafletMap, { MapMarkerData } from '@/components/map/LeafletMap';
 import SearchModal from '@/components/pages/collect-exam/SearchModal';
 import { getFarmerById, searchFarmers } from '@/services/api/FarmerApi';
@@ -21,6 +22,7 @@ import { LandInfoInterface } from '@/types/Land';
 import { Book, QrCodeInfo, SampleStatusEnum } from '@/types/qr-code/QrCode';
 import { TimeStampToDate } from '@/utils/Date';
 import { formatThaiNationalId } from '@/utils/IdentificationNumberFormat';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 const normalizeLandCode = (value?: string | null) => value?.trim() ?? '';
 const normalizeDigits = (value?: string | null) =>
@@ -121,6 +123,8 @@ const SampleReceivingInfo: React.FC = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [qrCodeData, setQrCodeData] = useState<QrCodeInfo>({} as QrCodeInfo);
   const [searchModal, setSearchModal] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [wizardStartStep, setWizardStartStep] = useState(1);
   const [isShowMap, setIsShowMap] = useState(false);
   const locationId = useLocation();
   const searchParams = new URLSearchParams(locationId.search);
@@ -742,21 +746,10 @@ const SampleReceivingInfo: React.FC = () => {
                           <GenButtonCircle
                             color={B_LIST.add.color}
                             icon={B_LIST.add.icon}
-                            onClick={() =>
-                              navigate(`/admin/farmer/add`, {
-                                state: {
-                                  thaiNationalId: qrCodeData.thaiNationalId,
-                                  firstName: qrCodeData.firstName,
-                                  lastName: qrCodeData.lastName,
-                                  phoneNumber: qrCodeData.phoneNumber,
-                                  bookId: qrCodeData.book?.bookId,
-                                  serviceAreaId:
-                                    qrCodeData.book?.serviceAreaId ??
-                                    qrCodeData.serviceArea?.serviceAreaId ??
-                                    qrCodeData.serviceAreaId,
-                                },
-                              })
-                            }
+                            onClick={() => {
+                              setWizardStartStep(2);
+                              setIsWizardOpen(true);
+                            }}
                           />
                         )}
                       </div>
@@ -896,34 +889,9 @@ const SampleReceivingInfo: React.FC = () => {
                             color={B_LIST.add.color}
                             icon={B_LIST.add.icon}
                             onClick={() => {
-                              // ดึงข้อมูลที่ดีที่สุดจากทุก source ที่มี
-                              const book = qrCodeData.book;
-                              const bookSubdistrict = book?.subdistrict;
-                              const provinceCode =
-                                bookSubdistrict?.district?.province?.code;
-                              const districtCode =
-                                bookSubdistrict?.district?.code;
-                              navigate(`/admin/land/add`, {
-                                state: {
-                                  bookId: book?.bookId,
-                                  farmerId: book?.farmerId,
-                                  landCode: qrCodeData.landCode || undefined,
-                                  landName: qrCodeData.landName || undefined,
-                                  areaSize: book?.areaSize ?? undefined,
-                                  serviceTypeId: book?.serviceTypeId,
-                                  serviceAreaId:
-                                    book?.serviceAreaId ??
-                                    qrCodeData.serviceArea?.serviceAreaId ??
-                                    qrCodeData.serviceAreaId,
-                                  provinceCode: provinceCode ?? undefined,
-                                  districtCode: districtCode ?? undefined,
-                                  subdistrictCode:
-                                    book?.subdistrictCode ?? undefined,
-                                  zipCode: book?.zipCode ?? undefined,
-                                  latitude: book?.latitude ?? undefined,
-                                  longitude: book?.longitude ?? undefined,
-                                },
-                              });
+                              const step = qrCodeData.book?.farmerId ? 3 : 2;
+                              setWizardStartStep(step);
+                              setIsWizardOpen(true);
                             }}
                           />
                         )}
@@ -1142,6 +1110,19 @@ const SampleReceivingInfo: React.FC = () => {
             fetchQrCode();
           }}
           qrCodeData={qrCodeData}
+        />
+      )}
+
+      {isWizardOpen && (
+        <CollectionWizardModal
+          isOpen={isWizardOpen}
+          onClose={() => setIsWizardOpen(false)}
+          onSuccess={() => {
+            setIsWizardOpen(false);
+            fetchQrCode();
+          }}
+          qrCodeData={qrCodeData}
+          startStep={wizardStartStep}
         />
       )}
     </div>

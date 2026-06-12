@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
@@ -29,6 +28,7 @@ import {
   SearchServiceCalendar,
 } from '@/types/ServiceCalendar';
 import { TimeStampToDate } from '@/utils/Date';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 type KpiItem = { label: string; icon: string; accent: string; unit: string };
 
@@ -272,7 +272,11 @@ const QRCodeManagement: React.FC = () => {
       await deleteQrCode(qrCodeId);
       setShowConfirm(null);
       setRefreshKey(prev => prev + 1);
-      await swalSuccessTimer('ลบสำเร็จ', `ลบ QR Code ${qrCode} เรียบร้อยแล้ว`, 1500);
+      await swalSuccessTimer(
+        'ลบสำเร็จ',
+        `ลบ QR Code ${qrCode} เรียบร้อยแล้ว`,
+        1500
+      );
     } catch (error: unknown) {
       const err = error as {
         response?: { data?: { message?: string | string[] } };

@@ -1,7 +1,6 @@
 // D:\mitrpol\mordin-private\src\pages\admin\farmer\FarmerAdd.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import { GenButtonCircle, B_LIST } from '../../../components/gui/GuiButton';
 import {
@@ -28,6 +27,7 @@ import { FactoryInfoInterface } from '../../../types/service-area/Factories';
 import { ServiceAreaInterface } from '../../../types/service-area/ServiceAreas';
 
 import FarmerCard from '@/components/pages/farmer/farmerCard';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 const FarmerEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -57,7 +57,8 @@ const FarmerEdit = () => {
       const farmerData = await getFarmerById(Number(id));
 
       setFormData(farmerData);
-      const initialCardId = farmerData.thaiNationalId || farmerData.thaiFarmerId || '';
+      const initialCardId =
+        farmerData.thaiNationalId || farmerData.thaiFarmerId || '';
       setInputCardId(formatIDCard(initialCardId));
       setFarmer(farmerData);
     };
@@ -169,8 +170,7 @@ const FarmerEdit = () => {
     const newErrors: typeof errors = {};
 
     // ตรวจเช็คความถูกต้อง
-    if (!inputCardId.trim())
-      newErrors.cardId = 'กรุณาระบุหมายเลขบัตร';
+    if (!inputCardId.trim()) newErrors.cardId = 'กรุณาระบุหมายเลขบัตร';
     if (!formData.firstName.trim()) newErrors.name = 'กรุณาระบุชื่อ';
     if (!formData.lastName.trim()) newErrors.lastname = 'กรุณาระบุนามสกุล';
     if (!formData.phone.trim()) newErrors.phone = 'กรุณาระบุหมายเลขโทรศัพท์';
@@ -195,12 +195,17 @@ const FarmerEdit = () => {
       };
 
       await updateFarmerById(Number(id), payload);
-      swalSuccessTimer('สำเร็จ!', 'แก้ไขข้อมูลเกษตรกรเรียบร้อยแล้ว').then(() => {
-        navigate('/admin/farmer');
-      });
+      swalSuccessTimer('สำเร็จ!', 'แก้ไขข้อมูลเกษตรกรเรียบร้อยแล้ว').then(
+        () => {
+          navigate('/admin/farmer');
+        }
+      );
     } catch (error) {
       console.error(error);
-      swalError('เกิดข้อผิดพลาด!', 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล กรุณาลองใหม่');
+      swalError(
+        'เกิดข้อผิดพลาด!',
+        'เกิดข้อผิดพลาดในการแก้ไขข้อมูล กรุณาลองใหม่'
+      );
     }
   };
 

@@ -241,6 +241,43 @@ body {
   background: #64748b;
 }
 
+.private-pricing-card .pricing-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+
+.private-pricing-card .pricing-content li {
+  color: #243247;
+  font-weight: 600;
+  line-height: 1.45;
+  padding-left: 1.35rem;
+  position: relative;
+}
+
+.private-pricing-card .pricing-content li::before {
+  color: #18a05c;
+  content: '✓';
+  font-weight: 800;
+  left: 0;
+  position: absolute;
+  top: 0;
+}
+
+.private-pricing-card .pricing-content li.disable {
+  color: #94a3b8;
+  font-weight: 400;
+  text-decoration: line-through;
+}
+
+.private-pricing-card .pricing-content li.disable::before {
+  color: #cbd5e1;
+  content: '–';
+}
+
 .private-layout-dark main .private-card,
 .private-layout-dark main .private-metric-card,
 .private-layout-dark main .private-pricing-card {
@@ -282,6 +319,14 @@ body {
 
 .private-layout-dark main .private-card-category {
   color: #aeb8c8;
+}
+
+.private-layout-dark main .private-pricing-card .pricing-content li {
+  color: #e6eaf0;
+}
+
+.private-layout-dark main .private-pricing-card .pricing-content li.disable {
+  color: #8194a9;
 }
 
 /* ══ SweetAlert2 — Mordin theme ══════════════════════════════════════════════
@@ -499,6 +544,24 @@ body[data-swal2-theme='dark'] .swal2-icon.swal2-success .swal2-success-fix {
   color: #94a3b8 !important;
 }
 
+.private-layout-root main .form-check .form-check-input[type='checkbox'] {
+  cursor: pointer;
+}
+
+.private-layout-root:not(.private-layout-dark)
+  main
+  .form-check-input[type='checkbox']:checked {
+  background-color: #005092 !important;
+  border-color: #005092 !important;
+}
+
+.private-layout-root:not(.private-layout-dark)
+  main
+  .form-check-input[type='checkbox']:focus {
+  border-color: #005092 !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 80, 146, 0.18) !important;
+}
+
 .private-layout-root:not(.private-layout-dark) main .text-muted,
 .private-layout-root:not(.private-layout-dark) main .form-text,
 .private-layout-root:not(.private-layout-dark) main .breadcrumb,
@@ -643,6 +706,16 @@ body[data-swal2-theme='dark'] .swal2-icon.swal2-success .swal2-success-fix {
 .private-layout-dark main input::placeholder,
 .private-layout-dark main textarea::placeholder {
   color: #aeb8c8 !important;
+}
+
+.private-layout-dark main .form-check-input[type='checkbox']:checked {
+  background-color: #7bd3f7 !important;
+  border-color: #7bd3f7 !important;
+}
+
+.private-layout-dark main .form-check-input[type='checkbox']:focus {
+  border-color: #7bd3f7 !important;
+  box-shadow: 0 0 0 0.2rem rgba(123, 211, 247, 0.18) !important;
 }
 
 .private-layout-dark main .text-muted,
@@ -1609,6 +1682,214 @@ body[data-swal2-theme='dark'] .swal2-icon.swal2-success .swal2-success-fix {
   background: #005092;
   border-color: #005092;
   color: #fff;
+}
+
+/* ===================== Widget Board (แดชบอร์ดปรับแต่งได้) ===================== */
+.exec-widget-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.exec-widget-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1px solid #e3e8ef;
+  background: #fff;
+  color: #475467;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.exec-widget-toolbar-btn:hover {
+  border-color: #005092;
+  color: #005092;
+}
+
+.exec-widget-toolbar-btn.is-active {
+  background: #005092;
+  border-color: #005092;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 80, 146, 0.25);
+}
+
+.exec-widget-hidden-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+}
+
+.exec-widget-hidden-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #667085;
+}
+
+.exec-widget-hidden-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px dashed #94a3b8;
+  background: #fff;
+  color: #475467;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.exec-widget-hidden-chip:hover {
+  border-color: #005092;
+  color: #005092;
+  border-style: solid;
+}
+
+/* กรอบเส้นประรอบวิดเจ็ตตอนอยู่ในโหมดปรับแต่ง */
+.exec-widget.is-customizing {
+  outline: 2px dashed #9bbcd9;
+  outline-offset: 3px;
+  border-radius: 14px;
+}
+
+.exec-widget-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.exec-widget-head-text {
+  min-width: 0;
+}
+
+.exec-widget-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.exec-widget-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.exec-widget-ctrl-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #667085;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.exec-widget-ctrl-btn:hover:not(:disabled) {
+  background: #eef4fb;
+  border-color: #d7e6f5;
+  color: #005092;
+}
+
+.exec-widget-ctrl-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* แถบหัวของวิดเจ็ตแบบ bare (KPI/ไทล์สรุป) — โผล่เฉพาะโหมดปรับแต่ง */
+.exec-widget-bare-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.exec-widget-bare-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #243247;
+}
+
+/* ตารางการ์ด/กราฟภายในวิดเจ็ต — ปรับจำนวนคอลัมน์ตามความกว้างวิดเจ็ตอัตโนมัติ
+   (ใช้แทน col-md-* เพื่อให้เนื้อหายังอ่านง่ายเมื่อผู้ใช้ย่อวิดเจ็ตเหลือครึ่งแถว) */
+.exec-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.exec-chart-grid-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ----- dark mode ----- */
+.private-layout-dark main .exec-widget-toolbar-btn {
+  background: #16202e;
+  border-color: #243446;
+  color: #b7c2d0;
+}
+
+.private-layout-dark main .exec-widget-toolbar-btn.is-active {
+  background: #005092;
+  border-color: #005092;
+  color: #fff;
+}
+
+.private-layout-dark main .exec-widget-hidden-row {
+  background: #16202e;
+  border-color: #3d4a5f;
+}
+
+.private-layout-dark main .exec-widget-hidden-chip {
+  background: #20293a;
+  border-color: #4a5b73;
+  color: #b7c2d0;
+}
+
+.private-layout-dark main .exec-widget.is-customizing {
+  outline-color: #3d5a78;
+}
+
+.private-layout-dark main .exec-widget-ctrl-btn {
+  color: #9aa7b8;
+}
+
+.private-layout-dark main .exec-widget-ctrl-btn:hover:not(:disabled) {
+  background: #1c2c40;
+  border-color: #28415f;
+  color: #7ec8f5;
+}
+
+.private-layout-dark main .exec-widget-bare-head {
+  background: #1c2536;
+}
+
+.private-layout-dark main .exec-widget-bare-title {
+  color: #d7e3f0;
 }
 
 .collect-sample-private-shell {

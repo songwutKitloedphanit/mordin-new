@@ -51,41 +51,37 @@
   <script src="/assets/js/main.js"></script>
 
   <!-- ═══ MODAL: Global Alert ═══ -->
-  <div class="modal fade" id="globalAlertModal" tabindex="-1" aria-labelledby="globalAlertModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow" style="border-radius:16px;overflow:hidden;">
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold" id="globalAlertModalLabel">
-            <i id="globalAlertModalIcon"></i>
-            <span id="globalAlertModalTitle">แจ้งเตือน</span>
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <div class="modal fade ag-popup" id="globalAlertModal" tabindex="-1" aria-labelledby="globalAlertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered ag-popup-dialog">
+      <div class="modal-content">
+        <div class="ag-popup-header">
+          <button type="button" class="ag-popup-close" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+          <div class="ag-popup-icon"><i id="globalAlertModalIcon" class="bi bi-info-circle-fill"></i></div>
+          <h5 class="ag-popup-title" id="globalAlertModalLabel"><span id="globalAlertModalTitle">แจ้งเตือน</span></h5>
         </div>
         <div class="modal-body" id="globalAlertModalBody"></div>
-        <div class="modal-footer border-0 pt-0">
-          <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">ปิด</button>
+        <div class="modal-footer">
+          <button type="button" class="btn-ag-popup-primary" data-bs-dismiss="modal">ปิด</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ═══ MODAL: Global Confirm ═══ -->
-  <div class="modal fade" id="globalConfirmModal" tabindex="-1" aria-labelledby="globalConfirmModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow" style="border-radius:16px;overflow:hidden;">
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold" id="globalConfirmModalLabel">
-            <i class="bi bi-question-circle-fill text-warning me-2"></i>
-            ยืนยันการดำเนินการ
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <div class="modal fade ag-popup" id="globalConfirmModal" tabindex="-1" aria-labelledby="globalConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered ag-popup-dialog">
+      <div class="modal-content">
+        <div class="ag-popup-header">
+          <button type="button" class="ag-popup-close" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+          <div class="ag-popup-icon"><i class="bi bi-question-circle-fill"></i></div>
+          <h5 class="ag-popup-title" id="globalConfirmModalLabel">ยืนยันการดำเนินการ</h5>
         </div>
         <div class="modal-body" id="globalConfirmModalBody">
           คุณต้องการยืนยันการดำเนินการนี้ใช่หรือไม่?
         </div>
-        <div class="modal-footer border-0 pt-0">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-          <button type="button" class="btn btn-primary px-4" id="globalConfirmBtn">ยืนยัน</button>
+        <div class="modal-footer">
+          <button type="button" class="btn-ag-popup-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn-ag-popup-primary" id="globalConfirmBtn">ยืนยัน</button>
         </div>
       </div>
     </div>
@@ -102,15 +98,19 @@
     var modalIconEl  = document.getElementById('globalAlertModalIcon');
     var msg = jsBookingSuccess || jsBookingError;
     if (msg && modalTitleEl && modalBodyEl) {
+      var alertModalEl = document.getElementById('globalAlertModal');
+      alertModalEl.classList.remove('ag-popup-success', 'ag-popup-error');
       if (jsBookingSuccess) {
         modalTitleEl.innerText  = 'สำเร็จ!';
-        modalIconEl.className   = 'bi bi-check-circle-fill text-success me-2';
+        modalIconEl.className   = 'bi bi-check-circle-fill';
+        alertModalEl.classList.add('ag-popup-success');
       } else {
         modalTitleEl.innerText  = 'เกิดข้อผิดพลาด!';
-        modalIconEl.className   = 'bi bi-exclamation-triangle-fill text-danger me-2';
+        modalIconEl.className   = 'bi bi-exclamation-triangle-fill';
+        alertModalEl.classList.add('ag-popup-error');
       }
       modalBodyEl.innerText = msg;
-      new bootstrap.Modal(document.getElementById('globalAlertModal')).show();
+      new bootstrap.Modal(alertModalEl).show();
     }
 
     /* Confirm modal */
@@ -126,14 +126,15 @@
       });
       confirmModalEl.addEventListener('show.bs.modal', function(event) {
         var btn    = event.relatedTarget;
+        if (!btn) return;
         var msg    = btn.getAttribute('data-bs-message');
         var title  = btn.getAttribute('data-bs-title');
         var formId = btn.getAttribute('data-bs-form-id');
         if (formId) confirmBtn.dataset.formId = formId; else delete confirmBtn.dataset.formId;
         var body  = confirmModalEl.querySelector('.modal-body');
-        var ttl   = confirmModalEl.querySelector('.modal-title');
+        var ttl   = confirmModalEl.querySelector('.ag-popup-title');
         if (body)  body.innerText = msg  || 'คุณต้องการยืนยันการดำเนินการนี้ใช่หรือไม่?';
-        if (ttl)   ttl.innerHTML  = '<i class="bi bi-question-circle-fill text-warning me-2"></i>' + (title || 'ยืนยันการดำเนินการ');
+        if (ttl)   ttl.innerText  = title || 'ยืนยันการดำเนินการ';
       });
     }
   });
@@ -164,7 +165,7 @@
   <!-- Scroll-reveal observer (all pages) -->
   <script>
   (function() {
-    var els = document.querySelectorAll('.scroll-reveal');
+    var els = document.querySelectorAll('.scroll-reveal, .sr-text, .sr-children, .sr-card, .sr-img');
     if (!els.length) return;
     var io = new IntersectionObserver(function(entries) {
       entries.forEach(function(en) { if (en.isIntersecting) { en.target.classList.add('revealed'); io.unobserve(en.target); } });

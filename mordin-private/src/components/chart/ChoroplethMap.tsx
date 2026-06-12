@@ -35,9 +35,18 @@ interface ChoroplethMapProps {
     level: MapLevel; // region, province, district, subdistrict
     name?: string; // ชื่อภูมิภาค, จังหวัด, อำเภอ, ตำบล
   };
+  // คลิกพื้นที่บนแผนที่แล้วได้ชื่อพื้นที่กลับไป (เปิดโหมดเลือกพื้นที่ single-select)
+  onSelect?: (name: string) => void;
+  height?: number;
 }
 
-const ChoroplethMap = ({ data, options, filter }: ChoroplethMapProps) => {
+const ChoroplethMap = ({
+  data,
+  options,
+  filter,
+  onSelect,
+  height = 400,
+}: ChoroplethMapProps) => {
   const colors = useChartColors();
 
   const rawGeoJson: GADM1GeoJSON | GADM2GeoJSON | GADM3GeoJSON =
@@ -140,6 +149,7 @@ const ChoroplethMap = ({ data, options, filter }: ChoroplethMapProps) => {
           map: mapName,
           roam: true,
           data: data,
+          selectedMode: onSelect ? 'single' : false,
           emphasis: {
             label: { color: colors.text },
           },
@@ -149,13 +159,31 @@ const ChoroplethMap = ({ data, options, filter }: ChoroplethMapProps) => {
         },
       ],
     }),
-    [mapName, data, options, colors]
+    [mapName, data, options, colors, onSelect]
+  );
+
+  const onEvents = useMemo(
+    () =>
+      onSelect
+        ? {
+            click: (params: { name?: string }) => {
+              if (params?.name) onSelect(params.name);
+            },
+          }
+        : undefined,
+    [onSelect]
   );
 
   return isMapReady ? (
-    <ReactECharts option={option} style={{ height: '400px' }} />
+    <ReactECharts
+      option={option}
+      onEvents={onEvents}
+      style={{ height: `${height}px` }}
+    />
   ) : (
-    <div style={{ height: '400px', display: 'grid', placeItems: 'center' }}>
+    <div
+      style={{ height: `${height}px`, display: 'grid', placeItems: 'center' }}
+    >
       กำลังโหลดแผนที่...
     </div>
   );

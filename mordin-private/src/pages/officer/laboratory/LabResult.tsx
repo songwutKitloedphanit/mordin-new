@@ -8,7 +8,6 @@ import React, {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { swalSuccessTimer, swalError, swalWarning, swalInfo, swalLoading, swalClose } from '@/utils/swal';
 
 import { GenButtonCircle } from '@/components/gui/GuiButton';
 import {
@@ -48,6 +47,14 @@ import {
   AnalysisStandardInterface,
   UpdateAnalysisStandardResultDto,
 } from '@/types/standard-sample/AnalysisStandards';
+import {
+  swalSuccessTimer,
+  swalError,
+  swalWarning,
+  swalInfo,
+  swalLoading,
+  swalClose,
+} from '@/utils/swal';
 
 const LabResult: React.FC = () => {
   const [laboratoryData, setLaboratoryData] = useState<Laboratory[]>();
@@ -375,7 +382,10 @@ const LabResult: React.FC = () => {
 
   const handleSubmitPreValue = async (resultValue: ResultInput[]) => {
     if (!resultValue || resultValue.length === 0) {
-      await swalWarning('ยังไม่มีค่าที่จะบันทึก', 'กรุณากรอกค่าผลวิเคราะห์ก่อนกดบันทึก');
+      await swalWarning(
+        'ยังไม่มีค่าที่จะบันทึก',
+        'กรุณากรอกค่าผลวิเคราะห์ก่อนกดบันทึก'
+      );
       return;
     }
 
@@ -392,9 +402,16 @@ const LabResult: React.FC = () => {
         : false;
 
       if (pendingCalculation) {
-        await swalInfo('บันทึกค่าดิบแล้ว', 'ระบบยังไม่คำนวณค่าหลังแปลงสำหรับ OM/P เพราะยังไม่มีค่า Working Standard ครบถ้วน');
+        await swalInfo(
+          'บันทึกค่าดิบแล้ว',
+          'ระบบยังไม่คำนวณค่าหลังแปลงสำหรับ OM/P เพราะยังไม่มีค่า Working Standard ครบถ้วน'
+        );
       } else {
-        await swalSuccessTimer('บันทึกผลวิเคราะห์สำเร็จ', 'ระบบบันทึกและคำนวณผลเรียบร้อยแล้ว', 1500);
+        await swalSuccessTimer(
+          'บันทึกผลวิเคราะห์สำเร็จ',
+          'ระบบบันทึกและคำนวณผลเรียบร้อยแล้ว',
+          1500
+        );
       }
 
       fetchExperimentService();
@@ -430,7 +447,11 @@ const LabResult: React.FC = () => {
       setLoading(true);
       try {
         await inputAnalysisStandardResults(resultValue);
-        swalSuccessTimer('บันทึกสำเร็จ', 'บันทึกข้อมูล Standard/Blank เรียบร้อยแล้ว', 1500);
+        swalSuccessTimer(
+          'บันทึกสำเร็จ',
+          'บันทึกข้อมูล Standard/Blank เรียบร้อยแล้ว',
+          1500
+        );
         const calendarId = selectedServiceCalendar?.serviceCalendarId;
         if (calendarId) {
           const data = await getAnalysisStandardsByCalendar(calendarId);
@@ -553,7 +574,10 @@ const LabResult: React.FC = () => {
 
   const handleUploadCSV = async () => {
     if (!file) {
-      await swalWarning('ยังไม่ได้เลือกไฟล์', 'กรุณาเลือกไฟล์ CSV ก่อนทำการอัปโหลด');
+      await swalWarning(
+        'ยังไม่ได้เลือกไฟล์',
+        'กรุณาเลือกไฟล์ CSV ก่อนทำการอัปโหลด'
+      );
       return;
     }
     swalLoading('กำลังอัปโหลด…');
@@ -580,13 +604,16 @@ const LabResult: React.FC = () => {
           title: 'swal-mordin-title',
           htmlContainer: 'swal-mordin-text',
           icon: 'swal-mordin-icon',
-        }
+        },
       });
       fetchExperimentService();
     } catch (err) {
       swalClose();
       console.error('Upload error:', err);
-      await swalError('เกิดข้อผิดพลาด', 'ไม่สามารถอัปโหลดไฟล์ได้ กรุณาตรวจสอบรูปแบบไฟล์หรือลองใหม่อีกครั้ง');
+      await swalError(
+        'เกิดข้อผิดพลาด',
+        'ไม่สามารถอัปโหลดไฟล์ได้ กรุณาตรวจสอบรูปแบบไฟล์หรือลองใหม่อีกครั้ง'
+      );
     } finally {
       setLoading(false);
     }
@@ -603,11 +630,18 @@ const LabResult: React.FC = () => {
           selectedServiceCalendar.serviceCalendarId,
           selectedRows
         );
-        swalSuccessTimer('บันทึกสำเร็จ', 'ข้อมูลได้รับการบันทึกเรียบร้อยแล้ว', 1000);
+        swalSuccessTimer(
+          'บันทึกสำเร็จ',
+          'ข้อมูลได้รับการบันทึกเรียบร้อยแล้ว',
+          1000
+        );
         fetchExperimentService();
       } catch (error) {
         console.error('Error:', error);
-        swalError('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+        swalError(
+          'เกิดข้อผิดพลาด',
+          'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
+        );
       } finally {
         setSelectedRows([]);
         setShowModal(false);
@@ -665,7 +699,7 @@ const LabResult: React.FC = () => {
             title: 'swal-mordin-title',
             htmlContainer: 'swal-mordin-text',
             icon: 'swal-mordin-icon',
-          }
+          },
         }).then(() => {
           alertedCodeRef.current = null;
         });
@@ -699,7 +733,7 @@ const LabResult: React.FC = () => {
             title: 'swal-mordin-title',
             htmlContainer: 'swal-mordin-text',
             icon: 'swal-mordin-icon',
-          }
+          },
         });
       }
       setSelectedResult(null);

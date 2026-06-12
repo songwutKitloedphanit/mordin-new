@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
@@ -12,6 +11,7 @@ import {
 } from '@/services/api/LandApi';
 import { LandInfoInterface, LandSummary } from '@/types/Land';
 import { TimeStampToDate } from '@/utils/Date';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 const KPI_CONFIG = [
   {

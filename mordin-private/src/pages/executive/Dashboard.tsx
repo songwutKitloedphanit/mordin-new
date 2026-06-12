@@ -1,22 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import HorizontalBarChart, {
-  BarChartDataItem,
-} from '@/components/chart/HorizontalBarChart';
 import DashboardSummary from '@/components/pages/executive/dashboard/DashBoardCard';
 import DashboardFilters from '@/components/pages/executive/dashboard/DashboardFilter';
-import {
-  formatElementShort,
-  formatElementTitle,
-} from '@/components/pages/executive/executive-elements';
+import { formatElementShort } from '@/components/pages/executive/executive-elements';
 import {
   BriefTile,
-  SectionCard,
   StatusNotice,
 } from '@/components/pages/executive/ExecutiveDashboardUI';
 import ExecutiveReportToolbar from '@/components/pages/executive/ExecutiveReportToolbar';
+import SoilGradePanel from '@/components/pages/executive/SoilGradePanel';
 import UpcomingServiceRounds from '@/components/pages/executive/UpcomingServiceRounds';
+import type { WidgetDef } from '@/components/pages/executive/widgets/types';
+import WidgetBoard from '@/components/pages/executive/widgets/WidgetBoard';
 import EmptyState from '@/components/ui/EmptyState';
 import LoadingState from '@/components/ui/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +35,8 @@ import { FactoryInfoInterface } from '@/types/service-area/Factories';
 import { ServiceAreaInfo } from '@/types/service-area/ServiceAreas';
 import { ServiceType } from '@/types/service-type/ServiceTypes';
 
+import '@/components/pages/executive/executive-redesign.css';
+
 const currentBuddhistYear = new Date().getFullYear() + 543;
 const yearList = [
   { value: '', name: 'ทุกปี' },
@@ -48,6 +46,9 @@ const yearList = [
     name: (currentBuddhistYear - 1).toString(),
   },
 ];
+
+// คีย์ localStorage สำหรับจำการจัดวางวิดเจ็ตของหน้านี้
+const WIDGET_STORAGE_KEY = 'exec-dashboard-widget-layout-v2';
 
 // คำทักทายตามช่วงเวลา (mockup: "สวัสดีตอนเช้า, คุณสมชาย 👋")
 const getTimeGreeting = () => {
@@ -74,7 +75,7 @@ const getMinorIcon = (name: string) => {
   return found ? found.icon : 'fas fa-flask';
 };
 
-// ลำดับการแสดงช่วงการใส่ปุ๋ย: รองพื้น โ’ แต่งหน้า โ’ เพิ่ม
+// ลำดับการแสดงช่วงการใส่ปุ๋ย: รองพื้น → แต่งหน้า → เพิ่ม
 const USAGE_TYPE_ORDER = ['รอง', 'แต่ง', 'เพิ่ม'];
 const usageTypeRank = (name: string) => {
   const index = USAGE_TYPE_ORDER.findIndex(keyword => name.includes(keyword));
@@ -85,16 +86,8 @@ type SelectedSearch = GetGraphFilterParams;
 
 interface DashboardGraph {
   elementName: string;
-  BarChartDataItem: BarChartDataItem[];
+  BarChartDataItem: { label: string; value: number; color: string }[];
 }
-
-// ===== แท็บของ Tabbed Explorer =====
-type TabKey = 'soil' | 'fertilizer' | 'improve';
-const EXPLORER_TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'soil', label: 'ผลวิเคราะห์ดิน', icon: 'fas fa-chart-bar' },
-  { key: 'fertilizer', label: 'คำแนะนำปุ๋ย', icon: 'fas fa-seedling' },
-  { key: 'improve', label: 'การปรับปรุงดิน', icon: 'fas fa-leaf' },
-];
 
 // ฟิลด์ฟิลเตอร์ที่ sync ขึ้น URL — เพื่อ refresh ไม่หาย และแชร์ลิงก์รายงานเงื่อนไขเดียวกันได้
 const FILTER_PARAM_KEYS: (keyof SelectedSearch)[] = [
@@ -118,14 +111,11 @@ const parseFiltersFromParams = (params: URLSearchParams): SelectedSearch => {
   return parsed;
 };
 
-const parseTabFromParams = (params: URLSearchParams): TabKey => {
-  const raw = params.get('tab');
-  return EXPLORER_TABS.some(tab => tab.key === raw) ? (raw as TabKey) : 'soil';
-};
+const MEDALS = ['🥇', '🥈', '🥉'];
 
-// แสดงสูตรปุ๋ยเป็นตารางตัวเลข เรียงตาม "จำนวนแปลงที่แนะนำ" (ความนิยม)
-// อ่านง่าย เห็นตัวเลขชัด — แทนกราฟวงกลม/แถบที่เทียบยาก
-const FormulaTable = ({
+// อันดับสูตรปุ๋ยแบบตารางเหรียญรางวัล เรียงตาม "จำนวนแปลงที่แนะนำ" (ความนิยม)
+// อ่านง่าย เห็นอันดับและตัวเลขชัด — แทนกราฟวงกลม/แถบที่เทียบยาก
+const FormulaRankTable = ({
   items,
 }: {
   items: { formula: string; useRate: number; count?: number }[];
@@ -144,41 +134,31 @@ const FormulaTable = ({
   if (ranked.length === 0) return null;
 
   return (
-    <div className="table-responsive">
-      <table
-        className="table align-middle mb-0"
-        style={{ fontSize: '1.35rem' }}
-      >
-        <thead>
-          <tr className="fw-semibold" style={{ fontSize: '1.1rem' }}>
-            <th>สูตรปุ๋ย</th>
-            {hasCount && <th className="text-end text-nowrap">จำนวนแปลง</th>}
-            <th className="text-end text-nowrap">อัตรา (กก./ไร่)</th>
+    <table className="exr-tbl">
+      <thead>
+        <tr>
+          <th style={{ width: 42 }}>#</th>
+          <th>สูตรปุ๋ย</th>
+          {hasCount && <th className="t-num">จำนวนแปลงแนะนำ</th>}
+          <th className="t-num">อัตรา (กก./ไร่)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {ranked.map((item, index) => (
+          <tr
+            key={`${item.formula}-${item.useRate}`}
+            className={index === 0 ? 'is-top' : ''}
+          >
+            <td>{MEDALS[index] ?? index + 1}</td>
+            <td className="t-main">{item.formula}</td>
+            {hasCount && (
+              <td className="t-num t-main">{item.count.toLocaleString()}</td>
+            )}
+            <td className="t-num">{item.useRate.toLocaleString()}</td>
           </tr>
-        </thead>
-        <tbody>
-          {ranked.map((item, index) => (
-            <tr
-              key={`${item.formula}-${item.useRate}`}
-              className={index === 0 ? 'table-primary' : ''}
-            >
-              <td className={index === 0 ? 'fw-bold' : ''}>
-                {index === 0 && (
-                  <i className="fas fa-star text-warning me-2"></i>
-                )}
-                {item.formula}
-              </td>
-              {hasCount && (
-                <td className="text-end fw-bold">
-                  {item.count.toLocaleString()}
-                </td>
-              )}
-              <td className="text-end">{item.useRate.toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </table>
   );
 };
 
@@ -186,20 +166,15 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   // อ่านค่าจาก URL "ครั้งเดียว" ตอน mount เพื่อใช้ตั้งค่าเริ่มต้น (หลังจากนั้นเราเป็นคนเขียน URL เอง)
-  const initialUrlRef = useRef<{ tab: TabKey; filters: SelectedSearch } | null>(
-    null
-  );
+  const initialUrlRef = useRef<SelectedSearch | null>(null);
   if (!initialUrlRef.current) {
-    initialUrlRef.current = {
-      tab: parseTabFromParams(searchParams),
-      filters: parseFiltersFromParams(searchParams),
-    };
+    initialUrlRef.current = parseFiltersFromParams(searchParams);
   }
 
   const [factoryList, setFactoryList] = useState<FactoryInfoInterface[]>([]);
   const [serviceAreaList, setServiceAreaList] = useState<ServiceAreaInfo[]>([]);
   const [draftSearch, setDraftSearch] = useState<SelectedSearch>(
-    initialUrlRef.current.filters
+    initialUrlRef.current
   );
   const [appliedSearch, setAppliedSearch] = useState<SelectedSearch | null>(
     null
@@ -217,8 +192,6 @@ const Dashboard = () => {
   const [dependentFilterError, setDependentFilterError] = useState<
     string | null
   >(null);
-  // สถานะการแสดงผลของดีไซน์ใหม่ (ไม่กระทบ data layer)
-  const [activeTab, setActiveTab] = useState<TabKey>(initialUrlRef.current.tab);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const factoryRequestRef = useRef(0);
   const provinceRequestRef = useRef(0);
@@ -292,7 +265,7 @@ const Dashboard = () => {
         setFactoryList(Array.isArray(factories) ? factories : []);
         setServiceTypes(safeTypes);
         // ใช้ฟิลเตอร์จาก URL ถ้ามี ไม่งั้น default = ประเภทบริการแรก
-        const urlFilters = initialUrlRef.current?.filters ?? {};
+        const urlFilters = initialUrlRef.current ?? {};
         const initialSearch: SelectedSearch = {
           ...urlFilters,
           typeId:
@@ -328,17 +301,16 @@ const Dashboard = () => {
     setAppliedSearch({ ...draftSearch });
   }, [draftSearch, filterError, isFilterLoading]);
 
-  // เขียนแท็บ + ฟิลเตอร์ที่ใช้จริงลง URL (replace) เพื่อ refresh ไม่หาย + แชร์ลิงก์ได้
+  // เขียนฟิลเตอร์ที่ใช้จริงลง URL (replace) เพื่อ refresh ไม่หาย + แชร์ลิงก์ได้
   useEffect(() => {
     if (isFilterLoading || !appliedSearch) return;
     const next = new URLSearchParams();
-    next.set('tab', activeTab);
     for (const key of FILTER_PARAM_KEYS) {
       const value = appliedSearch[key];
       if (value != null && value !== 0) next.set(key, String(value));
     }
     setSearchParams(next, { replace: true });
-  }, [activeTab, appliedSearch, isFilterLoading, setSearchParams]);
+  }, [appliedSearch, isFilterLoading, setSearchParams]);
 
   useEffect(() => {
     let ignore = false;
@@ -618,23 +590,195 @@ const Dashboard = () => {
       )?.nameTh,
     },
   ];
-  const activeFilters = reportFilters.filter(
-    filter =>
-      filter.value !== undefined && filter.value !== null && filter.value !== ''
-  );
+  // ===== นิยามวิดเจ็ตของหน้านี้ =====
+  // ทุก section เป็นวิดเจ็ตที่ผู้ใช้ จัดลำดับ/ย่อ-ขยาย/ยุบ/ซ่อน เองได้ (จำค่าใน localStorage)
+  // เพิ่มข้อมูลส่วนใหม่ = เพิ่ม WidgetDef ในลิสต์นี้ 1 ตัว
+  const widgets: WidgetDef[] = [
+    {
+      id: 'kpi',
+      title: 'ตัวเลขภาพรวม (KPI)',
+      icon: 'fas fa-gauge-high',
+      defaultSpan: 'full',
+      lockSpan: true,
+      bare: true,
+      render: () => <DashboardSummary />,
+    },
+    {
+      id: 'brief',
+      title: 'ข้อสรุปเด่น',
+      icon: 'fas fa-lightbulb',
+      defaultSpan: 'full',
+      lockSpan: true,
+      bare: true,
+      render: () => (
+        <div
+          className="exr-insights"
+          style={isDashboardLoading ? { opacity: 0.55 } : undefined}
+        >
+          <BriefTile
+            icon="fas fa-vial"
+            tone="blue"
+            label="ดินส่วนใหญ่"
+            empty={!soilInsight}
+            value={soilInsight && formatElementShort(soilInsight.element)}
+            sub={
+              soilInsight && (
+                <>
+                  <b>{soilInsight.pct.toFixed(0)}%</b> ของตัวอย่างอยู่ระดับ{' '}
+                  <b>{soilInsight.grade}</b>
+                </>
+              )
+            }
+          />
+          <BriefTile
+            icon="fas fa-star"
+            tone="green"
+            label="สูตรปุ๋ยแนะนำมากที่สุด"
+            empty={!fertilizerInsight}
+            value={fertilizerInsight?.formula}
+            sub={
+              fertilizerInsight &&
+              (fertilizerInsight.hasCount
+                ? `แนะนำให้ใช้ใน ${fertilizerInsight.count.toLocaleString()} แปลง`
+                : `อัตรา ${fertilizerInsight.useRate.toLocaleString()} กก./ไร่`)
+            }
+          />
+          <BriefTile
+            icon="fas fa-leaf"
+            tone="amber"
+            label="สารปรับปรุงดินเด่น"
+            empty={!improveInsight}
+            value={improveInsight?.fertilizerMinorName}
+            sub={
+              improveInsight && (
+                <>
+                  แนะนำครอบคลุม <b>{improveInsight.useRatePercent}%</b>{' '}
+                  ของพื้นที่
+                </>
+              )
+            }
+          />
+        </div>
+      ),
+    },
+    {
+      id: 'soil',
+      title: 'สัดส่วนระดับความอุดมสมบูรณ์ของดิน',
+      icon: 'fas fa-chart-bar',
+      defaultSpan: 'full',
+      render: () => (
+        <SoilGradePanel
+          elements={graphData.map(item => ({
+            elementName: item.elementName,
+            bars: item.BarChartDataItem,
+          }))}
+        />
+      ),
+    },
+    {
+      id: 'fertilizer',
+      title: 'ลำดับสูตรปุ๋ยที่แนะนำมากที่สุด',
+      icon: 'fas fa-seedling',
+      defaultSpan: 'half',
+      render: () =>
+        pieChartData.length > 0 ? (
+          <div className="exr-grid-wide">
+            {pieChartData.map(item => (
+              <div key={item.serviceCategoryName}>
+                <div className="exr-subhead">
+                  <span>
+                    <i className="fas fa-flask"></i>
+                    {item.serviceCategoryName}
+                  </span>
+                </div>
+                {item.summary
+                  // ซ่อนช่วงการใส่ที่ทุกสูตรอัตรา = 0 (ไม่มีคำแนะนำที่ใช้จริง)
+                  .filter(type =>
+                    type.PieChartItemDto.some(dto => Number(dto.useRate) > 0)
+                  )
+                  .map(type => (
+                    <div
+                      key={`${item.serviceCategoryName}-${type.usageTypeName}`}
+                      className="exr-group"
+                    >
+                      <div className="exr-subhead">
+                        <span>{type.usageTypeName}</span>
+                      </div>
+                      <FormulaRankTable items={type.PieChartItemDto} />
+                    </div>
+                  ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />
+        ),
+    },
+    {
+      id: 'improve',
+      title: 'การปรับปรุงสภาพดิน',
+      icon: 'fas fa-leaf',
+      defaultSpan: 'half',
+      render: () =>
+        prepareData.length > 0 ? (
+          <div className="exr-grid">
+            {prepareData.map(item => (
+              <div key={item.fertilizerMinorName} className="exr-stat">
+                <div className="exr-stat-ic">
+                  <i className={getMinorIcon(item.fertilizerMinorName)}></i>
+                </div>
+                <div>
+                  <div className="exr-stat-name">
+                    {item.fertilizerMinorName}
+                  </div>
+                  <div className="exr-stat-metrics">
+                    <div>
+                      <div className="exr-stat-metric-label">
+                        สัดส่วนพื้นที่
+                      </div>
+                      <div className="exr-stat-metric-value">
+                        {item.useRatePercent}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="exr-stat-metric-label">
+                        อัตราเฉลี่ย/ไร่
+                      </div>
+                      <div className="exr-stat-metric-value">
+                        {item.useRatePerRai}
+                        <small>{item.unitName}</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />
+        ),
+    },
+    {
+      id: 'upcoming',
+      title: 'รอบบริการที่กำลังมาถึง',
+      icon: 'fas fa-calendar-days',
+      defaultSpan: 'half',
+      bare: true,
+      render: () => <UpcomingServiceRounds />,
+    },
+  ];
 
   return (
-    <div className="executive-report-content">
+    <div className="executive-report-content exr">
       {/* ===================== PAGE HEADER (greeting — ไม่ติดไปใน print) ===================== */}
-      <div className="exec-page-header executive-report-no-print">
+      <div className="exr-page-head executive-report-no-print">
         <div>
-          <h2 className="exec-page-title">
+          <h2 className="exr-page-title">
             {getTimeGreeting()}
             {user?.firstName ? `, คุณ${user.firstName}` : ''} 👋
           </h2>
-          <p className="exec-page-subtitle">
-            รายงานภาพรวมการวิเคราะห์ดินและคำแนะนำปุ๋ย ·
-            ข้อมูลรวมผลการวิเคราะห์ดินและคำแนะนำการปรับปรุงดิน จากการสแกน QR
+          <p className="exr-page-sub">
+            ภาพรวมผลวิเคราะห์ดินและคำแนะนำปุ๋ย · ข้อมูลจากการสแกน QR
             และรถวิเคราะห์เคลื่อนที่
           </p>
         </div>
@@ -659,21 +803,6 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* ===================== KPI SUMMARY ===================== */}
-      <section className="mb-4">
-        {activeFilters.length > 0 && (
-          <div className="exec-brief-chips executive-report-no-print mb-3">
-            {activeFilters.map(filter => (
-              <span key={filter.label} className="exec-brief-chip">
-                <span className="exec-brief-chip-label">{filter.label}:</span>
-                {filter.value}
-              </span>
-            ))}
-          </div>
-        )}
-        <DashboardSummary />
-      </section>
-
       {/* ===================== ตัวกรอง (ยุบได้) ===================== */}
       <div className="exec-filter-card executive-report-no-print">
         <button
@@ -684,7 +813,7 @@ const Dashboard = () => {
         >
           <span
             className="d-flex align-items-center gap-2 fw-bold"
-            style={{ fontSize: '1rem' }}
+            style={{ fontSize: '13.5px' }}
           >
             <i className="fas fa-sliders text-primary"></i>
             ตัวกรองข้อมูล / ค้นหาตามเงื่อนไข
@@ -719,86 +848,6 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* ข้อสรุปเด่น 3 ด้าน — คำนวณตามเงื่อนไขที่กรองปัจจุบัน (อยู่ใต้ตัวกรอง) */}
-      {hasSuccessfulLoad && (
-        <section className="exec-brief mb-4">
-          {isDashboardLoading && (
-            <div className="exec-brief-sublabel mb-2">
-              <span className="exec-brief-updating">
-                <span
-                  className="spinner-border spinner-border-sm me-1"
-                  role="status"
-                  aria-hidden="true"
-                ></span>
-                กำลังอัปเดต…
-              </span>
-            </div>
-          )}
-          <div
-            className={`row g-3 exec-brief-tiles ${
-              isDashboardLoading ? 'is-updating' : ''
-            }`}
-          >
-            <BriefTile
-              icon="fas fa-vial"
-              accent="#3b9bd9"
-              label="ดินส่วนใหญ่"
-              empty={!soilInsight}
-              value={
-                soilInsight && (
-                  <>
-                    {formatElementShort(soilInsight.element)}{' '}
-                    <span className="text-body-secondary fs-6">
-                      ({soilInsight.element})
-                    </span>
-                  </>
-                )
-              }
-              sub={
-                soilInsight && (
-                  <>
-                    ส่วนใหญ่อยู่ระดับ{' '}
-                    <span className="fw-bold">{soilInsight.grade}</span> (
-                    {soilInsight.pct.toFixed(0)}%)
-                  </>
-                )
-              }
-            />
-            <BriefTile
-              icon="fas fa-star"
-              accent="#4caf7d"
-              label="สูตรปุ๋ยแนะนำสุด"
-              empty={!fertilizerInsight}
-              value={fertilizerInsight?.formula}
-              sub={
-                fertilizerInsight &&
-                (fertilizerInsight.hasCount
-                  ? `แนะนำ ${fertilizerInsight.count.toLocaleString()} แปลง`
-                  : `อัตรา ${fertilizerInsight.useRate.toLocaleString()} กก./ไร่`)
-              }
-            />
-            <BriefTile
-              icon="fas fa-leaf"
-              accent="#f4a62a"
-              label="สารปรับปรุงดินเด่น"
-              empty={!improveInsight}
-              value={improveInsight?.fertilizerMinorName}
-              sub={
-                improveInsight && (
-                  <>
-                    ครอบคลุม{' '}
-                    <span className="fw-bold">
-                      {improveInsight.useRatePercent}%
-                    </span>{' '}
-                    ของพื้นที่
-                  </>
-                )
-              }
-            />
-          </div>
-        </section>
-      )}
-
       {filterError && <StatusNotice type="error" message={filterError} />}
       {dependentFilterError && (
         <StatusNotice type="error" message={dependentFilterError} />
@@ -808,220 +857,10 @@ const Dashboard = () => {
         <LoadingState label="กำลังโหลดข้อมูลแดชบอร์ด..." />
       )}
 
-      {/* ===================== TABBED EXPLORER ===================== */}
-      {hasSuccessfulLoad && (
+      {/* ===================== WIDGET BOARD (ทุก section ปรับแต่งได้) ===================== */}
+      {hasDashboardLoaded && (
         <div className="position-relative">
-          <div
-            className="exec-tabs-nav executive-report-no-print"
-            role="tablist"
-          >
-            {EXPLORER_TABS.map(tab => (
-              <button
-                key={tab.key}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab.key}
-                className={`exec-tab-btn ${activeTab === tab.key ? 'is-active' : ''}`}
-                onClick={() => setActiveTab(tab.key)}
-              >
-                <i className={`${tab.icon} me-2`}></i>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* แผงผลวิเคราะห์ดิน */}
-          <div
-            role="tabpanel"
-            className={`exec-tab-panel ${activeTab === 'soil' ? '' : 'is-inactive'}`}
-          >
-            <SectionCard
-              title="ผลการวิเคราะห์ดิน"
-              subtitle="สัดส่วนตัวอย่างดินในแต่ละระดับความอุดมสมบูรณ์ แยกตามธาตุอาหาร"
-              icon="fas fa-chart-bar"
-            >
-              {graphData.length > 0 ? (
-                <div className="row">
-                  {graphData.map(item => {
-                    const topGrade = item.BarChartDataItem.reduce((a, b) =>
-                      b.value > a.value ? b : a
-                    );
-                    const totalCount = item.BarChartDataItem.reduce(
-                      (sum, bar) => sum + bar.value,
-                      0
-                    );
-                    const topPercent =
-                      totalCount > 0 ? (topGrade.value / totalCount) * 100 : 0;
-                    return (
-                      <div className="col-md-4 mb-4" key={item.elementName}>
-                        <div style={{ minHeight: '210px', width: '100%' }}>
-                          <HorizontalBarChart
-                            title={formatElementTitle(item.elementName)}
-                            dataItems={item.BarChartDataItem}
-                          />
-                        </div>
-                        <div
-                          className="text-center mt-2"
-                          style={{ fontSize: '1.1rem' }}
-                        >
-                          <span className="text-body-secondary">
-                            ส่วนใหญ่อยู่ระดับ{' '}
-                          </span>
-                          <span className="fw-bold">{topGrade.label}</span>
-                          <span className="text-body-secondary">
-                            {' '}
-                            ({topPercent.toFixed(0)}%)
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />
-              )}
-            </SectionCard>
-          </div>
-
-          {/* แผงคำแนะนำปุ๋ย */}
-          <div
-            role="tabpanel"
-            className={`exec-tab-panel ${activeTab === 'fertilizer' ? '' : 'is-inactive'}`}
-          >
-            <SectionCard
-              title="คำแนะนำปุ๋ย"
-              subtitle="สูตรปุ๋ยที่ถูกแนะนำมากที่สุด (ตามจำนวนแปลง) และอัตราใส่ต่อไร่ แยกตามช่วงการเพาะปลูก"
-              icon="fas fa-seedling"
-            >
-              {pieChartData.length > 0 ? (
-                <div className="row g-4">
-                  {pieChartData.map(item => (
-                    <div
-                      key={item.serviceCategoryName}
-                      className="col-lg-6 col-12"
-                    >
-                      <div className="border rounded-3 p-3 h-100">
-                        <h5
-                          className="fw-bold text-center mb-3 pb-2 border-bottom"
-                          style={{ fontSize: '1.55rem' }}
-                        >
-                          <i className="fas fa-flask text-primary me-2"></i>
-                          {item.serviceCategoryName}
-                        </h5>
-                        {item.summary
-                          // ซ่อนช่วงการใส่ที่ทุกสูตรอัตรา = 0 (ไม่มีคำแนะนำที่ใช้จริง)
-                          .filter(type =>
-                            type.PieChartItemDto.some(
-                              dto => Number(dto.useRate) > 0
-                            )
-                          )
-                          .map(type => (
-                            <div
-                              key={`${item.serviceCategoryName}-${type.usageTypeName}`}
-                              className="mb-4"
-                            >
-                              <div
-                                className="fw-semibold mb-2"
-                                style={{ fontSize: '1.3rem' }}
-                              >
-                                <i className="fas fa-seedling text-primary me-2"></i>
-                                {type.usageTypeName}
-                              </div>
-                              <FormulaTable items={type.PieChartItemDto} />
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />
-              )}
-            </SectionCard>
-          </div>
-
-          {/* แผงการปรับปรุงดิน */}
-          <div
-            role="tabpanel"
-            className={`exec-tab-panel ${activeTab === 'improve' ? '' : 'is-inactive'}`}
-          >
-            <SectionCard
-              title="การปรับปรุงดิน"
-              subtitle="สัดส่วนพื้นที่ที่ควรปรับปรุงดินและอัตราการใช้เฉลี่ยต่อไร่"
-              icon="fas fa-leaf"
-            >
-              {prepareData.length > 0 ? (
-                <div className="row justify-content-center gy-3">
-                  {prepareData.map(item => (
-                    <div key={item.fertilizerMinorName} className="col-md-5">
-                      <div className="private-card border-0 h-100 private-dashboard-improve-card">
-                        <div className="private-card-body text-center py-4">
-                          <div
-                            className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                            style={{
-                              width: 72,
-                              height: 72,
-                              backgroundColor: 'rgba(21, 114, 232, 0.12)',
-                            }}
-                          >
-                            <i
-                              className={`${getMinorIcon(
-                                item.fertilizerMinorName
-                              )} text-primary`}
-                              style={{ fontSize: '2rem' }}
-                            ></i>
-                          </div>
-                          <h5
-                            className="private-card-title fw-bold mb-1"
-                            style={{ fontSize: '1.6rem' }}
-                          >
-                            {item.fertilizerMinorName}
-                          </h5>
-                          <div
-                            className="text-body-secondary mb-4"
-                            style={{ fontSize: '1.05rem' }}
-                          >
-                            สารปรับปรุงดิน
-                          </div>
-                          <div className="row text-center">
-                            <div className="col-6 border-end">
-                              <div
-                                className="text-body-secondary mb-1"
-                                style={{ fontSize: '1.1rem' }}
-                              >
-                                <i className="fas fa-chart-pie me-1"></i>
-                                สัดส่วนพื้นที่
-                              </div>
-                              <div className="display-6 fw-bold text-primary">
-                                {item.useRatePercent}%
-                              </div>
-                            </div>
-                            <div className="col-6">
-                              <div
-                                className="text-body-secondary mb-1"
-                                style={{ fontSize: '1.1rem' }}
-                              >
-                                <i className="fas fa-weight-hanging me-1"></i>
-                                อัตราเฉลี่ย/ไร่
-                              </div>
-                              <div className="display-6 fw-bold text-primary">
-                                {item.useRatePerRai}
-                                <span className="fs-6 ms-1">
-                                  {item.unitName}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />
-              )}
-            </SectionCard>
-          </div>
+          <WidgetBoard storageKey={WIDGET_STORAGE_KEY} widgets={widgets} />
 
           {isDashboardLoading && (
             <div
@@ -1054,11 +893,6 @@ const Dashboard = () => {
           )}
         </div>
       )}
-
-      {/* ===================== รอบบริการที่กำลังมาถึง (M5 — ไม่ติดไปใน print) ===================== */}
-      <section className="executive-report-no-print mt-4">
-        <UpcomingServiceRounds />
-      </section>
     </div>
   );
 };

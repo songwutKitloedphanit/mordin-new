@@ -47,29 +47,6 @@ const Header: React.FC<HeaderProps> = ({
       </ul>
 
       <div className="ml-auto flex items-center gap-3">
-        {/* Top search bar matching mockup (decorative) */}
-        <div
-          className={`hidden w-[250px] items-center gap-2 rounded-[10px] border px-3 py-1.5 text-slate-400 transition-colors md:flex ${
-            isDarkMode
-              ? 'border-[#3D4A5F] bg-[#1a253b]'
-              : 'border-[#e6eaf0] bg-[#f8fafc]'
-          }`}
-        >
-          <i className="fas fa-magnifying-glass text-xs" />
-          <span className="select-none text-[13px]">
-            ค้นหาชาวไร่, ตัวอย่าง, แปลง…
-          </span>
-          <span
-            className={`ml-auto rounded-[5px] border px-1.5 py-0.5 text-[10px] font-normal ${
-              isDarkMode
-                ? 'border-[#3D4A5F] bg-[#263247] text-[#AEB8C8]'
-                : 'border-[#e6eaf0] bg-white'
-            }`}
-          >
-            ⌘K
-          </span>
-        </div>
-
         <button
           type="button"
           onClick={onThemeToggle}

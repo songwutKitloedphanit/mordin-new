@@ -16,13 +16,13 @@ import Swal, { SweetAlertOptions } from 'sweetalert2';
 
 const BASE: Partial<SweetAlertOptions> = {
   customClass: {
-    popup:          'swal-mordin-popup',
-    confirmButton:  'swal-mordin-confirm',
-    cancelButton:   'swal-mordin-cancel',
-    denyButton:     'swal-mordin-deny',
-    title:          'swal-mordin-title',
-    htmlContainer:  'swal-mordin-text',
-    icon:           'swal-mordin-icon',
+    popup: 'swal-mordin-popup',
+    confirmButton: 'swal-mordin-confirm',
+    cancelButton: 'swal-mordin-cancel',
+    denyButton: 'swal-mordin-deny',
+    title: 'swal-mordin-title',
+    htmlContainer: 'swal-mordin-text',
+    icon: 'swal-mordin-icon',
   },
 };
 

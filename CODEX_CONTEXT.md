@@ -15,14 +15,19 @@
 - Do not display Citizen ID numbers in the public domain.
 - Do not change API contracts or database schema without explicit approval.
 
-## Latest Completed Task (2026-06-11)
-- **Fixed KU Mock User Bypass for Render Deployment**:
-  1. Updated uth.service.ts and uth.controller.ts to ensure dmin@KU, staff@KU, and exclusive@KU correctly bypass the Azure AD token request, which was failing on the deployed app due to placeholder dummy_scope values.
-  2. Ensured correct UserRoles assignment for each KU mock user.
-  3. Styled mobile user profile container at the bottom of the nav menu to have a blue border, and styled its inner avatar to be a blue circle with high-contrast white text for the initial letter.
+## Latest Completed Task (2026-06-12)
+- **Soil Sample Stepper Wizard**:
+  1. Developed [CollectionWizardModal.tsx](file:///c:/mordin/mordin-private/src/pages/officer/sample-receiving/CollectionWizardModal.tsx) to manage adding missing farmers and lands in-place during the sample receiving flow.
+  2. Implemented a visual stepper indicator showing the stages: `ตรวจสอบ QR` → `เกษตรกร` → `แปลงปลูก` → `พร้อมรับตัวอย่าง`.
+  3. Pre-populated farmer and land forms with details retrieved from the scanned QR code, supporting Factory, Service Area, Province, District, Subdistrict, and Zip Code dropdowns, along with `วันเดือนปีเกิด` (Birth Date) for the farmer.
+  4. Added a Leaflet Map preview in the reference panel on the left with a fallback message for missing/invalid coordinates.
+  5. Modified [SampleReceivingInfo.tsx](file:///c:/mordin/mordin-private/src/pages/officer/sample-receiving/SampleReceivingInfo.tsx) to integrate the modal. The "Add Farmer" button starts the wizard at Step 2 (Farmer), and the "Add Land" button starts at Step 3 (Land) or Step 2 (if farmer is missing).
+  6. Added cancel and close buttons on all stages that exit the modal without saving the current state, and added a success step (Step 4) indicating completion.
+  7. Configured the success callback to reload the sample details automatically, enabling immediate confirmation to receive the sample.
 
 ## Files Recently Changed
-- `mordin-public/assets/css/main.css` (Updated desktop profile button and added mobile menu contrast & border styles)
+- `mordin-private/src/pages/officer/sample-receiving/CollectionWizardModal.tsx` (New stepper wizard modal component)
+- `mordin-private/src/pages/officer/sample-receiving/SampleReceivingInfo.tsx` (Modified to integrate the stepper wizard modal)
 
 ## Known Blockers
 - None.

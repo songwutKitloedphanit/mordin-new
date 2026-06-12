@@ -1,6 +1,5 @@
 import { ChangeEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
@@ -24,6 +23,7 @@ import {
 } from '@/types/Farmer';
 import { FactoryInfoInterface } from '@/types/service-area/Factories';
 import { ServiceAreaInterface } from '@/types/service-area/ServiceAreas';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 const KPI_CONFIG = [
   {
@@ -83,7 +83,7 @@ const FarmerAdd = () => {
       setFactoryList(factoryData);
 
       const defaultFactoryId =
-          factoryData.length > 0 ? factoryData[0].factoryId : null;
+        factoryData.length > 0 ? factoryData[0].factoryId : null;
 
       if (state) {
         setFormData({
@@ -189,8 +189,7 @@ const FarmerAdd = () => {
 
   const handleSubmit = async () => {
     const newErrors: typeof errors = {};
-    if (!inputCardId.trim())
-      newErrors.cardId = 'กรุณาระบุหมายเลขบัตร';
+    if (!inputCardId.trim()) newErrors.cardId = 'กรุณาระบุหมายเลขบัตร';
     if (!formData.firstName?.trim()) newErrors.name = 'กรุณาระบุชื่อ';
     if (!formData.lastName?.trim()) newErrors.lastname = 'กรุณาระบุนามสกุล';
     if (!formData.phone?.trim()) newErrors.phone = 'กรุณาระบุหมายเลขโทรศัพท์';

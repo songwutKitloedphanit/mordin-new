@@ -1,17 +1,18 @@
 ﻿import * as fs from 'fs';
 import * as path from 'path';
 
-
-import * as puppeteer from 'puppeteer';
-import { report } from 'process';
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-
 import * as archiver from 'archiver';
 import { Response } from 'express';
+import * as puppeteer from 'puppeteer';
 import { formatThaiDateWithOutWeekly } from 'src/common/utils/date.util';
 import { formatNumber } from 'src/common/utils/format-number.util';
-
 import { Farmer } from 'src/farmers/entities/farmer.entity';
 import { UsageType } from 'src/fertilizer/usage-types/entities/usage-type.entity';
 import { Land } from 'src/lands/entities/land.entity';

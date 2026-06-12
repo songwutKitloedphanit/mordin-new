@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { swalError } from '@/utils/swal';
 
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
 import { GenFormDate2, GenFormSelect } from '@/components/gui/GuiForm';
@@ -24,6 +23,7 @@ import {
   TimeStampToDate,
 } from '@/utils/Date';
 import { formatThaiNationalId } from '@/utils/IdentificationNumberFormat';
+import { swalError } from '@/utils/swal';
 
 const COLLECTED_SEARCH = {
   status: [SampleStatusEnum.COLLECTED],

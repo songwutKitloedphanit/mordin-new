@@ -3,7 +3,7 @@ import { Buffer } from 'buffer';
 import JSZip from 'jszip';
 import { PDFDocument } from 'pdf-lib';
 import React, { useEffect, useState } from 'react';
-import { swalWarning, swalError, swalLoading, swalClose } from '@/utils/swal';
+
 // เพิ่ม import สำหรับจัดการ ZIP และ PDF
 
 import { GenButtonCircle } from '@/components/gui/GuiButton';
@@ -28,6 +28,7 @@ import {
 } from '@/types/ServiceCalendar';
 import { TimeStampToDate } from '@/utils/Date';
 import { formatThaiNationalId } from '@/utils/IdentificationNumberFormat';
+import { swalWarning, swalError, swalLoading, swalClose } from '@/utils/swal';
 
 if (!window.Buffer) {
   window.Buffer = Buffer;
@@ -225,7 +226,10 @@ const AnalysisReport: React.FC = () => {
       };
 
       if (!playload.bookIds || playload.bookIds.length === 0) {
-        swalWarning('ยังไม่ได้เลือกตัวอย่าง', 'กรุณาเลือกตัวอย่างที่ต้องการยืนยัน');
+        swalWarning(
+          'ยังไม่ได้เลือกตัวอย่าง',
+          'กรุณาเลือกตัวอย่างที่ต้องการยืนยัน'
+        );
         return;
       }
       const unavailableReports = reports.filter(
@@ -235,7 +239,10 @@ const AnalysisReport: React.FC = () => {
       );
 
       if (unavailableReports.length > 0) {
-        swalWarning('ยังอนุมัติไม่ได้', 'ตัวอย่างที่เลือกยังไม่มีเกณฑ์สี/คะแนนจริงครบถ้วน');
+        swalWarning(
+          'ยังอนุมัติไม่ได้',
+          'ตัวอย่างที่เลือกยังไม่มีเกณฑ์สี/คะแนนจริงครบถ้วน'
+        );
         return;
       }
 
@@ -254,7 +261,10 @@ const AnalysisReport: React.FC = () => {
     };
 
     if (!payload.sampleCodes || payload.sampleCodes.length === 0) {
-      swalWarning('ยังไม่ได้เลือกตัวอย่าง', 'กรุณาเลือกตัวอย่างที่ต้องการดาวน์โหลด');
+      swalWarning(
+        'ยังไม่ได้เลือกตัวอย่าง',
+        'กรุณาเลือกตัวอย่างที่ต้องการดาวน์โหลด'
+      );
       return;
     }
 
@@ -298,7 +308,10 @@ const AnalysisReport: React.FC = () => {
     };
 
     if (!payload.sampleCodes || payload.sampleCodes.length === 0) {
-      swalWarning('ยังไม่ได้เลือกตัวอย่าง', 'กรุณาเลือกตัวอย่างที่ต้องการพิมพ์');
+      swalWarning(
+        'ยังไม่ได้เลือกตัวอย่าง',
+        'กรุณาเลือกตัวอย่างที่ต้องการพิมพ์'
+      );
       return;
     }
 
@@ -360,7 +373,10 @@ const AnalysisReport: React.FC = () => {
     } catch (error) {
       console.error('Print error:', error);
       swalClose();
-      swalError('เกิดข้อผิดพลาด!', 'ไม่สามารถเปิดไฟล์เพื่อพิมพ์ได้ กรุณาลองใหม่');
+      swalError(
+        'เกิดข้อผิดพลาด!',
+        'ไม่สามารถเปิดไฟล์เพื่อพิมพ์ได้ กรุณาลองใหม่'
+      );
     }
   };
 

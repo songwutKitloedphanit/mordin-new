@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import { B_LIST, GenButtonCircle } from '../../../components/gui/GuiButton';
 import {
@@ -15,6 +14,7 @@ import { ManagementKpiRow } from '@/components/gui/ManagementKpiCard';
 import RowAvatar from '@/components/gui/RowAvatar';
 import SearchAndPaginationTable from '@/components/gui/SearchAndPaginationTable';
 import { formatThaiNationalId } from '@/utils/IdentificationNumberFormat';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 const KPI_CONFIG = [
   {

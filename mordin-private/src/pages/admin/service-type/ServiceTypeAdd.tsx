@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
@@ -15,6 +15,9 @@ import {
 } from '../../../types/service-type/ServiceTypes';
 
 import ServiceTypeCard from '@/components/pages/service-type/ServiceTypeCard';
+
+const toBoolean = (value: unknown) =>
+  value === true || value === 1 || value === '1' || value === 'true';
 
 const ServiceTypeAdd = () => {
   const [laboratoryTest, setLaboratoryTest] = useState<
@@ -37,7 +40,7 @@ const ServiceTypeAdd = () => {
 
       const mappedData: ServiceLaboratoryInput[] = data.map(
         (lab: LaboratoryInfoInterface) => ({
-          laboratoryId: lab.laboratoryId,
+          laboratoryId: Number(lab.laboratoryId),
           name: lab.name,
           isDisplay: false,
         })
@@ -125,11 +128,14 @@ const ServiceTypeAdd = () => {
     }));
   };
 
-  const handleToggleTest = (id: number) => {
+  const handleSetTestVisible = (id: number, checked: boolean) => {
+    const laboratoryId = Number(id);
     setServiceType(prev => ({
       ...prev,
       serviceLaboratories: prev.serviceLaboratories.map(lab =>
-        lab.laboratoryId === id ? { ...lab, isDisplay: !lab.isDisplay } : lab
+        Number(lab.laboratoryId) === laboratoryId
+          ? { ...lab, laboratoryId, isDisplay: checked }
+          : lab
       ),
     }));
   };
@@ -329,7 +335,8 @@ const ServiceTypeAdd = () => {
 
                 {serviceType.serviceLaboratories?.map(lab => {
                   const labInfo = laboratoryTest.find(
-                    item => item.laboratoryId === lab.laboratoryId
+                    item =>
+                      Number(item.laboratoryId) === Number(lab.laboratoryId)
                   );
 
                   return (
@@ -338,11 +345,18 @@ const ServiceTypeAdd = () => {
                         className="form-check-input"
                         type="checkbox"
                         id={`test-${lab.laboratoryId}`}
-                        onChange={() => handleToggleTest(lab.laboratoryId)}
+                        checked={toBoolean(lab.isDisplay)}
+                        onChange={e =>
+                          handleSetTestVisible(
+                            lab.laboratoryId,
+                            e.currentTarget.checked
+                          )
+                        }
                       />
                       <label
                         className="form-check-label"
                         htmlFor={`test-${lab.laboratoryId}`}
+                        style={{ cursor: 'pointer' }}
                       >
                         {labInfo?.name ?? 'ไม่พบชื่อแลป'}
                       </label>
@@ -423,7 +437,7 @@ const ServiceTypeAdd = () => {
                         width: 'auto',
                         minWidth: 'unset',
                         padding: '4px',
-                      }} // โ… กำหนดความกว้าง
+                      }} // ✅ กำหนดความกว้าง
                     >
                       {(
                         Object.entries(ServiceTypeColor) as [string, string][]
@@ -504,13 +518,13 @@ const ServiceTypeAdd = () => {
             <ul className="pricing-content">
               {serviceType.serviceLaboratories?.map(t => {
                 const labInfo = laboratoryTest.find(
-                  item => item.laboratoryId === t.laboratoryId
+                  item => Number(item.laboratoryId) === Number(t.laboratoryId)
                 );
 
                 return (
                   <li
                     key={t.laboratoryId}
-                    className={t.isDisplay ? '' : 'disable'}
+                    className={toBoolean(t.isDisplay) ? '' : 'disable'}
                   >
                     {labInfo ? labInfo.name : 'ไม่พบชื่อแล็บ'}
                   </li>

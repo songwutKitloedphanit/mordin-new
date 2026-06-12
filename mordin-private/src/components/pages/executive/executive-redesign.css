@@ -1,0 +1,918 @@
+/* ════════════════════════════════════════════════════════════════════
+   Executive Dashboard / Report — ดีไซน์ใหม่ (อิง mockup dashboard-reports-redesign.html)
+   ทุกคลาส scope ใต้ .exr เพื่อไม่กระทบหน้าอื่นของแอป
+   ════════════════════════════════════════════════════════════════════ */
+
+.exr {
+  --exr-brand: #005092;
+  --exr-bg: #f3f5f8;
+  --exr-surface: #ffffff;
+  --exr-line: #e6eaf0;
+  --exr-line-soft: #f0f3f7;
+  --exr-ink: #16222f;
+  --exr-ink-2: #51606f;
+  --exr-ink-3: #8b9bae;
+  --exr-green: #18a05c;
+  --exr-green-bg: #e5f7ed;
+  --exr-amber: #d98f0c;
+  --exr-amber-bg: #fdf3dd;
+  --exr-red: #d9483b;
+  --exr-red-bg: #fceae8;
+  --exr-violet: #7a5af5;
+  --exr-radius: 14px;
+  --exr-shadow: 0 1px 3px rgba(16, 27, 45, 0.06), 0 4px 14px rgba(16, 27, 45, 0.04);
+  --exr-shadow-lg: 0 8px 30px rgba(16, 27, 45, 0.12);
+
+  font-size: 14px;
+  color: var(--exr-ink);
+}
+
+.private-layout-dark main .exr {
+  --exr-surface: #16202e;
+  --exr-line: #243446;
+  --exr-line-soft: #1d2a3b;
+  --exr-ink: #e6edf6;
+  --exr-ink-2: #9aa7b8;
+  --exr-ink-3: #6c7c90;
+  --exr-shadow: none;
+  --exr-shadow-lg: none;
+}
+
+/* ───────────────────────── Page head ───────────────────────── */
+.exr-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.exr-page-title {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--exr-ink);
+  margin: 0;
+}
+
+.exr-page-sub {
+  font-size: 13px;
+  color: var(--exr-ink-2);
+  margin: 3px 0 0;
+}
+
+/* ───────────────────────── KPI strip ───────────────────────── */
+.exr-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1200px) {
+  .exr-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .exr-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+.exr-kpi {
+  background: var(--exr-surface);
+  border-radius: var(--exr-radius);
+  padding: 18px 20px;
+  box-shadow: var(--exr-shadow);
+  border: 1px solid var(--exr-line-soft);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.exr-kpi:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--exr-shadow-lg);
+}
+
+/* แถบสีเน้นด้านซ้ายของการ์ด KPI */
+.exr-kpi::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--kpi-c, var(--exr-brand));
+  border-radius: 4px 0 0 4px;
+}
+
+.exr-kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 9px;
+}
+
+.exr-kpi-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--exr-ink-2);
+}
+
+.exr-kpi-ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  background: rgba(0, 80, 146, 0.08);
+  color: var(--kpi-c, var(--exr-brand));
+}
+
+.exr-kpi-num {
+  font-family: 'Inter', 'Sarabun', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+  color: var(--exr-ink);
+}
+
+.exr-kpi-num small {
+  font-family: 'Sarabun', sans-serif;
+  font-size: 13px;
+  color: var(--exr-ink-3);
+  font-weight: 600;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+.exr-kpi-trend {
+  font-size: 11.5px;
+  margin-top: 7px;
+  color: var(--exr-ink-3);
+}
+
+/* ───────────────────────── Insights strip ───────────────────────── */
+.exr-insights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 992px) {
+  .exr-insights {
+    grid-template-columns: 1fr;
+  }
+}
+
+.exr-insight {
+  border-radius: var(--exr-radius);
+  padding: 17px 19px;
+  display: flex;
+  gap: 13px;
+  border: 1px solid;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.exr-insight:hover {
+  transform: translateY(-2px);
+}
+
+.exr-insight.i-blue {
+  background: linear-gradient(135deg, #eef6ff 0%, #e3f0fd 100%);
+  border-color: #cce0f5;
+}
+
+.exr-insight.i-green {
+  background: linear-gradient(135deg, #ecfaf2 0%, #e0f6ea 100%);
+  border-color: #bfe8d2;
+}
+
+.exr-insight.i-amber {
+  background: linear-gradient(135deg, #fff8ea 0%, #fdf1d8 100%);
+  border-color: #f1ddae;
+}
+
+.private-layout-dark main .exr-insight.i-blue {
+  background: #182a3f;
+  border-color: #28415f;
+}
+
+.private-layout-dark main .exr-insight.i-green {
+  background: #16301f;
+  border-color: #245a36;
+}
+
+.private-layout-dark main .exr-insight.i-amber {
+  background: #33240e;
+  border-color: #6b5523;
+}
+
+.exr-insight-ic {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.i-blue .exr-insight-ic {
+  background: #cfe5fa;
+  color: var(--exr-brand);
+}
+
+.i-green .exr-insight-ic {
+  background: #c4ecd6;
+  color: var(--exr-green);
+}
+
+.i-amber .exr-insight-ic {
+  background: #f7e5b8;
+  color: var(--exr-amber);
+}
+
+.private-layout-dark main .i-blue .exr-insight-ic {
+  background: #1c3a59;
+  color: #7ec8f5;
+}
+
+.private-layout-dark main .i-green .exr-insight-ic {
+  background: #1d4a2c;
+  color: #6fe3a4;
+}
+
+.private-layout-dark main .i-amber .exr-insight-ic {
+  background: #54400f;
+  color: #f5cd6e;
+}
+
+.exr-insight-l {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--exr-ink-3);
+}
+
+.exr-insight-v {
+  font-size: 16px;
+  font-weight: 800;
+  margin-top: 2px;
+  color: var(--exr-ink);
+}
+
+.exr-insight-s {
+  font-size: 12.5px;
+  color: var(--exr-ink-2);
+  margin-top: 2px;
+}
+
+.exr-insight-empty {
+  font-size: 13px;
+  color: var(--exr-ink-3);
+  padding: 4px 0;
+}
+
+/* ───────────────────────── Cards ───────────────────────── */
+.exr-card {
+  background: var(--exr-surface);
+  border-radius: var(--exr-radius);
+  box-shadow: var(--exr-shadow);
+  border: 1px solid var(--exr-line-soft);
+  overflow: hidden;
+}
+
+.exr-card-head {
+  padding: 15px 22px 13px;
+  border-bottom: 1px solid var(--exr-line-soft);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.exr-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--exr-ink);
+  margin: 0;
+}
+
+.exr-card-title i {
+  color: var(--exr-brand);
+  font-size: 14px;
+}
+
+.exr-card-sub {
+  font-size: 12px;
+  color: var(--exr-ink-3);
+  margin: 3px 0 0;
+}
+
+.exr-card-body {
+  padding: 18px 22px 20px;
+  position: relative;
+}
+
+/* ───────────────────────── Chips ───────────────────────── */
+.exr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 18px;
+  padding: 3.5px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.exr-chip.c-blue {
+  background: #e7f1fb;
+  color: var(--exr-brand);
+  border-color: rgba(0, 80, 146, 0.15);
+}
+
+.exr-chip.c-green {
+  background: var(--exr-green-bg);
+  color: var(--exr-green);
+  border-color: rgba(24, 160, 92, 0.2);
+}
+
+.exr-chip.c-gray {
+  background: var(--exr-line-soft);
+  color: var(--exr-ink-2);
+  border-color: rgba(139, 155, 174, 0.15);
+}
+
+.private-layout-dark main .exr-chip.c-blue {
+  background: #1c2c40;
+  border-color: #28415f;
+  color: #7ec8f5;
+}
+
+.private-layout-dark main .exr-chip.c-green {
+  background: #16301f;
+  border-color: #245a36;
+  color: #6fe3a4;
+}
+
+/* ───────────────────────── Segmented tabs (เลือกธาตุ) ───────────────────────── */
+.exr-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: var(--exr-line-soft);
+  border-radius: 9px;
+  padding: 3px;
+}
+
+.exr-tab {
+  border: none;
+  background: transparent;
+  color: var(--exr-ink-2);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.13s ease;
+}
+
+.exr-tab:hover {
+  color: var(--exr-brand);
+}
+
+.exr-tab.on {
+  background: var(--exr-surface);
+  color: var(--exr-brand);
+  box-shadow: 0 1px 4px rgba(16, 27, 45, 0.12);
+}
+
+.private-layout-dark main .exr-tab.on {
+  background: #243446;
+  color: #7ec8f5;
+}
+
+/* ───────────────────────── แถบสัดส่วนระดับดิน (hbar) ───────────────────────── */
+.exr-mini-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--exr-ink-2);
+  margin-bottom: 12px;
+}
+
+.exr-hbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.exr-hbar-name {
+  width: 86px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--exr-ink-2);
+  text-align: right;
+}
+
+.exr-hbar-track {
+  flex: 1;
+  height: 14px;
+  background: var(--exr-line-soft);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.exr-hbar-fill {
+  height: 100%;
+  border-radius: 7px;
+  min-width: 2px;
+  transition: width 0.35s ease;
+}
+
+.exr-hbar-val {
+  width: 110px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--exr-ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.exr-hbar-val small {
+  font-weight: 600;
+  color: var(--exr-ink-3);
+}
+
+/* บรรทัดสรุปท้ายการ์ด */
+.exr-note {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--exr-line-soft);
+  font-size: 12.5px;
+  color: var(--exr-ink-2);
+}
+
+.exr-note i {
+  color: var(--exr-brand);
+  margin-right: 5px;
+}
+
+/* ───────────────────────── ตาราง ───────────────────────── */
+.exr-tbl {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.exr-tbl th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--exr-ink-3);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--exr-line);
+}
+
+.exr-tbl td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--exr-line-soft);
+  font-size: 13.5px;
+  vertical-align: middle;
+  color: var(--exr-ink-2);
+}
+
+.exr-tbl tr:last-child td {
+  border-bottom: none;
+}
+
+.exr-tbl tr:hover td {
+  background: rgba(0, 80, 146, 0.02);
+}
+
+.exr-tbl .t-main {
+  font-weight: 700;
+  color: var(--exr-ink);
+}
+
+.exr-tbl .t-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.exr-tbl tr.is-top td {
+  background: rgba(0, 80, 146, 0.05);
+}
+
+.private-layout-dark main .exr-tbl tr.is-top td {
+  background: rgba(126, 200, 245, 0.08);
+}
+
+/* หัวข้อกลุ่มย่อยในการ์ด (เช่น ช่วงการใส่ปุ๋ย) */
+.exr-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--exr-ink);
+  margin: 4px 0 8px;
+}
+
+.exr-subhead i {
+  color: var(--exr-brand);
+  margin-right: 6px;
+}
+
+.exr-group + .exr-group {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--exr-line);
+}
+
+/* ───────────────────────── การ์ดสถิติปรับปรุงดิน ───────────────────────── */
+.exr-stat {
+  border: 1px solid var(--exr-line);
+  border-radius: var(--exr-radius);
+  padding: 16px 18px;
+  height: 100%;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  background: var(--exr-surface);
+}
+
+.exr-stat-ic {
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background: rgba(0, 80, 146, 0.08);
+  color: var(--exr-brand);
+}
+
+.exr-stat-name {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--exr-ink);
+  line-height: 1.25;
+}
+
+.exr-stat-metrics {
+  display: flex;
+  gap: 18px;
+  margin-top: 7px;
+}
+
+.exr-stat-metric-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--exr-ink-3);
+}
+
+.exr-stat-metric-value {
+  font-family: 'Inter', 'Sarabun', sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--exr-brand);
+  letter-spacing: -0.5px;
+}
+
+.exr-stat-metric-value small {
+  font-family: 'Sarabun', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--exr-ink-3);
+  margin-left: 3px;
+}
+
+/* ───────────────────────── ตารางกริดภายในวิดเจ็ต (ปรับตามความกว้าง) ───────────────────────── */
+.exr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.exr-grid-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+/* ───────────────────────── Widget board (ปรับแต่งหน้าจอ) ───────────────────────── */
+.exr-board-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.exr-board-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--exr-line);
+  background: var(--exr-surface);
+  color: var(--exr-ink-2);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.exr-board-btn:hover {
+  border-color: var(--exr-brand);
+  color: var(--exr-brand);
+}
+
+.exr-board-btn.is-active {
+  background: var(--exr-brand);
+  border-color: var(--exr-brand);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 80, 146, 0.25);
+}
+
+.exr-board-hidden-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: var(--exr-line-soft);
+  border: 1px dashed var(--exr-ink-3);
+  border-radius: 12px;
+}
+
+.exr-board-hidden-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--exr-ink-2);
+}
+
+.exr-board-hidden-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px dashed var(--exr-ink-3);
+  background: var(--exr-surface);
+  color: var(--exr-ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.exr-board-hidden-chip:hover {
+  border-color: var(--exr-brand);
+  border-style: solid;
+  color: var(--exr-brand);
+}
+
+/* กรอบเส้นประรอบวิดเจ็ตตอนอยู่ในโหมดปรับแต่ง */
+.exr-widget.is-customizing {
+  outline: 2px dashed #9bbcd9;
+  outline-offset: 3px;
+  border-radius: var(--exr-radius);
+}
+
+.private-layout-dark main .exr-widget.is-customizing {
+  outline-color: #3d5a78;
+}
+
+.exr-widget-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.exr-ctrl-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--exr-ink-3);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.exr-ctrl-btn:hover:not(:disabled) {
+  background: rgba(0, 80, 146, 0.08);
+  border-color: rgba(0, 80, 146, 0.15);
+  color: var(--exr-brand);
+}
+
+.exr-ctrl-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* หัวของวิดเจ็ตแบบ bare (KPI/Insights) — โผล่เฉพาะโหมดปรับแต่ง */
+.exr-bare-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  background: var(--exr-line-soft);
+  border-radius: 10px;
+}
+
+.exr-bare-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--exr-ink-2);
+}
+
+.exr-bare-title i {
+  color: var(--exr-brand);
+  margin-right: 6px;
+}
+
+/* ───────────────────────── ฟิลเตอร์ chip แสดงเงื่อนไขที่เลือก ───────────────────────── */
+.exr-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+/* ───────────────────────── แผนที่เดียว + แผงรายละเอียดตามจุดที่คลิก ───────────────────────── */
+.exr-map-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 22px;
+}
+
+@media (max-width: 1100px) {
+  .exr-map-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.exr-map-canvas {
+  min-width: 0;
+}
+
+.exr-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 16px;
+  margin-top: 10px;
+}
+
+.exr-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--exr-ink-2);
+}
+
+.exr-dot {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(16, 27, 45, 0.12);
+}
+
+.exr-map-detail {
+  border-inline-start: 1px solid var(--exr-line-soft);
+  padding-inline-start: 22px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1100px) {
+  .exr-map-detail {
+    border-inline-start: none;
+    padding-inline-start: 0;
+    border-top: 1px solid var(--exr-line-soft);
+    padding-top: 16px;
+  }
+}
+
+.exr-map-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.exr-map-detail-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--exr-ink-3);
+}
+
+.exr-map-detail-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--exr-ink);
+  margin-top: 2px;
+}
+
+.exr-map-detail-title i {
+  color: var(--exr-brand);
+}
+
+.exr-map-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--exr-line-soft);
+}
+
+.exr-map-row:last-of-type {
+  border-bottom: none;
+}
+
+.exr-map-row-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--exr-ink-2);
+}
+
+.exr-map-row-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  color: var(--exr-ink);
+  white-space: nowrap;
+}
+
+.exr-map-row-value small {
+  color: var(--exr-ink-3);
+  font-weight: 600;
+}
+
+.exr-map-row-empty {
+  font-size: 12.5px;
+  color: var(--exr-ink-3);
+}
+
+.exr-map-hint {
+  margin-top: auto;
+  padding: 14px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--exr-ink-3);
+  background: var(--exr-line-soft);
+  border-radius: 10px;
+}
+
+.exr-map-hint i {
+  display: block;
+  font-size: 18px;
+  color: var(--exr-brand);
+  margin-bottom: 6px;
+}

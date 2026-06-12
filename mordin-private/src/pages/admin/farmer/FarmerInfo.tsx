@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 
 import 'datatables.net-bs5';
 import { useParams } from 'react-router-dom';
-import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import ConfirmAlert from '../../../components/gui/ConfirmAlert';
 import { DataTableFilter } from '../../../components/gui/DataTableFilter';
@@ -17,6 +16,7 @@ import FarmerCard from '@/components/pages/farmer/farmerCard';
 import { LandInfoInterface } from '@/types/Land';
 import { formatThaiDateWithOutWeekly } from '@/utils/Date';
 import { formatThaiNationalId } from '@/utils/IdentificationNumberFormat';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 const FarmerInfo: React.FC = () => {
   const { id } = useParams<{ id?: string }>();

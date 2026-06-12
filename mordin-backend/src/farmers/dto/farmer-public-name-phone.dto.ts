@@ -17,4 +17,3 @@ export class FarmerPublicNamePhoneDto {
   @Length(9, 20)
   phone!: string;
 }
-

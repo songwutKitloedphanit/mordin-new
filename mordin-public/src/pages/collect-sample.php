@@ -253,6 +253,7 @@ $formStatusClass = $isFormLocked ? 'bg-success' : 'bg-primary';
         <div class="collect-sample-public-container">
           <div class="collect-sample-page-header">
             <div>
+              <p class="collect-sample-kicker">MITR PHOL SOIL SERVICE</p>
               <h1 class="collect-sample-page-title">แบบฟอร์มเก็บตัวอย่างดิน</h1>
               <div class="collect-sample-breadcrumb">
                 <i class="fas fa-qrcode"></i>
@@ -294,6 +295,7 @@ $formStatusClass = $isFormLocked ? 'bg-success' : 'bg-primary';
               <a href="/collect-sample/<?= urlencode($code) ?>" class="collect-sample-back-btn text-decoration-none">
                 <i class="fas fa-arrow-left"></i> ย้อนกลับ
               </a>
+              <p class="collect-sample-kicker">MITR PHOL SOIL SERVICE</p>
               <h1 class="collect-sample-page-title">แบบฟอร์มเก็บตัวอย่างดิน</h1>
               <div class="collect-sample-breadcrumb">
                 <i class="fas fa-qrcode"></i>

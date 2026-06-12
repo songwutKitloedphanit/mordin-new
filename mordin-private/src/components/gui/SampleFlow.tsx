@@ -71,8 +71,7 @@ const SampleFlow: React.FC<SampleFlowProps> = ({
             status != null &&
             step.statuses.includes(status) &&
             status !== step.statuses[0];
-          const isNow =
-            status === step.statuses[0] || (idx === 0 && !status);
+          const isNow = status === step.statuses[0] || (idx === 0 && !status);
           const stepClass = isDone
             ? 'flow-step done'
             : isNow

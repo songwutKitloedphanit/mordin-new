@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ActionMeta, SingleValue } from 'react-select';
-import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { B_LIST, GenButtonCircle } from '@/components/gui/GuiButton';
@@ -24,6 +23,7 @@ import {
   LandSummary,
   LatLng,
 } from '@/types/Land';
+import { swalSuccessTimer, swalError } from '@/utils/swal';
 
 interface FarmerOption {
   value: string;
@@ -399,7 +399,7 @@ const LandAdd: React.FC = () => {
           geocodingRef.current = false;
         }, 1000);
         setTimeout(() => {
-          stateHydratingRef.current = false;  // longer guard covers district/subdistrict API calls
+          stateHydratingRef.current = false; // longer guard covers district/subdistrict API calls
         }, 3000);
 
         if (state.farmerId) {
@@ -488,7 +488,11 @@ const LandAdd: React.FC = () => {
             name: s.nameTh,
           })),
         ]);
-        if (!geocodingRef.current && !stateHydratingRef.current && subs.length > 0) {
+        if (
+          !geocodingRef.current &&
+          !stateHydratingRef.current &&
+          subs.length > 0
+        ) {
           setLand(prev => ({ ...prev, subdistrictCode: subs[0].code }));
         }
       } else if (!geocodingRef.current && !stateHydratingRef.current) {

@@ -2,7 +2,6 @@ import JSZip from 'jszip';
 import { useRef, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
-import { swalError, swalLoading, swalClose } from '@/utils/swal';
 
 import { B_LIST, GenButtonCircle } from '../../../components/gui/GuiButton';
 
@@ -18,6 +17,7 @@ import PrintableSampleCard from '@/components/printable/PrintableSampleCard';
 import { getReports, getReportsPdf } from '@/services/api/qr-code/BookApi';
 import { PrintReportInterface, SampleCodes } from '@/types/qr-code/Report';
 import { TimeStampToDate } from '@/utils/Date';
+import { swalError, swalLoading, swalClose } from '@/utils/swal';
 
 // const cardData2 = [
 //   {
@@ -180,10 +180,7 @@ const AnalysisReportInfo = () => {
     } catch (error) {
       console.error('Error loading analysis report:', error);
       setLocation([]);
-      swalError(
-        'เกิดข้อผิดพลาด',
-        'ไม่สามารถโหลดข้อมูลรายงานการวิเคราะห์ได้'
-      );
+      swalError('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลรายงานการวิเคราะห์ได้');
     } finally {
       setLoading(false);
     }

@@ -39,4 +39,3 @@ export class FarmerPublicProfileDto {
   landSizeSummary?: number;
   lands!: FarmerPublicLandDto[];
 }
-

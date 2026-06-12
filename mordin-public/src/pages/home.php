@@ -59,16 +59,16 @@ include_once COMPONENT_PATH . 'lib_header.php';
         <span>MITR PHOL SOIL SERVICE</span>
       </div>
 
-      <h1 class="ag-hero-title scroll-reveal">
+      <h1 class="ag-hero-title scroll-reveal sr-delay-1">
         วิเคราะห์คุณภาพดินอัจฉริยะ<br><span class="ag-grad">กับแพลตฟอร์มหมอดินโมบาย</span>
       </h1>
 
-      <p class="ag-hero-lead scroll-reveal">
+      <p class="ag-hero-lead scroll-reveal sr-delay-2">
         บริการตรวจวิเคราะห์ดินใกล้พื้นที่เกษตรกร ลดระยะเวลารอผลจากหลายสัปดาห์เหลือภายในวันเดียว
         พร้อมข้อมูลสำหรับวางแผนจัดการดินและปุ๋ยรายแปลงอย่างเหมาะสม
       </p>
 
-      <div class="ag-hero-actions scroll-reveal">
+      <div class="ag-hero-actions scroll-reveal sr-delay-3">
         <a class="btn-hero-white"
            href="<?= $isPublicLoggedIn ? '/services/book/farmer' : '/services/book/login' ?>"
            <?= $isPublicLoggedIn ? '' : 'data-require-login="true"' ?>>
@@ -79,7 +79,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
         </a>
       </div>
 
-      <div class="ag-hero-trust scroll-reveal">
+      <div class="ag-hero-trust scroll-reveal sr-delay-4">
         <span><i class="bi bi-check-circle-fill text-success me-1"></i>ฟรี (ปีที่ 1)</span>
         <span><i class="bi bi-clock-fill text-warning me-1"></i>ผลใน 6 ชั่วโมง</span>
         <span><i class="bi bi-geo-alt-fill me-1"></i>ใกล้พื้นที่คุณ</span>
@@ -104,7 +104,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
         <div class="row gy-4 align-items-start">
 
           <!-- Map card -->
-          <div class="col-lg-7 scroll-reveal stagger-1">
+          <div class="col-lg-7 sr-card stagger-1">
             <div class="ag-card" style="overflow:hidden;">
               <div class="d-flex align-items-center justify-content-between mb-3">
                 <span class="ag-kicker" style="margin:0;">
@@ -136,16 +136,16 @@ include_once COMPONENT_PATH . 'lib_header.php';
           </div>
 
           <!-- Service locations copy -->
-          <div class="col-lg-5 scroll-reveal stagger-2">
-            <div class="ag-kicker">SERVICE LOCATIONS</div>
-            <div class="ag-section-title">
+          <div class="col-lg-5">
+            <div class="ag-kicker sr-text">SERVICE LOCATIONS</div>
+            <div class="ag-section-title sr-text stagger-1">
               <h2>จุดให้บริการใกล้พื้นที่เกษตรกร</h2>
             </div>
-            <p style="color:var(--ag-text);line-height:1.85;">
+            <p class="sr-text stagger-2" style="color:var(--ag-text);line-height:1.85;">
               รถวิเคราะห์ดินเคลื่อนที่ออกให้บริการตามปฏิทินในเขตส่งเสริมอ้อยฯ
               เกษตรกรสามารถเลือกแปลงและจองคิวจากพื้นที่จริง ลดการเดินทางและลดเวลารอผล
             </p>
-            <div class="ag-stat-pair">
+            <div class="ag-stat-pair sr-children">
               <div class="ag-stat-line">
                 <strong>6 Hours</strong>
                 <span>รับผลวิเคราะห์ภายในวันเดียวเมื่อเข้ารับบริการ</span>
@@ -155,7 +155,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
                 <span>มาตรฐานกระบวนการวิเคราะห์และควบคุมคุณภาพข้อมูล</span>
               </div>
             </div>
-            <div class="mt-3">
+            <div class="mt-3 sr-text stagger-3">
               <a class="btn btn-primary w-100"
                  href="<?= $isPublicLoggedIn ? '/services/book/farmer' : '/services/book/login' ?>"
                  <?= $isPublicLoggedIn ? '' : 'data-require-login="true"' ?>>
@@ -171,33 +171,33 @@ include_once COMPONENT_PATH . 'lib_header.php';
     <!-- CORE CAPABILITIES ─────────────────────────────── -->
     <div class="ag-sub-section ag-sub-section-light">
       <div class="container-xl">
-        <div class="text-center mb-4 scroll-reveal">
+        <div class="text-center mb-4 sr-text">
           <div class="ag-kicker d-inline-block">CORE CAPABILITIES</div>
           <div class="ag-section-title"><h2>ความสามารถหลักของบริการ</h2></div>
         </div>
         <div class="ag-feature-grid">
-          <div class="ag-feature-card scroll-reveal stagger-1">
+          <div class="ag-feature-card sr-card stagger-1">
             <div class="ag-feature-icon" style="background:rgba(15,142,69,.12);color:var(--ag-green);">
               <i class="bi bi-currency-exchange"></i>
             </div>
             <h3>ฟรีในปีแรก</h3>
             <p>ลดต้นทุนเริ่มต้นในการวิเคราะห์ดินสำหรับเกษตรกรในเขตบริการ</p>
           </div>
-          <div class="ag-feature-card scroll-reveal stagger-2">
+          <div class="ag-feature-card sr-card stagger-2">
             <div class="ag-feature-icon" style="background:rgba(234,179,8,.12);color:var(--ag-yellow);">
               <i class="bi bi-clock-history"></i>
             </div>
             <h3>ผลเร็วภายใน 6 ชั่วโมง</h3>
             <p>เปลี่ยนงานรอผลหลายสัปดาห์เป็นข้อมูลที่พร้อมใช้วางแผนในวันเดียว</p>
           </div>
-          <div class="ag-feature-card scroll-reveal stagger-3">
+          <div class="ag-feature-card sr-card stagger-3">
             <div class="ag-feature-icon" style="background:rgba(0,91,172,.12);color:var(--ag-blue);">
               <i class="bi bi-geo-alt"></i>
             </div>
             <h3>ใกล้พื้นที่จริง</h3>
             <p>บริการเคลื่อนที่ตามจุดนัดหมายในปฏิทิน ลดภาระขนส่งตัวอย่างดิน</p>
           </div>
-          <div class="ag-feature-card scroll-reveal stagger-4">
+          <div class="ag-feature-card sr-card stagger-4">
             <div class="ag-feature-icon" style="background:rgba(32,201,151,.12);color:var(--ag-green-light);">
               <i class="bi bi-bar-chart-line"></i>
             </div>
@@ -213,25 +213,27 @@ include_once COMPONENT_PATH . 'lib_header.php';
       <div class="container-xl">
         <div class="row gy-4 align-items-center">
 
-          <div class="col-lg-5 scroll-reveal">
-            <img src="/assets/img/soil-car.jpg" class="img-fluid rounded-3 shadow-sm" alt="รถวิเคราะห์ดินเคลื่อนที่">
+          <div class="col-lg-5">
+            <div class="sr-img">
+              <img src="/assets/img/soil-car.jpg" class="img-fluid" alt="รถวิเคราะห์ดินเคลื่อนที่">
+            </div>
           </div>
 
-          <div class="col-lg-7 scroll-reveal">
-            <div class="ag-kicker">ABOUT PRECISION</div>
-            <div class="ag-section-title">
+          <div class="col-lg-7">
+            <div class="ag-kicker sr-text">ABOUT PRECISION</div>
+            <div class="ag-section-title sr-text stagger-1">
               <h2>การให้บริการบนรถวิเคราะห์ดินเคลื่อนที่</h2>
             </div>
-            <p style="color:var(--ag-text);line-height:1.85;">
+            <p class="sr-text stagger-2" style="color:var(--ag-text);line-height:1.85;">
               ในปัจจุบันที่ราคาปุ๋ยเคมีปรับตัวสูงขึ้น การใส่ปุ๋ยตามค่าวิเคราะห์ดินจึงมีความสำคัญมากขึ้น
               แต่สถานที่บริการมักอยู่ไกล ใช้เวลานาน 2–3 สัปดาห์กว่าจะได้ผล และมีค่าบริการสูง
             </p>
-            <p style="color:var(--ag-text);line-height:1.85;">
+            <p class="sr-text stagger-3" style="color:var(--ag-text);line-height:1.85;">
               กลุ่มมิตรผลจึงจัดทำ<strong>รถบริการวิเคราะห์ดินเคลื่อนที่</strong>
               เพื่อออกให้บริการในพื้นที่เขตส่งเสริมอ้อยฯ
               เกษตรกรจะได้รับผลวิเคราะห์ดินภายใน 1 วัน พร้อมคำแนะนำการจัดการดินและปุ๋ยที่เหมาะสมกับพื้นที่
             </p>
-            <ul class="ag-checklist mt-3">
+            <ul class="ag-checklist mt-3 sr-children">
               <li><i class="bi bi-check-circle-fill"></i><span>ช่วยเพิ่มผลผลิตและคุณภาพอ้อย</span></li>
               <li><i class="bi bi-check-circle-fill"></i><span>ลดต้นทุน เพิ่มรายได้และกำไร</span></li>
               <li><i class="bi bi-check-circle-fill"></i><span>ปรับปรุงคุณภาพดินระยะยาว</span></li>
@@ -246,7 +248,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
     <!-- COMPARISON TABLE ───────────────────────────────── -->
     <div class="ag-sub-section">
       <div class="container-xl">
-        <div class="text-center mb-4 scroll-reveal">
+        <div class="text-center mb-4 sr-text">
           <div class="ag-kicker d-inline-block">COMPARISON MATRIX</div>
           <div class="ag-section-title"><h2>เปรียบเทียบบริการ</h2></div>
         </div>
@@ -309,8 +311,6 @@ include_once COMPONENT_PATH . 'lib_header.php';
   var glows = hero ? hero.querySelectorAll('.ag-glow') : [];
   var reduceMotion = false;
 
-  function mix(a, b, t) { return Math.round(a + (b - a) * t); }
-
   var heroFade = document.getElementById('ag-hero-fade');
 
   function syncHeroScroll() {
@@ -324,8 +324,11 @@ include_once COMPONENT_PATH . 'lib_header.php';
     header.classList.toggle('scrolled', scrollTop > 40);
 
     if (!reduceMotion) {
-      var bg = 'rgb(' + mix(0, 255, progress) + ',' + mix(43, 255, progress) + ',' + mix(80, 255, progress) + ')';
-      hero.style.background = progress > 0 ? bg : '';
+      /* Flipboard fold: hero stays pinned (sticky) and tips backwards while the white sheet slides over it */
+      hero.style.transform = progress > 0
+        ? 'perspective(1200px) rotateX(' + (16 * progress).toFixed(2) + 'deg) scale(' + (1 - 0.05 * progress).toFixed(3) + ')'
+        : '';
+      hero.style.filter = progress > 0 ? 'brightness(' + (1 - 0.35 * progress).toFixed(3) + ')' : '';
       if (heroInner) {
         heroInner.style.opacity = String(Math.max(0, 1 - progress * 1.25));
         heroInner.style.transform = 'translateY(' + (-56 * progress).toFixed(1) + 'px)';
@@ -336,7 +339,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
     }
 
     if (heroFade) {
-      var fadeOpacity = Math.max(0, Math.min(1, (progress - 0.65) / 0.3));
+      var fadeOpacity = Math.max(0, Math.min(1, (progress - 0.35) / 0.5)) * 0.45;
       heroFade.style.opacity = String(fadeOpacity);
     }
 
@@ -345,10 +348,60 @@ include_once COMPONENT_PATH . 'lib_header.php';
     }
   }
 
-  if (snapWrap) snapWrap.addEventListener('scroll', syncHeroScroll, { passive: true });
-  window.addEventListener('scroll', syncHeroScroll, { passive: true });
-  window.addEventListener('resize', syncHeroScroll);
+  var syncQueued = false;
+  function requestSync() {
+    if (syncQueued) return;
+    syncQueued = true;
+    requestAnimationFrame(function () {
+      syncQueued = false;
+      syncHeroScroll();
+    });
+  }
+
+  if (snapWrap) snapWrap.addEventListener('scroll', requestSync, { passive: true });
+  window.addEventListener('scroll', requestSync, { passive: true });
+  window.addEventListener('resize', requestSync);
   syncHeroScroll();
+
+  /* Page-swipe commit: a gesture that ends inside the hero zone glides to a
+     full page in the swiped direction — down commits to the white page, up
+     back to the hero — so the flip never rests half-open. */
+  (function () {
+    if (!hero) return;
+    var commitTarget = null;
+    var commitTimer = null;
+    var lastY = window.scrollY;
+    var lastDir = 0;
+    var touching = false;
+
+    function settleHero() {
+      if (touching) return;
+      var heroHeight = Math.max(1, hero.offsetHeight);
+      var yNow = window.scrollY;
+      if (yNow <= 1 || yNow >= heroHeight - 1) { commitTarget = null; return; }
+      commitTarget = lastDir >= 0 ? heroHeight : 0;
+      window.scrollTo({ top: commitTarget, behavior: 'smooth' });
+    }
+
+    window.addEventListener('scroll', function () {
+      var yNow = window.scrollY;
+      if (yNow !== lastY) lastDir = yNow > lastY ? 1 : -1;
+      lastY = yNow;
+      if (commitTarget !== null && Math.abs(yNow - commitTarget) < 2) commitTarget = null;
+      if (commitTarget !== null) return; /* our own glide is in flight */
+      clearTimeout(commitTimer);
+      commitTimer = setTimeout(settleHero, 90);
+    }, { passive: true });
+
+    /* a new user gesture always takes back control from an in-flight glide */
+    window.addEventListener('wheel', function () { commitTarget = null; }, { passive: true });
+    window.addEventListener('touchstart', function () { touching = true; commitTarget = null; }, { passive: true });
+    window.addEventListener('touchend', function () {
+      touching = false;
+      clearTimeout(commitTimer);
+      commitTimer = setTimeout(settleHero, 60);
+    }, { passive: true });
+  }());
 
   if (hero && !reduceMotion) {
     hero.addEventListener('pointermove', function (event) {
