@@ -16,8 +16,9 @@
 - Do not change API contracts or database schema without explicit approval.
 
 ## Latest Completed Task (2026-06-15)
-- **Fixed Render Deployment and Summary Diagnostics**:
+- **Fixed Render Deployment, Summary Diagnostics, and Missing Columns**:
   - Rewrote migration `20260615_add_fertilizer_land_scores_main.sql` using conditional PL/pgSQL blocks (`DO $$ ... $$`) to prevent database relation conflict errors.
+  - Created migrations `20260615_add_birth_date_to_qr_codes_main.sql` and `20260615_add_birth_date_to_qr_codes_logs.sql` to add `birth_date` to the `qr_codes` and `qr_codes_logs` tables.
   - Wrapped database query in `getSummaryCards()` in backend with `try-catch` to throw descriptive error messages.
   - Updated private React dashboard card (`DashBoardCard.tsx`) to show the server-side database error in UI alert when query fails (prioritizing `data.message` over `data.error` to render actual database driver details).
 

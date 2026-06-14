@@ -2,14 +2,18 @@
 
 ## Overview
 - Date: 2026-06-15
-- Task: Fix Render migration crash and enhance dashboard summary error visibility.
+- Task: Fix Render migration crash, resolve missing qr_codes.birth_date database column, and enhance dashboard summary error visibility.
 
 ### What Was Done
 1. **Conditional Migration Execution**:
    - Updated `mordin-backend/migrations/20260615_add_fertilizer_land_scores_main.sql`.
    - Replaced raw `CREATE TABLE` and `ALTER TABLE ADD CONSTRAINT` statements with PL/pgSQL `DO $$ BEGIN IF NOT EXISTS ... END $$;` blocks.
    - This prevents deployment failures on Render when the database relations or constraints are already present.
-2. **Backend Error Capture**:
+2. **Added birth_date Column Migrations**:
+   - Created `20260615_add_birth_date_to_qr_codes_main.sql` to add `birth_date` to the main database `qr_codes` table.
+   - Created `20260615_add_birth_date_to_qr_codes_logs.sql` to add `birth_date` to the logs database `qr_codes_logs` table.
+   - Created corresponding rollback SQL scripts for both.
+3. **Backend Error Capture**:
    - Updated `mordin-backend/src/sample/fertilizer-major-land-scores/fertilizer-major-land-scores.service.ts`.
    - Wrapped database find query in `getSummaryCards()` in a `try-catch` block.
    - Configured it to log and throw `InternalServerErrorException` with the specific database driver error.
