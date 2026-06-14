@@ -30,7 +30,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           join(__dirname, '/../**/*.entity{.ts,.js}'),
           '!' + join(__dirname, '/../**/*.log.entity{.ts,.js}'),
         ],
-        synchronize: true, // Temporarily true to auto-fix missing columns on Render
+        synchronize: config.get('NODE_ENV') === 'test',
         extra: {
           max: 5,
           idleTimeoutMillis: 30000,
@@ -59,7 +59,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         // บอกให้หาเฉพาะไฟล์ที่ลงท้ายด้วย .log.entity.ts (หรือ .js ตอน build)
         entities: [join(__dirname, '/../**/*.log.entity{.ts,.js}')],
         entitySkipConstructor: true,
-        synchronize: true, // Temporarily true to auto-fix missing columns on Render
+        synchronize: config.get('NODE_ENV') === 'test',
       }),
       inject: [ConfigService],
     }),
