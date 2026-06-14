@@ -1,0 +1,1 @@
+ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS birth_date DATE NULL;

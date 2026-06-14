@@ -1,0 +1,1 @@
+ALTER TABLE qr_codes DROP COLUMN IF EXISTS birth_date;
