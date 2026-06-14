@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 
@@ -482,14 +482,20 @@ export class FertilizerMajorLandScoresService {
   }
 
   async getSummaryCards() {
-    const scores = await this.fertilizerMajorLandScoreRepo.find({
-      relations: {
-        book: {
-          qrCode: true,
-          land: true,
+    let scores;
+    try {
+      scores = await this.fertilizerMajorLandScoreRepo.find({
+        relations: {
+          book: {
+            qrCode: true,
+            land: true,
+          },
         },
-      },
-    });
+      });
+    } catch (err: any) {
+      console.error('DATABASE ERROR in getSummaryCards:', err);
+      throw new InternalServerErrorException(`Database query failed: ${err.message || err}`);
+    }
 
     // set ไว้กันซ้ำ
     const landIds = new Set<number>(); // แปลง (ไร่) ที่ approved
