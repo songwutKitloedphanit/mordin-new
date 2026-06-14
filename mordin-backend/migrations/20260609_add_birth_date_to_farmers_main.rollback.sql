@@ -1,0 +1,1 @@
+ALTER TABLE farmers DROP COLUMN IF EXISTS birth_date;
