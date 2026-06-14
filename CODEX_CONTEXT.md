@@ -15,17 +15,19 @@
 - Do not display Citizen ID numbers in the public domain.
 - Do not change API contracts or database schema without explicit approval.
 
-## Latest Completed Task (2026-06-12)
-- **Switched MapPicker to LeafletMapPicker & Moved Layout**:
-  - Replaced the Google `MapPicker` with `LeafletMapPicker` in `CollectionWizardModal.tsx` to fix the API key `AuthFailure` issue.
-  - Moved the interactive map from the right-hand column (`col-lg-7` under the Land Form) to the left-hand column (`col-lg-5` below the Check Existing Land list).
+## Latest Completed Task (2026-06-15)
+- **Fixed Render Deployment and Summary Diagnostics**:
+  - Rewrote migration `20260615_add_fertilizer_land_scores_main.sql` using conditional PL/pgSQL blocks (`DO $$ ... $$`) to prevent database relation conflict errors.
+  - Wrapped database query in `getSummaryCards()` in backend with `try-catch` to throw descriptive error messages.
+  - Updated private React dashboard card (`DashBoardCard.tsx`) to show the server-side database error in UI alert when query fails (prioritizing `data.message` over `data.error` to render actual database driver details).
 
 ## Files Recently Changed
-- `mordin-private/src/pages/officer/sample-receiving/CollectionWizardModal.tsx` (Modified)
+- `mordin-backend/migrations/20260615_add_fertilizer_land_scores_main.sql` (Modified)
+- `mordin-backend/src/sample/fertilizer-major-land-scores/fertilizer-major-land-scores.service.ts` (Modified)
+- `mordin-private/src/components/pages/executive/dashboard/DashBoardCard.tsx` (Modified)
 
 ## Known Blockers
 - None.
 
 ## Next Recommended Task / Prompt
-- Port the interactive dashboard and executive reports layouts from the HTML mockup into the React codebase (`mordin-private/src/pages/executive/...`).
-
+- If needed, extend backend `/qr-codes` search to include `qrCode.thaiNationalId`, `book.farmer.thaiNationalId`, and linked land fields so searching matches the display fallback.

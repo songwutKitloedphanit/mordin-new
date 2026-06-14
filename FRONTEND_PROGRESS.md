@@ -2,6 +2,53 @@
 
 ## Overview
 - Date: 2026-06-15
+- Task: Fix Render migration crash and enhance dashboard summary error visibility.
+
+### What Was Done
+1. **Conditional Migration Execution**:
+   - Updated `mordin-backend/migrations/20260615_add_fertilizer_land_scores_main.sql`.
+   - Replaced raw `CREATE TABLE` and `ALTER TABLE ADD CONSTRAINT` statements with PL/pgSQL `DO $$ BEGIN IF NOT EXISTS ... END $$;` blocks.
+   - This prevents deployment failures on Render when the database relations or constraints are already present.
+2. **Backend Error Capture**:
+   - Updated `mordin-backend/src/sample/fertilizer-major-land-scores/fertilizer-major-land-scores.service.ts`.
+   - Wrapped database find query in `getSummaryCards()` in a `try-catch` block.
+   - Configured it to log and throw `InternalServerErrorException` with the specific database driver error.
+3. **Frontend Error Display**:
+   - Updated `mordin-private/src/components/pages/executive/dashboard/DashBoardCard.tsx`.
+   - Configured `DashboardSummary` component to fetch and render the specific server-side error string when it fails to load the dashboard KPIs. Swapped priority of `data.message` and `data.error` to render the actual DB driver message instead of the generic "Internal Server Error" status string.
+
+### Files Changed
+- `mordin-backend/migrations/20260615_add_fertilizer_land_scores_main.sql` (Modified)
+- `mordin-backend/src/sample/fertilizer-major-land-scores/fertilizer-major-land-scores.service.ts` (Modified)
+- `mordin-private/src/components/pages/executive/dashboard/DashBoardCard.tsx` (Modified)
+
+### Commands Run
+- `npm run build` in `mordin-backend` (Passed)
+- `npm run build` in `mordin-private` (Passed)
+- Pushed changes to `songwutKitloedphanit/mordin-new` to trigger Render build.
+
+---
+
+## Overview
+- Date: 2026-06-15
+- Task: Adjust private login logo and remove its wrapper background.
+
+### What Was Done
+1. **Adjusted Login Logo Presentation**:
+   - Updated `mordin-private/src/pages/auth/login.tsx`.
+   - Increased the compact login brand logo from 46px to 54px.
+   - Removed the white rounded wrapper background, shadow, clipping, and radius around the logo so the image sits directly on the page.
+
+### Files Changed
+- `mordin-private/src/pages/auth/login.tsx` (Modified)
+
+### Commands Run
+- `npm run build` in `mordin-private` (passed; Vite reported the existing large chunk warning).
+
+---
+
+## Overview
+- Date: 2026-06-15
 - Task: Fix missing citizen ID display in private sample receiving after using existing farmer data.
 
 ### What Was Done
