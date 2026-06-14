@@ -110,7 +110,7 @@ export class AuthService {
   async mockLogin(payload: AuthenRequest): Promise<AuthenProfileResponse> {
     const env_username = this.configService.get<string>('ADMIN_USERNAME');
     const env_password = this.configService.get<string>('ADMIN_PASSWORD');
-    const kuDemoPassword = this.configService.get<string>('KU_DEMO_PASSWORD');
+    const kuDemoPassword = this.configService.get<string>('KU_DEMO_PASSWORD') || '123456';
 
     const isValidAdmin =
       payload.username === env_username && payload.password === env_password;
