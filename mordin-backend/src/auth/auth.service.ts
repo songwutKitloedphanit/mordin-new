@@ -115,7 +115,7 @@ export class AuthService {
     const isValidAdmin =
       payload.username === env_username && payload.password === env_password;
     const isValidKUUser =
-      ['admin@KU', 'staff@KU', 'exclusive@KU'].includes(payload.username) &&
+      ['admin@mitrphol.com', 'staff@mitrphol.com', 'exclusive@mitrphol.com'].includes(payload.username) &&
       !!kuDemoPassword &&
       payload.password === kuDemoPassword;
 

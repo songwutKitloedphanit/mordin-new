@@ -69,7 +69,7 @@ export class AuthController {
     try {
       const isDevMode =
         this.configService.get<string>('ADMIN_USERNAME') === body.username;
-      const isKUUser = ['admin@KU', 'staff@KU', 'exclusive@KU'].includes(
+      const isKUUser = ['admin@mitrphol.com', 'staff@mitrphol.com', 'exclusive@mitrphol.com'].includes(
         body.username
       );
       const response =
@@ -91,9 +91,9 @@ export class AuthController {
 
       let role = isDevMode ? UserRoles.Admin : UserRoles.Executive;
       if (isKUUser) {
-        if (body.username === 'admin@KU') role = UserRoles.Admin;
-        else if (body.username === 'staff@KU') role = UserRoles.Staff;
-        else if (body.username === 'exclusive@KU') role = UserRoles.Executive;
+        if (body.username === 'admin@mitrphol.com') role = UserRoles.Admin;
+        else if (body.username === 'staff@mitrphol.com') role = UserRoles.Staff;
+        else if (body.username === 'exclusive@mitrphol.com') role = UserRoles.Executive;
       }
 
       const user = await this.userService.findOrCreateUser(
