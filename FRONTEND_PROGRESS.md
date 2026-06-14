@@ -1,6 +1,105 @@
 # Frontend Progress - Mordin Public UI Modernization
 
 ## Overview
+- Date: 2026-06-15
+- Task: Fix missing citizen ID display in private sample receiving after using existing farmer data.
+
+### What Was Done
+1. **Fixed Sample Receiving Table Fallbacks**:
+   - Updated `mordin-private/src/pages/officer/sample-receiving/SampleReceivingManagement.tsx`.
+   - Identified that the returning/existing-data flow links the QR book to an existing farmer, so the citizen ID is available at `book.farmer.thaiNationalId` instead of `qrCode.thaiNationalId`.
+   - Added display helpers so the waiting-to-receive table uses `qrCode.thaiNationalId` first, then falls back to `book.farmer.thaiNationalId`.
+   - Added the same fallback style for land code, using `book.land.landCode` when the flat QR field is empty.
+
+### Files Changed
+- `mordin-private/src/pages/officer/sample-receiving/SampleReceivingManagement.tsx` (Modified)
+
+### Commands Run
+- `npm run build` in `mordin-private` (passed; Vite reported the existing large chunk warning).
+
+### Remaining Issues
+- Search results are still supplied by the existing `/qr-codes` API contract. This change fixes display only and does not alter backend search behavior.
+
+---
+
+## Overview
+- Date: 2026-06-12
+- Task: Fix MapPicker "AuthFailure" API key issue and move map to the left side of the screen.
+
+### What Was Done
+1. **Replaced MapPicker Component**:
+   - Updated `mordin-private/src/pages/officer/sample-receiving/CollectionWizardModal.tsx`.
+   - Switched from the Google Maps `MapPicker` (which was causing an API Key `AuthFailure`) to `LeafletMapPicker`, which leverages OpenStreetMap and Leaflet and works without requiring an API key.
+2. **Moved Map to Left Column**:
+   - Re-organized the layout in step 3 (Land) of the wizard modal.
+   - Moved the Map rendering block from `col-lg-7` (Right side / Land Form) to `col-lg-5` (Left side / Land Candidates) below the "ตรวจแปลงเดิมของเกษตรกร" section.
+
+### Files Changed
+- `mordin-private/src/pages/officer/sample-receiving/CollectionWizardModal.tsx` (Modified)
+
+---
+
+## Overview
+
+### What Was Done
+1. **Added MapPicker to CollectionWizardModal**:
+   - Updated `mordin-private/src/pages/officer/sample-receiving/CollectionWizardModal.tsx`.
+   - Replaced the two separate `TextField` inputs for Latitude and Longitude with the reusable `MapPicker` component.
+   - Handled `MapPicker`'s `location`, `setLocation`, and error states.
+   - Wired up the state changes so dropping a pin on the map correctly maps back to `landForm.latitude` and `landForm.longitude`.
+
+### Files Changed
+- `mordin-private/src/pages/officer/sample-receiving/CollectionWizardModal.tsx` (Modified)
+
+---
+
+## Overview
+
+### What Was Done
+1. **Fixed Public Collect Sample Payload**:
+   - Updated `mordin-public/src/pages/collect-sample.php`.
+   - Identified that `areaSize`, `subdistrictCode`, and `zipCode` inputs filled by the farmer were ignored by the PHP `POST` handler and not included in `$formData`.
+   - Modified the POST handler to explicitly extract these variables using `filter_var` and attach them to `$formData` before submitting to the backend API (`updateDataByFarmer`). This ensures the private Receiving flow accurately auto-populates the fields in the wizard modal based on what the farmer entered.
+
+### Files Changed
+- `mordin-public/src/pages/collect-sample.php` (Modified)
+
+---
+
+## Overview
+
+### What Was Done
+1. **Fixed Address Cascading Derivation**:
+   - Updated `buildLandForm` in `mordin-private/src/pages/officer/sample-receiving/CollectionWizardModal.tsx`.
+   - When scanning QR Codes, the backend payload may only provide a flat `subdistrictCode` without sending nested `district` and `province` objects.
+   - Implemented logic to automatically derive the `provinceId` (first 2 digits) and `districtId` (first 4 digits) from the 6-digit `subdistrictCode`. This ensures that the cascading `useEffect` triggers correctly load and auto-select the matching dropdown options for Province, District, and Subdistrict.
+2. **Fixed Area Size and Quota Code Parsing**:
+   - Ensured `areaSize` defaults to an empty string `""` instead of `"undefined"` when the QR data lacks area dimensions.
+   - Automatically pre-filled `quotaCode` with the farmer's `thaiFarmerId` as a fallback when the QR payload doesn't explicitly declare a quota code.
+
+### Files Changed
+- `mordin-private/src/pages/officer/sample-receiving/CollectionWizardModal.tsx` (Modified)
+
+### Commands Run
+- `npm run build` (Ensured zero TypeScript errors)
+
+---
+
+## Overview
+
+### What Was Done
+1. **Centered Segment Tabs**:
+   - Modified [report-land.php](file:///c:/mordin/mordin-public/src/pages/services/service-reports/report-land.php) by moving `.public-farmer-toolbar` inside the `.container` of the main `public-report-page` section, removing the `.container-fluid` wrapper. This correctly applies the flexbox centering (`justify-content: center`) directly to the segment tabs so they perfectly align with the center of the page content, matching the layout on the `farmer.php` page.
+
+### Files Changed
+- `mordin-public/src/pages/services/service-reports/report-land.php` (Modified)
+
+### Commands Run
+- Edited file and verified CSS layouts against references.
+
+---
+
+## Overview
 - Date: 2026-06-12
 - Task: Implement soil sample collection stepper wizard popup in Private app.
 

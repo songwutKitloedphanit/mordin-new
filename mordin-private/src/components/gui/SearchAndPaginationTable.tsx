@@ -62,7 +62,16 @@ function SearchAndPaginationTable<T extends object>({
   const [columnFilters, setColumnFilters] = useState<Record<number, string>>(
     {}
   );
+  // debounce คำค้น เพื่อไม่ยิง API ทุกตัวอักษร
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const fetchPage = clientSideFilters ? 1 : page;
+  // โหมด client-side กรองในเครื่อง ไม่ต้องส่งคำค้นไป server (กัน refetch ซ้ำตอนพิมพ์)
+  const serverSearch = clientSideFilters ? '' : debouncedSearch.trim();
 
   useEffect(() => {
     const load = async () => {
@@ -74,7 +83,7 @@ function SearchAndPaginationTable<T extends object>({
           order,
         };
         if (clientSideFilters) q.all = true;
-        if (search.trim()) q.search = search.trim();
+        if (serverSearch) q.search = serverSearch;
         if (sortBy) q.sortBy = sortBy;
         const res = await fetchData(q as FetchParams);
         setData(res.data);
@@ -86,7 +95,7 @@ function SearchAndPaginationTable<T extends object>({
     };
     load();
   }, [
-    search,
+    serverSearch,
     fetchPage,
     limit,
     sortBy,

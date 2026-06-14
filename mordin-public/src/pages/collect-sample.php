@@ -136,6 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_numeric($latitude)  || (float)$latitude  < -90  || (float)$latitude  > 90)  $errors['latitude']  = 'พิกัดละติจูดไม่ถูกต้อง';
     if (!is_numeric($longitude) || (float)$longitude < -180 || (float)$longitude > 180) $errors['longitude'] = 'พิกัดลองจิจูดไม่ถูกต้อง';
 
+    $areaSize        = filter_var($_POST['areaSize'] ?? null, FILTER_VALIDATE_FLOAT);
+    $subdistrictCode = trim($_POST['subdistrictCode'] ?? '');
+    $zipCode         = filter_var($_POST['zipCode'] ?? null, FILTER_VALIDATE_INT);
+
     $formData = [
       'firstName'     => trim($_POST['firstName'] ?? ''),
       'lastName'      => trim($_POST['lastName'] ?? ''),
@@ -150,6 +154,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       'latitude'      => $latitude,
       'longitude'     => $longitude,
     ];
+
+    if ($areaSize !== false && $areaSize !== null) {
+      $formData['areaSize'] = $areaSize;
+    }
+    if ($subdistrictCode) {
+      $formData['subdistrictCode'] = $subdistrictCode;
+    }
+    if ($zipCode) {
+      $formData['zipCode'] = $zipCode;
+    }
 
     if ($farmerId && $farmerId > 0) {
       $formData['farmerId'] = $farmerId;
@@ -343,7 +357,7 @@ $formStatusClass = $isFormLocked ? 'bg-success' : 'bg-primary';
                   <!-- farmer info fields -->
                   <div id="farmerFields">
                     <div class="collect-sample-section-title"><i class="fas fa-user"></i>ข้อมูลเกษตรกร</div>
-                    
+
                     <!-- Name row: hidden for returning users -->
                     <div class="row g-3 mb-3" id="nameFieldsRow" <?= $collectMode === 'returning' ? 'style="display:none"' : '' ?>>
                       <div class="col-md-6">
@@ -670,7 +684,7 @@ function initMap() {
   mapInstance.on('click', function(e) {
     const newLat = e.latlng.lat;
     const newLng = e.latlng.lng;
-    
+
     Swal.fire({
       icon: 'question',
       title: 'ยืนยันการเปลี่ยนพิกัด',
@@ -927,7 +941,7 @@ function startNewLand() {
   document.querySelector('[name="landName"]').value = '';
   const areaSizeInput = document.querySelector('[name="areaSize"]');
   if (areaSizeInput) areaSizeInput.value = '';
-  
+
   const provinceSel = document.getElementById('provinceCode');
   if (provinceSel) provinceSel.value = '';
   const districtSel = document.getElementById('districtCode');

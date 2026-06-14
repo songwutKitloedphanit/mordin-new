@@ -37,6 +37,7 @@ export interface QrCode {
   dirtWeightMehlich: number;
   firstName: string;
   lastName: string;
+  birthDate?: string;
   phoneNumber: string;
   status: SampleStatusEnum;
   thaiNationalId: string;

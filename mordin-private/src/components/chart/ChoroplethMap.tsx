@@ -1,7 +1,7 @@
 import * as echarts from 'echarts';
 import type { GeoJSONSourceInput } from 'echarts/types/src/coord/geo/geoTypes.js';
 import ReactECharts from 'echarts-for-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import rawGeoJsonProvince from '../../assets/geojson/gadm41_THA_1.json';
 import rawGeoJsonDistrict from '../../assets/geojson/gadm41_THA_2.json';
@@ -23,6 +23,14 @@ export interface ChoroplethMapData {
   itemStyle?: { color: string };
 }
 
+// คีย์เทียบชื่อพื้นที่แบบทนความต่างเล็กน้อย (ตัวพิมพ์/เว้นวรรค/อักขระ + Mueang→Muang)
+// ใช้จับคู่ชื่อจาก API กับชื่อในแผนที่ GADM ไม่ให้พื้นที่ "ไม่มีสี" ทั้งที่มีข้อมูล
+const normalizeGeoKey = (value?: string) =>
+  (value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .replace(/^mueang/, 'muang');
+
 export interface ChoroplethMapOption {
   name: string;
   pieces: { min: number; max: number; color: string }[];
@@ -37,7 +45,8 @@ interface ChoroplethMapProps {
   };
   // คลิกพื้นที่บนแผนที่แล้วได้ชื่อพื้นที่กลับไป (เปิดโหมดเลือกพื้นที่ single-select)
   onSelect?: (name: string) => void;
-  height?: number;
+  // ตัวเลข (px) หรือ '100%' เพื่อยืดตามกล่องที่ครอบ (เช่นวิดเจ็ตบนกริดที่ resize ได้)
+  height?: number | string;
 }
 
 const ChoroplethMap = ({
@@ -48,6 +57,9 @@ const ChoroplethMap = ({
   height = 400,
 }: ChoroplethMapProps) => {
   const colors = useChartColors();
+
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const chartRef = useRef<ReactECharts | null>(null);
 
   const rawGeoJson: GADM1GeoJSON | GADM2GeoJSON | GADM3GeoJSON =
     filter?.level === MapLevel.Region
@@ -117,6 +129,41 @@ const ChoroplethMap = ({
 
   const isMapReady = readyMapName === mapName;
 
+  // echarts ไม่ตามขนาด container เอง (ตามเฉพาะ window) — เฝ้ากล่องครอบด้วย
+  // ResizeObserver เพื่อให้แผนที่ปรับขนาดตอนผู้ใช้ย่อ/ขยายวิดเจ็ตบนกริด
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!box || !isMapReady || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      chartRef.current?.getEchartsInstance().resize();
+    });
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [isMapReady]);
+
+  // จับคู่ข้อมูลจาก API เข้ากับชื่อฟีเจอร์ในแผนที่ด้วยคีย์ที่ทนความต่าง แล้วเปลี่ยน
+  // ชื่อ data ให้ตรงกับชื่อในแผนที่ (echarts จับคู่แบบตรงตัว) — เก็บ map ย้อนกลับไว้
+  // ส่งชื่อเดิมกลับตอนคลิก เพื่อให้ส่วนอื่นของหน้าใช้คีย์เดิมได้เหมือนเดิม
+  const { matchedData, renderNameToOriginal } = useMemo(() => {
+    const normToFeature = new Map<string, string>();
+    for (const feature of filteredGeoJson.features) {
+      const featureName = (feature.properties as { name?: string }).name;
+      if (featureName) {
+        normToFeature.set(normalizeGeoKey(featureName), featureName);
+      }
+    }
+    const reverse = new Map<string, string>();
+    const mapped = data.map(item => {
+      const featureName = normToFeature.get(normalizeGeoKey(item.name));
+      const renderName = featureName ?? item.name;
+      reverse.set(renderName, item.name);
+      return featureName && featureName !== item.name
+        ? { ...item, name: featureName }
+        : item;
+    });
+    return { matchedData: mapped, renderNameToOriginal: reverse };
+  }, [data, filteredGeoJson]);
+
   const option = useMemo(
     () => ({
       backgroundColor: 'transparent',
@@ -148,7 +195,7 @@ const ChoroplethMap = ({
           type: 'map',
           map: mapName,
           roam: true,
-          data: data,
+          data: matchedData,
           selectedMode: onSelect ? 'single' : false,
           emphasis: {
             label: { color: colors.text },
@@ -159,7 +206,7 @@ const ChoroplethMap = ({
         },
       ],
     }),
-    [mapName, data, options, colors, onSelect]
+    [mapName, matchedData, options, colors, onSelect]
   );
 
   const onEvents = useMemo(
@@ -167,23 +214,29 @@ const ChoroplethMap = ({
       onSelect
         ? {
             click: (params: { name?: string }) => {
-              if (params?.name) onSelect(params.name);
+              if (params?.name) {
+                // ส่งชื่อเดิม (คีย์ที่ส่วนอื่นของหน้าใช้) กลับไป ไม่ใช่ชื่อในแผนที่
+                onSelect(renderNameToOriginal.get(params.name) ?? params.name);
+              }
             },
           }
         : undefined,
-    [onSelect]
+    [onSelect, renderNameToOriginal]
   );
 
+  const boxHeight = typeof height === 'number' ? `${height}px` : height;
+
   return isMapReady ? (
-    <ReactECharts
-      option={option}
-      onEvents={onEvents}
-      style={{ height: `${height}px` }}
-    />
+    <div ref={boxRef} style={{ height: boxHeight, width: '100%' }}>
+      <ReactECharts
+        ref={chartRef}
+        option={option}
+        onEvents={onEvents}
+        style={{ height: '100%', width: '100%' }}
+      />
+    </div>
   ) : (
-    <div
-      style={{ height: `${height}px`, display: 'grid', placeItems: 'center' }}
-    >
+    <div style={{ height: boxHeight, display: 'grid', placeItems: 'center' }}>
       กำลังโหลดแผนที่...
     </div>
   );

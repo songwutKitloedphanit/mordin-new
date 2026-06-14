@@ -1,0 +1,2477 @@
+diff --git a/.gitignore b/.gitignore
+index 4b4a87d..c27ef53 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -39,6 +39,7 @@ lerna-debug.log*
+ .env
+ .env.development.local
+ .env.test.local
++.env.test
+ .env.production.local
+ .env.local
+ .env.development
+diff --git a/deploy.bat b/deploy.bat
+index 32b1c3c..59b344e 100644
+--- a/deploy.bat
++++ b/deploy.bat
+@@ -30,7 +30,7 @@ echo [SUCCESS] Build completed successfully
+ 
+ REM Create archive using tar (available in Windows 10+)
+ echo [INFO] Creating deployment archive...
+-tar -czf "%TEMP_DIR%\%ARCHIVE_NAME%" dist node_modules package.json
++tar -czf "%TEMP_DIR%\%ARCHIVE_NAME%" dist node_modules package.json migrations scripts DB_MIGRATIONS.md
+ if %errorlevel% neq 0 (
+     echo [ERROR] Failed to create archive
+     exit /b 1
+@@ -70,4 +70,4 @@ if exist "%TEMP_DIR%\%ARCHIVE_NAME%" (
+     del "%TEMP_DIR%\%ARCHIVE_NAME%"
+ )
+ 
+-exit /b 0
+\ No newline at end of file
++exit /b 0
+diff --git a/deploy.sh b/deploy.sh
+index 6ae5560..c4118ff 100755
+--- a/deploy.sh
++++ b/deploy.sh
+@@ -68,7 +68,7 @@ main() {
+     
+     # Create archive
+     log_info "Creating deployment archive..."
+-    if tar czf "${TEMP_DIR}/${ARCHIVE_NAME}" dist node_modules package.json; then
++    if tar czf "${TEMP_DIR}/${ARCHIVE_NAME}" dist node_modules package.json migrations scripts DB_MIGRATIONS.md; then
+         log_success "Archive created: ${TEMP_DIR}/${ARCHIVE_NAME}"
+         log_info "Archive size: $(du -h "${TEMP_DIR}/${ARCHIVE_NAME}" | cut -f1)"
+     else
+@@ -99,4 +99,4 @@ main() {
+ }
+ 
+ # Execute main function
+-main "$@"
+\ No newline at end of file
++main "$@"
+diff --git a/package.json b/package.json
+index fe83b0b..c0e7eea 100644
+--- a/package.json
++++ b/package.json
+@@ -17,6 +17,13 @@
+     "test:cov": "jest --coverage",
+     "test:debug": "node --inspect-brk -r tsconfig-paths/register -rts-node/register node_modules/.bin/jest --runInBand",
+     "test:e2e": "jest --config ./test/jest-e2e.json",
++    "test:integration": "node scripts/run-integration-tests.js",
++    "test:db:reset": "node scripts/reset-test-db.js",
++    "migrate:check": "node scripts/migrate.js check",
++    "migrate:status": "node scripts/migrate.js status",
++    "migrate:up": "node scripts/migrate.js up",
++    "migrate:down": "node scripts/migrate.js down",
++    "migrate:service-area": "node scripts/migrate-service-area-outbox.js",
+     "format": "prettier --write .",
+     "format:check": "prettier --check .",
+     "generate-env": "node generate-env.js"
+diff --git a/src/app.module.ts b/src/app.module.ts
+index e1b874b..ff5461e 100644
+--- a/src/app.module.ts
++++ b/src/app.module.ts
+@@ -27,6 +27,7 @@ import { getNamespace } from 'cls-hooked';
+ import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+ import { DashboardModule } from './dashboard/dashboard.module';
+ import { LoggingSubscriber } from './common/subscribers/logging.subscriber';
++import { AuditOutboxModule } from './audit-outbox/audit-outbox.module';
+ 
+ @Module({
+   imports: [
+@@ -54,6 +55,7 @@ import { LoggingSubscriber } from './common/subscribers/logging.subscriber';
+     ConvertOmSettingModule,
+     ResultsModule,
+     DashboardModule,
++    AuditOutboxModule,
+     
+   ],
+   controllers: [AppController],
+diff --git a/src/auth/auth.controller.ts b/src/auth/auth.controller.ts
+index d978846..3d70164 100644
+--- a/src/auth/auth.controller.ts
++++ b/src/auth/auth.controller.ts
+@@ -1,4 +1,4 @@
+-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
++import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Patch, Post, Req, UseGuards } from '@nestjs/common';
+ import { AuthService } from './auth.service';
+ import { AuthenRequest } from './interfaces/authen.request';
+ import { BaseResponse } from './interfaces/response';
+@@ -10,6 +10,7 @@ import { csvHeader } from './auth.module';
+ import { ConfigService } from '@nestjs/config';
+ import { UserRoles } from 'src/users/enums/user.enum';
+ import { AuthenProfileResponse } from './interfaces/authen.response';
++import { UpdateProfileDto } from 'src/users/dto/update-profile.dto';
+ @Controller('auth')
+ export class AuthController {
+   constructor(
+@@ -45,7 +46,7 @@ export class AuthController {
+         Array.isArray(userInfo) ? userInfo[0] : userInfo,
+         isDevMode ? UserRoles.Admin : UserRoles.Executive,
+       );
+-      
++
+       const token = await this.authService.generateTokens({
+         sub: user.userId,
+         username: user.username,
+@@ -110,6 +111,25 @@ export class AuthController {
+     }
+   }
+ 
++  @Patch('profile')
++  @UseGuards(AuthGuard)
++  @HttpCode(HttpStatus.OK)
++  async updateProfile(
++    @Req() req: RequestWithAuth,
++    @Body() updateProfileDto: UpdateProfileDto,
++  ) {
++    const user = await this.userService.updateProfile(
++      Number(req.user.sub),
++      updateProfileDto,
++    );
++
++    return {
++      code: HttpStatus.OK,
++      message: 'Profile updated successfully',
++      data: user,
++    };
++  }
++
+   private handleError(error: unknown): never {
+     if (isAxiosError(error)) {
+       const response = error.response?.data;
+diff --git a/src/common/subscribers/logging.subscriber.ts b/src/common/subscribers/logging.subscriber.ts
+index e981736..9974636 100644
+--- a/src/common/subscribers/logging.subscriber.ts
++++ b/src/common/subscribers/logging.subscriber.ts
+@@ -2,10 +2,6 @@ import { BusLog } from 'src/buses/entities/bus.log.entity';
+ import { Bus } from 'src/buses/entities/bus.entity';
+ import { Book } from 'src/sample/books/entities/book.entity';
+ import { BookLog } from 'src/sample/books/entities/book.log.entity';
+-import { ServiceAreaLog } from 'src/service-area/service-areas/entities/service-area.log.entity';
+-import { ServiceArea } from 'src/service-area/service-areas/entities/service-area.entity';
+-import { FactoryLog } from 'src/service-area/factories/entities/factory.log.entity';
+-import { Factory } from 'src/service-area/factories/entities/factory.entity';
+ import { ServiceTypeLog } from 'src/service-type/service-types/entities/service-type.log.entity';
+ import { ServiceType } from 'src/service-type/service-types/entities/service-type.entity';
+ import { Unit } from 'src/reference-data/units/entities/unit.entity';
+@@ -92,8 +88,6 @@ const entityToLogMap = new Map<Function, Function>([
+   [Farmer, FarmerLog],
+   [Bus, BusLog],
+   [Book, BookLog],
+-  [ServiceArea, ServiceAreaLog],
+-  [Factory, FactoryLog],
+   [ServiceType, ServiceTypeLog],
+   [Unit, UnitLog],
+   [ServiceCalendar, ServiceCalendarLog],
+@@ -237,4 +231,4 @@ export class LoggingSubscriber implements EntitySubscriberInterface {
+     const newLog = logRepository.create(logData);
+     await logRepository.save(newLog);
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/database/database.module.ts b/src/database/database.module.ts
+index 802f370..d10e014 100644
+--- a/src/database/database.module.ts
++++ b/src/database/database.module.ts
+@@ -24,7 +24,7 @@ import { join } from 'path';
+         // บอกให้หาเฉพาะไฟล์ที่ลงท้ายด้วย .entity.ts (หรือ .js ตอน build)
+         // และต้องไม่ใช่ .log.entity.ts
+         entities: [join(__dirname, '/../**/*.entity{.ts,.js}'), '!' + join(__dirname, '/../**/*.log.entity{.ts,.js}')],
+-        // synchronize: true, // dev only
++        synchronize: config.get('NODE_ENV') === 'test',
+         extra: {
+           max: 5,
+           idleTimeoutMillis: 30000,
+@@ -39,6 +39,7 @@ import { join } from 'path';
+       imports: [ConfigModule],
+       name: 'logs', // ตั้งชื่อ connection สำหรับ logs
+       useFactory: (config: ConfigService) => ({
++        name: 'logs',
+         type: 'postgres',
+         host: config.get('POSTGRES_LOGS_HOST'),
+         port: config.get<number>('POSTGRES_LOGS_PORT'),
+@@ -49,10 +50,10 @@ import { join } from 'path';
+         // บอกให้หาเฉพาะไฟล์ที่ลงท้ายด้วย .log.entity.ts (หรือ .js ตอน build)
+         entities: [join(__dirname, '/../**/*.log.entity{.ts,.js}')],
+         entitySkipConstructor: true,
+-        synchronize: true, // dev only
++        synchronize: config.get('NODE_ENV') === 'test',
+       }),
+       inject: [ConfigService],
+     }),
+   ],
+ })
+-export class DatabaseModule { }
+\ No newline at end of file
++export class DatabaseModule { }
+diff --git a/src/farmers/dto/farmer-public-profile.dto.ts b/src/farmers/dto/farmer-public-profile.dto.ts
+index eef023d..74322ee 100644
+--- a/src/farmers/dto/farmer-public-profile.dto.ts
++++ b/src/farmers/dto/farmer-public-profile.dto.ts
+@@ -1,12 +1,35 @@
++export class FarmerPublicLandDto {
++  landId!: number;
++  landCode?: string;
++  name!: string;
++  areaSize!: number;
++  latitude?: number;
++  longitude?: number;
++  subdistrictCode!: string;
++  zipCode!: number;
++  subdistrict?: {
++    code: number;
++    zipCode: number;
++    latitude?: number;
++    longitude?: number;
++    district?: {
++      code: number;
++      province?: {
++        code: number;
++      };
++    };
++  };
++}
++
+ export class FarmerPublicProfileDto {
+   farmerId!: number;
+   firstName!: string;
+   lastName!: string;
+   phone!: string;
+   thaiFarmerId?: string;
+-  thaiNationalIdMasked?: string; // ปิดเลขบางส่วนเพื่อความปลอดภัย
+   factory?: { factoryId: number; name: string; initial: string | null };
+   serviceArea?: { serviceAreaId: number; code: string | null; name: string | null };
+   landCount?: number;
+   landSizeSummary?: number;
++  lands!: FarmerPublicLandDto[];
+ }
+diff --git a/src/farmers/entities/farmer.entity.ts b/src/farmers/entities/farmer.entity.ts
+index 4a06409..443adf7 100644
+--- a/src/farmers/entities/farmer.entity.ts
++++ b/src/farmers/entities/farmer.entity.ts
+@@ -1,5 +1,4 @@
+ /* eslint-disable prettier/prettier */
+-import { now } from 'mongoose';
+ import { Land } from 'src/lands/entities/land.entity';
+ import { Factory } from 'src/service-area/factories/entities/factory.entity';
+ import { ServiceArea } from 'src/service-area/service-areas/entities/service-area.entity';
+@@ -10,7 +9,6 @@ import {
+   Column,
+   BeforeInsert,
+   BeforeUpdate,
+-  NumericType,
+   ManyToOne,
+   JoinColumn,
+   OneToMany,
+diff --git a/src/farmers/farmers.controller.ts b/src/farmers/farmers.controller.ts
+index 2966d58..994ce60 100644
+--- a/src/farmers/farmers.controller.ts
++++ b/src/farmers/farmers.controller.ts
+@@ -18,6 +18,7 @@ import { SearchFarmerDto } from './dto/search-farmer.dto';
+ import { AuthGuard } from 'src/auth/auth.guard';
+ import { User } from 'src/auth/decorators/user.decorator';
+ import { FarmerPublicLoginDto } from './dto/farmer-public-login.dto';
++import { FarmerPublicNamePhoneDto } from './dto/farmer-public-name-phone.dto';
+ import { Response } from 'express';
+ 
+ @Controller('farmers')
+@@ -45,6 +46,11 @@ export class FarmersController {
+     return this.farmersService.publicLogin(dto);
+   }
+ 
++  @Post('public-lookup-by-name-phone')
++  async publicLookupByNamePhone(@Body() dto: FarmerPublicNamePhoneDto) {
++    return this.farmersService.publicLookupByNamePhone(dto);
++  }
++
+   @Get('/summary')
+   getSummary() {
+     return this.farmersService.getSummary();
+diff --git a/src/farmers/farmers.service.ts b/src/farmers/farmers.service.ts
+index 81783ad..3420377 100644
+--- a/src/farmers/farmers.service.ts
++++ b/src/farmers/farmers.service.ts
+@@ -11,6 +11,7 @@ import { FarmerSummaryDTO } from './dto/farmer-summary.dto';
+ import { FarmerLog } from './entities/farmer.log.entity';
+ import { error } from 'console';
+ import { FarmerPublicLoginDto } from './dto/farmer-public-login.dto';
++import { FarmerPublicNamePhoneDto } from './dto/farmer-public-name-phone.dto';
+ import { FarmerPublicProfileDto } from './dto/farmer-public-profile.dto'; import { Book } from 'src/sample/books/entities/book.entity';
+ import { SampleStatusEnum } from 'src/sample/enums/qr-code.enum';
+ import { BooksService } from 'src/sample/books/books.service';
+@@ -377,12 +378,6 @@ export class FarmersService {
+     return (v ?? '').replace(/\D/g, '');
+   }
+ 
+-  private maskThaiId(id?: string) {
+-    const d = this.digits(id);     // d เป็น string เสมอ
+-    if (d.length !== 13) return undefined;
+-    return `${d.slice(0, 3)}**********${d.slice(-2)}`;
+-  }
+-
+   /**
+    * ล็อกอินแบบ Public: ยืนยันตัวตนด้วย
+    * - thai_national_id "หรือ" thai_farmer_id
+@@ -441,6 +436,16 @@ export class FarmersService {
+     // บางเวอร์ชันของ TypeORM/PG จะให้คีย์เป็นตัวพิมพ์เล็ก
+     const landCount = parseInt((agg?.landcount ?? agg?.landCount ?? '0'), 10);
+     const landSizeSummary = parseFloat((agg?.landsizesummary ?? agg?.landSizeSummary ?? '0'));
++    const lands = await this.landRepository.find({
++      where: { farmerId: farmer.farmerId },
++      relations: {
++        subdistrict: {
++          district: {
++            province: true,
++          },
++        },
++      },
++    });
+ 
+     // สร้าง payload ตอบกลับ
+     const resp: FarmerPublicProfileDto = {
+@@ -449,7 +454,6 @@ export class FarmersService {
+       lastName: farmer.lastName,
+       phone: farmer.phone,
+       thaiFarmerId: farmer.thaiFarmerId || undefined,
+-      thaiNationalIdMasked: this.maskThaiId(farmer.thaiNationalId),
+       factory: farmer.factory ? {
+         factoryId: farmer.factoryId,
+         name: farmer.factory?.name ?? null,
+@@ -462,11 +466,121 @@ export class FarmersService {
+       } : undefined,
+       landCount,
+       landSizeSummary,
++      lands: lands.map(land => ({
++        landId: land.landId,
++        landCode: land.landCode,
++        name: land.name,
++        areaSize: land.areaSize,
++        latitude: land.latitude,
++        longitude: land.longitude,
++        subdistrictCode: land.subdistrictCode,
++        zipCode: land.zipCode,
++        subdistrict: land.subdistrict ? {
++          code: land.subdistrict.code,
++          zipCode: land.subdistrict.zipCode,
++          latitude: land.subdistrict.latitude,
++          longitude: land.subdistrict.longitude,
++          district: land.subdistrict.district ? {
++            code: land.subdistrict.district.code,
++            province: land.subdistrict.district.province ? {
++              code: land.subdistrict.district.province.code,
++            } : undefined,
++          } : undefined,
++        } : undefined,
++      })),
+     };
+ 
+     return resp;
+   }
+ 
++  async publicLookupByNamePhone(dto: FarmerPublicNamePhoneDto): Promise<FarmerPublicProfileDto> {
++    const phoneDigits = this.digits(dto.phone);
++    const firstName = dto.firstName.trim();
++    if (!firstName) {
++      throw new BadRequestException('Invalid first name');
++    }
++    if (!phoneDigits || phoneDigits.length < 9) {
++      throw new BadRequestException('Invalid phone number');
++    }
++
++    const matches = await this.farmerRepo.createQueryBuilder('farmer')
++      .leftJoinAndSelect('farmer.factory', 'factory')
++      .leftJoinAndSelect('farmer.serviceArea', 'serviceArea')
++      .where('farmer.firstName = :firstName', { firstName })
++      .andWhere('farmer.phone = :phone', { phone: phoneDigits })
++      .limit(2)
++      .getMany();
++
++    if (matches.length === 0) {
++      throw new NotFoundException('ไม่พบข้อมูลเกษตรกรจากชื่อและเบอร์โทรที่ให้มา');
++    }
++    if (matches.length > 1) {
++      throw new BadRequestException('พบข้อมูลซ้ำหลายรายการ กรุณาติดต่อเจ้าหน้าที่');
++    }
++
++    const farmer = matches[0];
++    const agg = await this.landRepository.createQueryBuilder('land')
++      .select('COUNT(land.land_id)', 'landCount')
++      .addSelect('COALESCE(SUM(land.area_size),0)', 'landSizeSummary')
++      .where('land.farmer_id = :fid', { fid: farmer.farmerId })
++      .getRawOne<any>();
++
++    const landCount = parseInt((agg?.landcount ?? agg?.landCount ?? '0'), 10);
++    const landSizeSummary = parseFloat((agg?.landsizesummary ?? agg?.landSizeSummary ?? '0'));
++    const lands = await this.landRepository.find({
++      where: { farmerId: farmer.farmerId },
++      relations: {
++        subdistrict: {
++          district: {
++            province: true,
++          },
++        },
++      },
++    });
++
++    return {
++      farmerId: farmer.farmerId,
++      firstName: farmer.firstName,
++      lastName: farmer.lastName,
++      phone: farmer.phone,
++      thaiFarmerId: farmer.thaiFarmerId || undefined,
++      factory: farmer.factory ? {
++        factoryId: farmer.factoryId,
++        name: farmer.factory?.name ?? null,
++        initial: farmer.factory?.initial ?? null,
++      } : undefined,
++      serviceArea: farmer.serviceArea ? {
++        serviceAreaId: farmer.serviceAreaId,
++        code: farmer.serviceArea?.code ?? null,
++        name: farmer.serviceArea?.name ?? null,
++      } : undefined,
++      landCount,
++      landSizeSummary,
++      lands: lands.map(land => ({
++        landId: land.landId,
++        landCode: land.landCode,
++        name: land.name,
++        areaSize: land.areaSize,
++        latitude: land.latitude,
++        longitude: land.longitude,
++        subdistrictCode: land.subdistrictCode,
++        zipCode: land.zipCode,
++        subdistrict: land.subdistrict ? {
++          code: land.subdistrict.code,
++          zipCode: land.subdistrict.zipCode,
++          latitude: land.subdistrict.latitude,
++          longitude: land.subdistrict.longitude,
++          district: land.subdistrict.district ? {
++            code: land.subdistrict.district.code,
++            province: land.subdistrict.district.province ? {
++              code: land.subdistrict.district.province.code,
++            } : undefined,
++          } : undefined,
++        } : undefined,
++      })),
++    };
++  }
++
+   async getSummary() {
+     const farmers = await this.farmerRepo.find();
+     const lands = await this.landRepository.find();
+diff --git a/src/lands/lands.controller.ts b/src/lands/lands.controller.ts
+index d935f52..f00ecd9 100644
+--- a/src/lands/lands.controller.ts
++++ b/src/lands/lands.controller.ts
+@@ -16,6 +16,7 @@ import { UpdateLandDto } from './dto/update-land.dto';
+ import { AuthGuard } from 'src/auth/auth.guard';
+ import { User } from 'src/auth/decorators/user.decorator';
+ import { UpdateLandByFarmerDto } from './dto/update-land-by-farmer.dto';
++import { CreatePublicLandByFarmerDto } from './dto/create-public-land-by-farmer.dto';
+ 
+ @Controller('lands')
+ export class LandsController {
+@@ -27,6 +28,11 @@ export class LandsController {
+     return this.landsService.create(createLandDto, userId);
+   }
+ 
++  @Post('public-by-farmer')
++  createPublicByFarmer(@Body() createLandDto: CreatePublicLandByFarmerDto) {
++    return this.landsService.createPublicByFarmer(createLandDto);
++  }
++
+   @Get()
+   findAll() {
+     return this.landsService.findAll();
+diff --git a/src/lands/lands.module.ts b/src/lands/lands.module.ts
+index b1d965a..08e8313 100644
+--- a/src/lands/lands.module.ts
++++ b/src/lands/lands.module.ts
+@@ -7,11 +7,13 @@ import { Land } from './entities/land.entity';
+ import { FertilizerMajorLandScore } from 'src/sample/fertilizer-major-land-scores/entities/fertilizer-major-land-score.entity';
+ import { Book } from 'src/sample/books/entities/book.entity';
+ import { LandLog } from './entities/land.log.entity';
++import { Farmer } from 'src/farmers/entities/farmer.entity';
+ 
+ @Module({
+   imports: [TypeOrmModule.forFeature([
+     Land,
+     LandLog, 
++    Farmer,
+     FertilizerMajorLandScore,
+     Book
+   ])],
+diff --git a/src/lands/lands.service.ts b/src/lands/lands.service.ts
+index c25d46b..4587595 100644
+--- a/src/lands/lands.service.ts
++++ b/src/lands/lands.service.ts
+@@ -12,6 +12,8 @@ import { LandLog } from './entities/land.log.entity';
+ import { SampleStatusEnum } from 'src/sample/enums/qr-code.enum';
+ import { formatGlobalDateWithOutWeekly, formatThaiDateWithOutWeekly } from 'src/common/utils/date.util';
+ import { UpdateLandByFarmerDto } from './dto/update-land-by-farmer.dto';
++import { Farmer } from 'src/farmers/entities/farmer.entity';
++import { CreatePublicLandByFarmerDto } from './dto/create-public-land-by-farmer.dto';
+ 
+ @Injectable()
+ export class LandsService {
+@@ -22,6 +24,9 @@ export class LandsService {
+     @InjectRepository(LandLog)
+     private readonly landLog: Repository<LandLog>,
+ 
++    @InjectRepository(Farmer)
++    private readonly farmerRepository: Repository<Farmer>,
++
+     @InjectRepository(Book)
+     private readonly bookRepo: Repository<Book>,
+   ) { }
+@@ -56,6 +61,35 @@ export class LandsService {
+     return this.landRepository.save(land);
+   }
+ 
++  async createPublicByFarmer(createLandDto: CreatePublicLandByFarmerDto) {
++    const phone = (createLandDto.phone ?? '').replace(/\D/g, '');
++    const firstName = createLandDto.firstName.trim();
++    const farmer = await this.farmerRepository.findOne({
++      where: {
++        farmerId: createLandDto.farmerId,
++        firstName,
++        phone,
++      },
++    });
++
++    if (!farmer) {
++      throw new UnauthorizedException('Farmer information does not match');
++    }
++
++    return this.create({
++      landCode: createLandDto.landCode?.trim() || undefined,
++      name: createLandDto.name,
++      areaSize: createLandDto.areaSize,
++      latitude: createLandDto.latitude,
++      longitude: createLandDto.longitude,
++      subdistrictCode: createLandDto.subdistrictCode,
++      zipCode: createLandDto.zipCode,
++      farmerId: createLandDto.farmerId,
++      quotaCode: undefined,
++      village: undefined,
++    });
++  }
++
+   findAll() {
+     return this.landRepository
+       .createQueryBuilder('land')
+diff --git a/src/sample/books/entities/book.log.entity.ts b/src/sample/books/entities/book.log.entity.ts
+index 3ed714d..7c4ca14 100644
+--- a/src/sample/books/entities/book.log.entity.ts
++++ b/src/sample/books/entities/book.log.entity.ts
+@@ -49,6 +49,12 @@ export class BookLog extends BaseLogEntity {
+   @Column({ name: 'area_size', type: 'float', nullable: true, default: null })
+   areaSize: number;
+ 
++  @Column({ type: 'varchar', name: 'subdistrict_code', length: 6, nullable: true, default: null })
++  subdistrictCode: string;
++
++  @Column({ name: 'zip_code', type: 'int', nullable: true, default: null })
++  zipCode: number;
++
+   @Column({ name: 'sample_code', type: 'varchar', length: 15, nullable: true })
+   sampleCode: string;
+ 
+diff --git a/src/sample/fertilizer-major-land-scores/dto/graph-data-response.dto.ts b/src/sample/fertilizer-major-land-scores/dto/graph-data-response.dto.ts
+index 7be1da1..6cd427b 100644
+--- a/src/sample/fertilizer-major-land-scores/dto/graph-data-response.dto.ts
++++ b/src/sample/fertilizer-major-land-scores/dto/graph-data-response.dto.ts
+@@ -50,8 +50,11 @@ export class PieChartItemDto {
+   @ApiProperty({ example: '16-16-8', description: 'สูตรปุ๋ย' })
+   formula: string;
+ 
+-  @ApiProperty({ example: 50, description: 'อัตราการใช้ (หรือจำนวน)' })
+-  useRate: number; 
++  @ApiProperty({ example: 50, description: 'อัตราการใช้ต่อไร่' })
++  useRate: number;
++
++  @ApiProperty({ example: 120, description: 'จำนวนแปลงที่แนะนำสูตรนี้' })
++  count: number;
+ }
+ 
+ export class PieChartDataDto {
+diff --git a/src/sample/fertilizer-major-land-scores/fertilizer-major-land-scores.service.ts b/src/sample/fertilizer-major-land-scores/fertilizer-major-land-scores.service.ts
+index 016b285..4a4fdda 100644
+--- a/src/sample/fertilizer-major-land-scores/fertilizer-major-land-scores.service.ts
++++ b/src/sample/fertilizer-major-land-scores/fertilizer-major-land-scores.service.ts
+@@ -17,7 +17,6 @@ import {
+   PrepareDataDto,
+   SoilAnalysisDataDto,
+ } from './dto/graph-data-response.dto';
+-import { Book } from '../books/entities/book.entity';
+ import { FertilizerMinorLandUsage } from '../fertilizer-minor-land-usages/entities/fertilizer-minor-land-usage.entity';
+ import { FertilizerMajorLandUsage } from '../fertilizer-major-land-usages/entities/fertilizer-major-land-usage.entity';
+ 
+@@ -161,6 +160,7 @@ export class FertilizerMajorLandScoresService {
+       .leftJoin('serviceUsage.serviceCategory', 'category')
+       .leftJoin('serviceUsage.usageType', 'usageType')
+       .leftJoin('majorUsage.book', 'book')
++      .leftJoin('book.qrCode', 'qrCode')
+       .leftJoin('book.land', 'land')
+       .leftJoin('land.subdistrict', 'subdistrict')
+       .leftJoin('subdistrict.district', 'district')
+@@ -170,6 +170,7 @@ export class FertilizerMajorLandScoresService {
+       .leftJoin('book.analysisServiceCalendar', 'analysisServiceCalendar');
+ 
+     this.applyCommonFilters(majorUsageQuery, filters);
++    majorUsageQuery.andWhere('qrCode.status = :status', { status: SampleStatusEnum.APPROVED });
+ 
+     majorUsageQuery.select([
+       'category.name AS serviceCategoryName',
+@@ -188,6 +189,7 @@ export class FertilizerMajorLandScoresService {
+       .leftJoin('minorUsage.book', 'book')
+       .leftJoin('minorUsage.fertilizerMinor', 'fertMinor')
+       .leftJoin('fertMinor.unit', 'unit')
++      .leftJoin('book.qrCode', 'qrCode')
+       .leftJoin('book.land', 'land')
+       .leftJoin('land.subdistrict', 'subdistrict')
+       .leftJoin('subdistrict.district', 'district')
+@@ -197,6 +199,7 @@ export class FertilizerMajorLandScoresService {
+       .leftJoin('book.analysisServiceCalendar', 'analysisServiceCalendar');
+ 
+     this.applyCommonFilters(minorUsageQuery, filters);
++    minorUsageQuery.andWhere('qrCode.status = :status', { status: SampleStatusEnum.APPROVED });
+ 
+     minorUsageQuery
+       .select([
+@@ -209,23 +212,10 @@ export class FertilizerMajorLandScoresService {
+       .groupBy('minorUsage.fertilizerMinorName')
+       .addGroupBy('unit.name');
+ 
+-    const bookCountQuery = this.fertilizerMajorLandScoreRepo.manager
+-      .createQueryBuilder(Book, 'book')
+-      .leftJoin('book.land', 'land')
+-      .leftJoin('land.subdistrict', 'subdistrict')
+-      .leftJoin('subdistrict.district', 'district')
+-      .leftJoin('district.province', 'province')
+-      .leftJoin('province.geography', 'geography')
+-      .leftJoin('book.serviceArea', 'serviceArea')
+-      .leftJoin('book.analysisServiceCalendar', 'analysisServiceCalendar');
+-
+-    this.applyCommonFilters(bookCountQuery, filters);
+-
+-    const [soilRaw, majorRaw, minorRaw, totalBooks] = await Promise.all([
++    const [soilRaw, majorRaw, minorRaw] = await Promise.all([
+       soilQuery.getRawMany(),
+       majorUsageQuery.getRawMany(),
+-      minorUsageQuery.getRawMany(),
+-      bookCountQuery.getCount()
++      minorUsageQuery.getRawMany()
+     ]);
+ 
+     const soilAnalysis = this.transformDataByLocation(soilRaw);
+@@ -263,7 +253,8 @@ export class FertilizerMajorLandScoresService {
+ 
+       summaryItem.PieChartItemDto.push({
+         formula: row.formula,
+-        useRate: Number(row.userate)
++        useRate: Number(row.userate),
++        count: Number(row.count)
+       });
+     }
+ 
+diff --git a/src/sample/qr-codes/dto/update-qr-code.dto.ts b/src/sample/qr-codes/dto/update-qr-code.dto.ts
+index 1f4d5aa..46ddb98 100644
+--- a/src/sample/qr-codes/dto/update-qr-code.dto.ts
++++ b/src/sample/qr-codes/dto/update-qr-code.dto.ts
+@@ -1,6 +1,14 @@
+ import { IsDecimal, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+ 
+ export class UpdateQrCodeDto {
++    @IsOptional()
++    @IsNumber()
++    farmerId?: number;
++
++    @IsOptional()
++    @IsNumber()
++    landId?: number;
++
+     @IsString()
+     @IsNotEmpty()
+     firstName: string;
+diff --git a/src/sample/qr-codes/qr-codes.controller.ts b/src/sample/qr-codes/qr-codes.controller.ts
+index 522f6db..75979a9 100644
+--- a/src/sample/qr-codes/qr-codes.controller.ts
++++ b/src/sample/qr-codes/qr-codes.controller.ts
+@@ -8,6 +8,7 @@ import {
+   Delete,
+   Query,
+   UseGuards,
++  ParseIntPipe,
+ } from '@nestjs/common';
+ import { QrCodesService } from './qr-codes.service';
+ import { CreateQrCodeDto } from './dto/create-qr-code.dto';
+@@ -35,20 +36,24 @@ export class QrCodesController {
+     return this.qrCodesService.create(createQrCodeDto, userId);
+   }
+ 
++  @UseGuards(AuthGuard)
+   @Get()
+   search(@Query() searchDto: SearchQrCodeDto) {
+     return this.qrCodesService.searchAndPagination(searchDto);
+   }
+ 
++  @UseGuards(AuthGuard)
+   @Get('/logs')
+   getLogs() {
+     return this.qrCodesService.getLogs();
+   }
+ 
++  @UseGuards(AuthGuard)
+   @Get('summary')
+   async getQrCodeSummary(): Promise<QrCodeSummaryDto> {
+     return this.qrCodesService.getQrCodeSummary();
+   }
++  @UseGuards(AuthGuard)
+   @Get('collected')
+   findCollectedQrCodes() {
+     return this.qrCodesService.findCollectedQrCodes();
+@@ -64,16 +69,19 @@ export class QrCodesController {
+     return this.qrCodesService.checkEncryptQrCode(code);
+   }
+ 
++  @UseGuards(AuthGuard)
+   @Get('encrypt/:qrCode')
+   getEncryptQrCode(@Param('qrCode') qrCode: string) {
+     return this.qrCodesService.encryptQrCode(qrCode);
+   }
+ 
++  @UseGuards(AuthGuard)
+   @Get('decrypt/:code')
+   getDecryptCode(@Param('code') code: string) {
+     return this.qrCodesService.getDecryptCode(code);
+   }
+ 
++  @UseGuards(AuthGuard)
+   @Get(':qrcode')
+   findOne(@Param('qrcode') qrCode: string) {
+     return this.qrCodesService.findOne(qrCode);
+@@ -81,8 +89,8 @@ export class QrCodesController {
+ 
+   @UseGuards(AuthGuard)
+   @Patch(':id')
+-  update(@Param('id') id: string, @Body() updateQrCodeDto: UpdateQrCodeDto, @User('sub')  userId: number) {
+-    return this.qrCodesService.update(+id, updateQrCodeDto, userId);
++  update(@Param('id', ParseIntPipe) id: number, @Body() updateQrCodeDto: UpdateQrCodeDto, @User('sub')  userId: number) {
++    return this.qrCodesService.update(id, updateQrCodeDto, userId);
+   }
+ 
+   @UseGuards(AuthGuard)
+@@ -123,14 +131,14 @@ export class QrCodesController {
+ 
+   @UseGuards(AuthGuard)
+   @Delete(':id')
+-  remove(@Param('id') id: string) {
+-    return this.qrCodesService.remove(+id);
++  remove(@Param('id', ParseIntPipe) id: number) {
++    return this.qrCodesService.remove(id);
+   }
+ 
+   @UseGuards(AuthGuard)
+   @Post('/generate/:number')
+   generateQrCode(
+-    @Param('number') number: number,
++    @Param('number', ParseIntPipe) number: number,
+     @Body() createQrCodeDto: CreateQrCodeDto,
+     @User('sub')  userId: number
+   ) {
+diff --git a/src/sample/qr-codes/qr-codes.service.ts b/src/sample/qr-codes/qr-codes.service.ts
+index d597f8f..092ae58 100644
+--- a/src/sample/qr-codes/qr-codes.service.ts
++++ b/src/sample/qr-codes/qr-codes.service.ts
+@@ -1,4 +1,4 @@
+-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
++import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+ import { CreateQrCodeDto } from './dto/create-qr-code.dto';
+ import { UpdateQrCodeDto } from './dto/update-qr-code.dto';
+ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+@@ -8,7 +8,6 @@ import { BooksService } from '../books/books.service';
+ import { CryptoService } from 'src/common/crypto/crypto.service';
+ import { Book } from '../books/entities/book.entity';
+ import { SampleStatusEnum } from '../enums/qr-code.enum';
+-import { mock } from 'node:test';
+ import { Land } from 'src/lands/entities/land.entity';
+ import { ResultsService } from '../results/results.service';
+ import { ServiceCalendar } from 'src/service-calendars/entities/service-calendar.entity';
+@@ -50,6 +49,8 @@ export class QrCodesService {
+     private readonly resultService: ResultsService
+   ) { }
+ 
++  private readonly logger = new Logger(QrCodesService.name);
++
+   async getLatestSequenceInYear(year: number): Promise<number> {
+     const yearShort = (year % 100).toString().padStart(2, '0');
+ 
+@@ -337,31 +338,27 @@ export class QrCodesService {
+     };
+   }
+ 
+-  findOneByEncryptCode(code: string) {
++  async findOneByEncryptCode(code: string) {
+     try {
+       const decrypted = this.cryptoService.decrypt(code);
+-      const qrCode = this.qrCodeRepo.findOne({
++      const qrCode = await this.qrCodeRepo.findOne({
+         where: { qrCode: decrypted },
+-        relations: {
+-          createdUser: true,
+-          serviceArea: {
+-            factory: true,
+-          },
+-          serviceCalendar: true,
+-          book: {
+-            serviceArea: true,
+-            subdistrict: {
+-              district: {
+-                province: true,
+-              },
+-            },
+-          },
+-        },
+       });
+       if (!qrCode) {
+         throw new NotFoundException('QrCode not found');
+       }
+-      return qrCode;
++      if (qrCode.status !== SampleStatusEnum.DISTRIBUTED) {
++        return {
++          status: qrCode.status,
++          message: 'Soil sample information has already been recorded',
++        };
++      }
++      return {
++        status: qrCode.status,
++        type: qrCode.type,
++        serviceAreaId: qrCode.serviceAreaId,
++        serviceCalendarId: qrCode.serviceCalendarId,
++      };
+     } catch (error) {
+       throw new NotFoundException('QrCode not found');
+     }
+@@ -391,7 +388,6 @@ export class QrCodesService {
+     if (!qrCode) {
+       throw new NotFoundException('QrCode not found');
+     }
+-
+     if (qrCode.status !== SampleStatusEnum.DISTRIBUTED) {
+       throw new BadRequestException(
+         'ไม่สามารถลบได้ เนื่องจาก QR Code นี้ถูกใช้งานแล้ว'
+@@ -408,19 +404,20 @@ export class QrCodesService {
+   }
+ 
+   private async mapInputData(
+-    qrCode: QrCode
++    qrCode: QrCode,
++    manager?: import('typeorm').EntityManager
+   ): Promise<{ farmer: Farmer | null; land: Land | null }> {
+-    console.log('Mapping input data for QR Code:', qrCode);
+-
+     const thaiId = qrCode.thaiNationalId?.trim();
+     const phone = qrCode.phoneNumber?.replace(/\D/g, ''); // normalize เบอร์
+     const landCode = qrCode.landCode?.trim();
+ 
++    const farmerRepo = manager?.getRepository(Farmer) ?? this.farmerRepo;
++    const landRepo = manager?.getRepository(Land) ?? this.landRepo;
+     const [farmerById, farmerByPhone] = await Promise.all([
+       thaiId
+-        ? this.farmerRepo.findOne({ where: { thaiNationalId: thaiId } })
++        ? farmerRepo.findOne({ where: { thaiNationalId: thaiId } })
+         : null,
+-      phone ? this.farmerRepo.findOne({ where: { phone } }) : null,
++      phone ? farmerRepo.findOne({ where: { phone } }) : null,
+     ]);
+ 
+     let farmer: Farmer | null = null;
+@@ -436,16 +433,38 @@ export class QrCodesService {
+     } else if (farmerById === null && farmerByPhone) {
+       farmer = farmerByPhone;
+     } else {
+-      farmer = null; // conflict or not found
++      // conflict or not found — ปล่อย farmer = null โดยตั้งใจ (กันผูกตัวอย่างผิดคน)
++      // แต่ต้อง log ให้เจ้าหน้าที่ตามต่อได้ ไม่ปล่อยเงียบ
++      farmer = null;
++      if (farmerById && farmerByPhone) {
++        // เลขบัตรตรงคนหนึ่ง แต่เบอร์โทรตรงอีกคนหนึ่ง — ข้อมูลขัดกัน
++        this.logger.warn(
++          `Farmer conflict on QR ${qrCode.qrCode}: thaiNationalId matches farmerId=${farmerById.farmerId} ` +
++            `but phone matches farmerId=${farmerByPhone.farmerId}. Sample saved WITHOUT farmer link; staff must reconcile.`
++        );
++      } else if (thaiId || phone) {
++        // มีข้อมูลระบุตัวตนแต่ไม่พบเกษตรกรในระบบ — เป็นเกษตรกรรายใหม่/ยังไม่ลงทะเบียน
++        this.logger.warn(
++          `No matching farmer for QR ${qrCode.qrCode} (thaiNationalId/phone provided but not found). ` +
++            `Sample saved WITHOUT farmer link; staff must register/link this farmer.`
++        );
++      }
+     }
+ 
+     let land: Land | null = null;
+     if (landCode) {
+-      const foundLand = await this.landRepo.findOne({ where: { landCode } });
++      const foundLand = await landRepo.findOne({ where: { landCode } });
+       if (foundLand) {
+         const isOwnedByFarmer =
+           farmer && foundLand.farmerId === farmer.farmerId;
+         land = isOwnedByFarmer || !farmer ? foundLand : null;
++        if (farmer && foundLand.farmerId !== farmer.farmerId) {
++          // landCode มีอยู่จริงแต่เป็นของเกษตรกรคนอื่น — ไม่ผูกแปลง ใช้ข้อมูลที่กรอกแทน
++          this.logger.warn(
++            `Land code "${landCode}" on QR ${qrCode.qrCode} belongs to farmerId=${foundLand.farmerId}, ` +
++              `not the matched farmerId=${farmer.farmerId}. Land link skipped.`
++          );
++        }
+       }
+     }
+ 
+@@ -455,12 +474,19 @@ export class QrCodesService {
+   //ใช้สำหรับ Update ข้อมูลจากที่เกษตรกรเก็บตัวอย่างแล้ว Scan QrCode กรอกข้อมูล
+   async updateDataByFarmer(code: string, updateData: UpdateQrCodeDto) {
+     const decryptCode = this.cryptoService.decrypt(code);
+-    const qrCode = await this.qrCodeRepo.findOne({
++    return this.dataSource.transaction(async manager => {
++    const qrCode = await manager.findOne(QrCode, {
+       where: { qrCode: decryptCode },
++      lock: { mode: 'pessimistic_write' },
+     });
+     if (!qrCode) {
+       throw new NotFoundException('QrCode not found');
+     }
++    if (qrCode.status !== SampleStatusEnum.DISTRIBUTED) {
++      throw new BadRequestException(
++        'Soil sample information has already been recorded'
++      );
++    }
+     // const book = await this.bookRepo.findOne({
+     //   where: { qrCodeId: qrCode.qrCodeId },
+     // });
+@@ -471,13 +497,13 @@ export class QrCodesService {
+     // --- [เริ่มส่วนที่แก้ไข] ---
+ 
+     // 1. ลองค้นหา Book ของ QR Code นี้ก่อน
+-    let book = await this.bookRepo.findOne({
++    let book = await manager.findOne(Book, {
+       where: { qrCodeId: qrCode.qrCodeId },
+     });
+ 
+     // 2. ถ้าไม่เจอ (แสดงว่าเป็น QR ลอยๆ ที่เพิ่งถูกสแกนครั้งแรก) ให้สร้าง Instance ใหม่
+     if (!book) {
+-      book = this.bookRepo.create({
++      book = manager.create(Book, {
+         qrCodeId: qrCode.qrCodeId
+       });
+     }
+@@ -520,9 +546,44 @@ export class QrCodesService {
+       landName,
+     };
+ 
+-    const updatedQrCode = await this.qrCodeRepo.save(updateQrCode);
+-    const { farmer, land } = await this.mapInputData(updatedQrCode);
+-    console.log('Farmer and Land mapped:', { farmer, land });
++    const updatedQrCode = await manager.save(QrCode, updateQrCode);
++    let { farmer, land } = await this.mapInputData(updatedQrCode, manager);
++
++    if (updateData.farmerId) {
++      const phone = phoneNumber?.replace(/\D/g, '');
++      const verifiedFarmer = await manager.findOne(Farmer, {
++        where: {
++          farmerId: updateData.farmerId,
++          firstName,
++          phone,
++        },
++      });
++
++      if (!verifiedFarmer) {
++        throw new BadRequestException('Farmer information does not match');
++      }
++
++      farmer = verifiedFarmer;
++    }
++
++    if (updateData.landId) {
++      if (!farmer) {
++        throw new BadRequestException('Cannot link land without matched farmer');
++      }
++
++      const verifiedLand = await manager.findOne(Land, {
++        where: {
++          landId: updateData.landId,
++          farmerId: farmer.farmerId,
++        },
++      });
++
++      if (!verifiedLand) {
++        throw new BadRequestException('Land does not belong to matched farmer');
++      }
++
++      land = verifiedLand;
++    }
+ 
+     const updateBook = {
+       ...book,
+@@ -537,11 +598,12 @@ export class QrCodesService {
+       zipCode: land ? land.zipCode : (zipCode ?? book.zipCode),
+       farmerId: farmer ? farmer.farmerId : undefined,
+     };
+-    await this.bookRepo.save(updateBook);
++    await manager.save(Book, updateBook);
+     return {
+-      qrCode: updateQrCode,
+-      book: updateBook,
++      status: SampleStatusEnum.COLLECTED,
++      message: 'Soil sample information has been recorded',
+     };
++    });
+   }
+ 
+   private normalizeCoordinate(
+diff --git a/src/service-area/factories/dto/create-factory.dto.ts b/src/service-area/factories/dto/create-factory.dto.ts
+index f165da8..3596fc9 100644
+--- a/src/service-area/factories/dto/create-factory.dto.ts
++++ b/src/service-area/factories/dto/create-factory.dto.ts
+@@ -1,5 +1,11 @@
+ import { Type } from 'class-transformer';
+-import { IsNotEmpty, IsString, Length, ValidateNested } from 'class-validator';
++import {
++  IsNotEmpty,
++  IsOptional,
++  IsString,
++  Length,
++  ValidateNested,
++} from 'class-validator';
+ import { CreateServiceAreaDto } from 'src/service-area/service-areas/dto/create-service-area.dto';
+ 
+ export class CreateFactoryDto {
+@@ -12,6 +18,7 @@ export class CreateFactoryDto {
+   @Length(3, 4)
+   initial: string;
+ 
++  @IsOptional()
+   @IsString()
+   note?: string;
+ 
+diff --git a/src/service-area/factories/dto/update-factory.dto.ts b/src/service-area/factories/dto/update-factory.dto.ts
+index 0e77c81..ff395cd 100644
+--- a/src/service-area/factories/dto/update-factory.dto.ts
++++ b/src/service-area/factories/dto/update-factory.dto.ts
+@@ -1,5 +1,11 @@
+ import { Type } from 'class-transformer';
+-import { IsNotEmpty, IsOptional, IsString, Length, ValidateNested } from 'class-validator';
++import {
++  IsNotEmpty,
++  IsOptional,
++  IsString,
++  Length,
++  ValidateNested,
++} from 'class-validator';
+ import { CreateServiceAreaDto } from 'src/service-area/service-areas/dto/create-service-area.dto';
+ import { UpdateServiceAreaDto } from 'src/service-area/service-areas/dto/update-service-area.dto';
+ 
+diff --git a/src/service-area/factories/entities/factory.log.entity.ts b/src/service-area/factories/entities/factory.log.entity.ts
+index 45c0dc5..9d383bf 100644
+--- a/src/service-area/factories/entities/factory.log.entity.ts
++++ b/src/service-area/factories/entities/factory.log.entity.ts
+@@ -11,11 +11,9 @@ import {
+   OneToMany,
+   PrimaryColumn,
+   PrimaryGeneratedColumn,
+-  Unique,
+ } from 'typeorm';
+ 
+ @Entity('factories_logs')
+-@Unique(['initial'])
+ export class FactoryLog extends BaseLogEntity{
+   @PrimaryColumn()
+   factoryId: number;
+@@ -35,4 +33,10 @@ export class FactoryLog extends BaseLogEntity{
+   @Column({ name: 'update_uid', type: 'int' })
+   updateUid: number;
+ 
++  @Column({ name: 'audit_event_id', type: 'uuid', nullable: true })
++  auditEventId: string | null;
++
++  @Column({ name: 'action', type: 'varchar', length: 20, nullable: true })
++  action: string | null;
++
+ }
+diff --git a/src/service-area/factories/factories.controller.ts b/src/service-area/factories/factories.controller.ts
+index acbec75..3a2b794 100644
+--- a/src/service-area/factories/factories.controller.ts
++++ b/src/service-area/factories/factories.controller.ts
+@@ -1,23 +1,29 @@
+ import {
++  Body,
+   Controller,
++  Delete,
+   Get,
+-  Post,
+-  Body,
+-  Patch,
+   Param,
+-  Delete,
++  ParseIntPipe,
++  Patch,
++  Post,
+   UseGuards,
+ } from '@nestjs/common';
+-import { FactoriesService } from './factories.service';
+-import { CreateFactoryDto } from './dto/create-factory.dto';
+-import { UpdateFactoryDto } from './dto/update-factory.dto';
+ import { AuthGuard } from 'src/auth/auth.guard';
++import { Roles } from 'src/auth/decorators/roles.decorator';
+ import { User } from 'src/auth/decorators/user.decorator';
++import { RolesGuard } from 'src/auth/roles.guard';
++import { UserRoles } from 'src/users/enums/user.enum';
++import { CreateFactoryDto } from './dto/create-factory.dto';
++import { UpdateFactoryDto } from './dto/update-factory.dto';
++import { FactoriesService } from './factories.service';
+ 
+ @Controller('factories')
+ export class FactoriesController {
+-  constructor(private readonly factoriesService: FactoriesService) { }
+-  @UseGuards(AuthGuard)
++  constructor(private readonly factoriesService: FactoriesService) {}
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
+   @Post()
+   create(
+     @Body() createFactoryDto: CreateFactoryDto,
+@@ -31,28 +37,55 @@ export class FactoriesController {
+     return this.factoriesService.findAll();
+   }
+ 
+-  @Get('/summary')
++  @Get('summary')
+   getSummary() {
+     return this.factoriesService.getSummary();
+   }
+ 
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
++  @Get('management')
++  findAllManagement() {
++    return this.factoriesService.findAllManagement();
++  }
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
++  @Get('management/:id')
++  findOneManagement(@Param('id', ParseIntPipe) id: number) {
++    return this.factoriesService.findOneManagement(id);
++  }
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
++  @Get('logs')
++  getLogs() {
++    return this.factoriesService.getLogs();
++  }
++
+   @Get(':id')
+-  findOne(@Param('id') id: string) {
+-    return this.factoriesService.findOne(+id);
++  findOne(@Param('id', ParseIntPipe) id: number) {
++    return this.factoriesService.findOne(id);
+   }
+-  @UseGuards(AuthGuard)
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
+   @Patch(':id')
+-  update(@Param('id') id: number, @Body() updateFactoryDto: UpdateFactoryDto, @User('sub') userId: number) {
++  update(
++    @Param('id', ParseIntPipe) id: number,
++    @Body() updateFactoryDto: UpdateFactoryDto,
++    @User('sub') userId: number
++  ) {
+     return this.factoriesService.update(id, updateFactoryDto, userId);
+   }
+ 
+-  @UseGuards(AuthGuard)
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
+   @Delete(':id')
+-  remove(@Param('id') id: string) {
+-    return this.factoriesService.remove(+id);
+-  }
+-  @Get('/logs')
+-  getLogs() {
+-    return this.factoriesService.getLogs();
++  remove(
++    @Param('id', ParseIntPipe) id: number,
++    @User('sub') userId: number
++  ) {
++    return this.factoriesService.remove(id, userId);
+   }
+ }
+diff --git a/src/service-area/factories/factories.module.ts b/src/service-area/factories/factories.module.ts
+index e57dfbd..1daa72e 100644
+--- a/src/service-area/factories/factories.module.ts
++++ b/src/service-area/factories/factories.module.ts
+@@ -5,9 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
+ import { Factory } from './entities/factory.entity';
+ import { ServiceArea } from '../service-areas/entities/service-area.entity';
+ import { FactoryLog } from './entities/factory.log.entity';
++import { AuditOutboxModule } from 'src/audit-outbox/audit-outbox.module';
+ 
+ @Module({
+-  imports: [TypeOrmModule.forFeature([Factory, ServiceArea,FactoryLog])],
++  imports: [
++    TypeOrmModule.forFeature([Factory, ServiceArea]),
++    TypeOrmModule.forFeature([FactoryLog], 'logs'),
++    AuditOutboxModule,
++  ],
+   controllers: [FactoriesController],
+   providers: [FactoriesService],
+ })
+diff --git a/src/service-area/factories/factories.service.ts b/src/service-area/factories/factories.service.ts
+index 41d6c24..9bcd5f9 100644
+--- a/src/service-area/factories/factories.service.ts
++++ b/src/service-area/factories/factories.service.ts
+@@ -1,201 +1,407 @@
+-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
++import {
++  BadRequestException,
++  ConflictException,
++  Injectable,
++} from '@nestjs/common';
++import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
++import { AuditOutboxService } from 'src/audit-outbox/audit-outbox.service';
++import { Farmer } from 'src/farmers/entities/farmer.entity';
++import { Book } from 'src/sample/books/entities/book.entity';
++import { QrCode } from 'src/sample/qr-codes/entities/qr-code.entity';
++import {
++  DataSource,
++  EntityManager,
++  QueryFailedError,
++  Repository,
++} from 'typeorm';
++import { CreateServiceAreaDto } from '../service-areas/dto/create-service-area.dto';
++import { UpdateServiceAreaDto } from '../service-areas/dto/update-service-area.dto';
++import { ServiceArea } from '../service-areas/entities/service-area.entity';
++import { normalizeServiceAreaCode } from '../service-areas/service-area-code.util';
+ import { CreateFactoryDto } from './dto/create-factory.dto';
++import { FactorySummaryDTO } from './dto/factory-summary.dto';
+ import { UpdateFactoryDto } from './dto/update-factory.dto';
+-import { InjectRepository } from '@nestjs/typeorm';
+ import { Factory } from './entities/factory.entity';
+-import { Repository } from 'typeorm';
+-import { ServiceArea } from '../service-areas/entities/service-area.entity';
+-import { FactorySummaryDTO } from './dto/factory-summary.dto';
+ import { FactoryLog } from './entities/factory.log.entity';
+ 
+ @Injectable()
+ export class FactoriesService {
+   constructor(
+-    @InjectRepository(Factory)
+-    private factoryRepo: Repository<Factory>,
+-
++    @InjectDataSource() private readonly dataSource: DataSource,
++    @InjectRepository(Factory) private readonly factoryRepo: Repository<Factory>,
+     @InjectRepository(ServiceArea)
+-    private serviceAreaRepo: Repository<ServiceArea>,
+-    @InjectRepository(FactoryLog)
+-    private factoryLog: Repository<FactoryLog>,
+-  ) { }
+-
+-  async create(createFactoryDto: CreateFactoryDto, Uid: number) {
+-    // Create the factory entity
+-    const factory = this.factoryRepo.create({
+-      ...createFactoryDto,
+-      updateUid: Uid,
+-    });
++    private readonly serviceAreaRepo: Repository<ServiceArea>,
++    @InjectRepository(FactoryLog, 'logs')
++    private readonly factoryLogRepo: Repository<FactoryLog>,
++    private readonly auditOutbox: AuditOutboxService
++  ) {}
+ 
+-    // Save the factory entity
+-    const savedFactory = await this.factoryRepo.save(factory);
+-
+-    // Create and save related service areas
+-    if (
+-      createFactoryDto.serviceAreas &&
+-      createFactoryDto.serviceAreas.length > 0
+-    ) {
+-      const serviceAreas = createFactoryDto.serviceAreas.map((serviceAreaDto) =>
+-        this.serviceAreaRepo.create({
+-          ...serviceAreaDto,
+-          factoryId: savedFactory.factoryId,
+-          updateUid: Uid,
+-        }),
+-      );
+-
+-      await this.serviceAreaRepo.save(serviceAreas);
+-    }
+-    return savedFactory;
++  async create(createFactoryDto: CreateFactoryDto, userId: number) {
++    return this.handleConflict(() =>
++      this.dataSource.transaction(async manager => {
++        const { serviceAreas = [], ...factoryInput } = createFactoryDto;
++        const factory = manager.create(Factory, {
++          ...factoryInput,
++          updateUid: userId,
++        });
++        const savedFactory = await manager.save(factory);
++        await this.auditOutbox.enqueue(
++          manager,
++          'factory',
++          savedFactory.factoryId,
++          'create',
++          userId,
++          null,
++          this.factorySnapshot(savedFactory)
++        );
++        await this.createServiceAreas(
++          manager,
++          serviceAreas,
++          savedFactory.factoryId,
++          userId
++        );
++        return savedFactory;
++      })
++    );
+   }
+ 
+-  async update(id: number, updateFactoryDto: UpdateFactoryDto, Uid: number) {
+-
+-    // Find the existing factory without loading serviceAreas
+-    const factory = await this.factoryRepo.findOne({
+-      where: { factoryId: id },
+-    });
+-    if (!factory) {
+-      throw new BadRequestException(`Factory with ID ${id} not found`);
+-    }
+-
+-    const { name, initial, note } = updateFactoryDto;
+-
+-    // Update the factory entity
+-    const { serviceAreas, ...factoryData } = updateFactoryDto; // แยก serviceAreas ออก
+-    await this.factoryRepo.update(id, {
+-      name,
+-      initial,
+-      note,
+-      updateUid: Uid,
+-    });
+-
+-    // Fetch updated factory
+-    const updatedFactory = await this.factoryRepo.findOne({
+-      where: { factoryId: id },
+-    });
+-    if (!updatedFactory) {
+-      throw new BadRequestException(
+-        `Factory with ID ${id} not found after update`,
+-      );
+-    }
++  async update(id: number, dto: UpdateFactoryDto, userId: number) {
++    return this.handleConflict(() =>
++      this.dataSource.transaction(async manager => {
++        const factory = await manager.findOne(Factory, {
++          where: { factoryId: id },
++        });
++        if (!factory) {
++          throw new BadRequestException(`Factory with ID ${id} not found`);
++        }
+ 
+-    // Update Existing Service Areas
+-    if (serviceAreas && serviceAreas.length > 0) {
+-      for (const serviceAreaDto of serviceAreas) {
+-        const existingServiceArea = await this.serviceAreaRepo.findOne({
+-          where: { serviceAreaId: serviceAreaDto.serviceAreaId },
++        const beforeFactory = this.factorySnapshot(factory);
++        Object.assign(factory, {
++          name: dto.name,
++          initial: dto.initial,
++          note: dto.note,
++          updateUid: userId,
+         });
+-        if (existingServiceArea) {
+-          // Update existing service area
+-          Object.assign(existingServiceArea, {
+-            ...serviceAreaDto,
+-            factoryId: updatedFactory.factoryId,
+-            updateUid: Uid,
+-          });
+-          await this.serviceAreaRepo.save(existingServiceArea);
++        await manager.save(factory);
++        await this.auditOutbox.enqueue(
++          manager,
++          'factory',
++          factory.factoryId,
++          'update',
++          userId,
++          beforeFactory,
++          this.factorySnapshot(factory)
++        );
++
++        for (const area of dto.serviceAreas ?? []) {
++          await this.updateServiceArea(manager, id, area, userId);
+         }
+-      }
+-    }
++        await this.createServiceAreas(
++          manager,
++          dto.newServiceAreas ?? [],
++          id,
++          userId
++        );
++        return manager.findOne(Factory, {
++          where: { factoryId: id },
++          relations: { serviceAreas: true, updateUser: true },
++        });
++      })
++    );
++  }
+ 
+-    // Create New Service Areas
+-    if (
+-      updateFactoryDto.newServiceAreas &&
+-      updateFactoryDto.newServiceAreas.length > 0
+-    ) {
+-      const newServiceAreas = updateFactoryDto.newServiceAreas.map(
+-        (newServiceAreaDto) =>
+-          this.serviceAreaRepo.create({
+-            ...newServiceAreaDto,
+-            factoryId: updatedFactory.factoryId,
+-            updateUid: Uid,
+-          }),
+-      );
+-      await this.serviceAreaRepo.save(newServiceAreas);
+-    }
++  async findAll() {
++    const factories = await this.factoryRepo.find({ order: { name: 'ASC' } });
++    return factories.map(factory => this.factoryPublicDto(factory));
++  }
+ 
+-    return this.factoryRepo.findOne({
++  async findOne(id: number) {
++    const factory = await this.factoryRepo.findOne({
+       where: { factoryId: id },
+-      relations: {
+-        serviceAreas: true,
+-        updateUser: true,
+-      }
++      relations: { serviceAreas: true },
+     });
++    if (!factory) return null;
++    return {
++      ...this.factoryPublicDto(factory),
++      serviceAreas: factory.serviceAreas
++        .filter(area => area.isActive)
++        .map(area => this.serviceAreaPublicDto(area)),
++    };
+   }
+ 
+-  async findAll() {
+-    return await this.factoryRepo
++  async findAllManagement() {
++    return this.factoryRepo
+       .createQueryBuilder('factory')
+       .leftJoinAndSelect('factory.updateUser', 'updateUser')
+       .addSelect(
+-        (subQuery) =>
++        subQuery =>
+           subQuery
+             .select('COUNT(serviceArea.service_area_id)')
+             .from('service_areas', 'serviceArea')
+-            .where('serviceArea.factory_id = factory.factory_id'),
+-        'serviceAreaCount',
++            .where('serviceArea.factory_id = factory.factory_id')
++            .andWhere('serviceArea.is_active = true'),
++        'serviceAreaCount'
++      )
++      .addSelect(
++        subQuery =>
++          subQuery
++            .select('COUNT(serviceArea.service_area_id)')
++            .from('service_areas', 'serviceArea')
++            .where('serviceArea.factory_id = factory.factory_id')
++            .andWhere('serviceArea.is_active = false'),
++        'inactiveServiceAreaCount'
+       )
+       .getRawAndEntities()
+-      .then((result) =>
++      .then(result =>
+         result.entities.map((entity, index) => ({
+           ...entity,
+           serviceAreaCount: parseInt(result.raw[index].serviceAreaCount, 10),
+-        })),
++          inactiveServiceAreaCount: parseInt(
++            result.raw[index].inactiveServiceAreaCount,
++            10
++          ),
++        }))
+       );
+   }
+ 
+-  async findOne(id: number) {
+-    return await this.factoryRepo
++  async findOneManagement(id: number) {
++    const factory = await this.factoryRepo
+       .createQueryBuilder('factory')
+       .where('factory.factory_id = :id', { id })
+       .leftJoinAndSelect('factory.serviceAreas', 'serviceArea')
+       .leftJoinAndSelect('factory.updateUser', 'updateUser')
+-      .addSelect(
+-        (subQuery) =>
+-          subQuery
+-            .select('COUNT(serviceArea.service_area_id)')
+-            .from('service_areas', 'serviceArea')
+-            .where('serviceArea.factory_id = factory.factory_id'),
+-        'serviceAreaCount',
+-      )
+-      .getRawAndEntities()
+-      .then(
+-        (result) =>
+-          result.entities.map((entity, index) => ({
+-            ...entity,
+-            serviceAreaCount: parseInt(result.raw[index].serviceAreaCount, 10),
+-          }))[0],
+-      );
++      .getOne();
++    if (!factory) return null;
++    return {
++      ...factory,
++      serviceAreas: await Promise.all(
++        factory.serviceAreas.map(area => this.serviceAreaManagementDto(area))
++      ),
++    };
+   }
+ 
+-  async remove(id: number) {
+-    const serviceAreaCount = await this.serviceAreaRepo.count({
+-      where: { factoryId: id },
++  async remove(id: number, userId: number) {
++    return this.dataSource.transaction(async manager => {
++      const factory = await manager.findOne(Factory, {
++        where: { factoryId: id },
++      });
++      if (!factory) {
++        throw new BadRequestException(`Factory with ID ${id} not found`);
++      }
++      if (await manager.count(ServiceArea, { where: { factoryId: id } })) {
++        throw new ConflictException(
++          'Cannot delete a factory that still has promotion zones'
++        );
++      }
++      await this.auditOutbox.enqueue(
++        manager,
++        'factory',
++        id,
++        'delete',
++        userId,
++        this.factorySnapshot(factory),
++        null
++      );
++      return manager.remove(factory);
+     });
++  }
++
++  async getSummary(): Promise<FactorySummaryDTO> {
++    return {
++      totalFactories: await this.factoryRepo.count(),
++      totalServiceAres: await this.serviceAreaRepo.count({
++        where: { isActive: true },
++      }),
++    };
++  }
++
++  getLogs() {
++    return this.factoryLogRepo.find();
++  }
+ 
+-    if (serviceAreaCount > 0) {
+-      throw new ConflictException(
+-        'ไม่สามารถลบโรงงานได้เนื่องจากมีเขตส่งเสริมในโรงงานนี้',
++  private async createServiceAreas(
++    manager: EntityManager,
++    areas: CreateServiceAreaDto[],
++    factoryId: number,
++    userId: number
++  ) {
++    for (const area of areas) {
++      const savedArea = await manager.save(
++        manager.create(ServiceArea, {
++          ...area,
++          code: normalizeServiceAreaCode(area.code),
++          factoryId,
++          isActive: true,
++          effectiveTo: null,
++          supersededByServiceAreaId: null,
++          updateUid: userId,
++        })
++      );
++      await this.auditOutbox.enqueue(
++        manager,
++        'service_area',
++        savedArea.serviceAreaId,
++        'create',
++        userId,
++        null,
++        this.serviceAreaSnapshot(savedArea)
+       );
+     }
++  }
+ 
+-    return this.factoryRepo.delete(id);
++  private async updateServiceArea(
++    manager: EntityManager,
++    factoryId: number,
++    input: UpdateServiceAreaDto,
++    userId: number
++  ) {
++    const serviceArea = await manager.findOne(ServiceArea, {
++      where: { serviceAreaId: input.serviceAreaId, factoryId },
++    });
++    if (!serviceArea) {
++      throw new BadRequestException('Service area not found in target factory');
++    }
++    if (!serviceArea.isActive) {
++      if (this.hasServiceAreaChanges(serviceArea, input)) {
++        throw new ConflictException(
++          'Cannot edit an inactive promotion zone history record'
++        );
++      }
++      return;
++    }
++    if (await this.isServiceAreaUsed(serviceArea.serviceAreaId, manager)) {
++      if (this.hasServiceAreaChanges(serviceArea, input)) {
++        throw new ConflictException(
++          'Cannot edit a promotion zone that has already been used. Create a new relationship instead.'
++        );
++      }
++      return;
++    }
++    const beforeArea = this.serviceAreaSnapshot(serviceArea);
++    Object.assign(serviceArea, {
++      ...input,
++      code: input.code
++        ? normalizeServiceAreaCode(input.code)
++        : serviceArea.code,
++      factoryId,
++      updateUid: userId,
++    });
++    if (this.serviceAreaSnapshotEquals(beforeArea, this.serviceAreaSnapshot(serviceArea))) {
++      return;
++    }
++    await manager.save(serviceArea);
++    await this.auditOutbox.enqueue(
++      manager,
++      'service_area',
++      serviceArea.serviceAreaId,
++      'update',
++      userId,
++      beforeArea,
++      this.serviceAreaSnapshot(serviceArea)
++    );
+   }
+ 
+-  async getSummary() {
+-    const factories = await this.findAll();
++  private factoryPublicDto(factory: Factory) {
++    return {
++      factoryId: factory.factoryId,
++      name: factory.name,
++      initial: factory.initial,
++    };
++  }
+ 
+-    const factorySummary: FactorySummaryDTO = {
+-      totalFactories: factories.length,
+-      totalServiceAres: 0
+-    }
++  private serviceAreaPublicDto(area: ServiceArea) {
++    return {
++      serviceAreaId: area.serviceAreaId,
++      factoryId: area.factoryId,
++      code: area.code,
++      name: area.name,
++    };
++  }
+ 
+-    factories.forEach((factory) => {
+-      factorySummary.totalServiceAres += factory.serviceAreaCount;
+-    })
++  private factorySnapshot(factory: Factory) {
++    return {
++      factoryId: factory.factoryId,
++      name: factory.name,
++      initial: factory.initial,
++      note: factory.note ?? null,
++      updateUid: factory.updateUid,
++    };
++  }
+ 
+-    return factorySummary;
++  private serviceAreaSnapshot(area: ServiceArea) {
++    return {
++      serviceAreaId: area.serviceAreaId,
++      factoryId: area.factoryId,
++      code: area.code,
++      name: area.name,
++      note: area.note ?? null,
++      isActive: area.isActive,
++      effectiveFrom: area.effectiveFrom ?? null,
++      effectiveTo: area.effectiveTo ?? null,
++      supersededByServiceAreaId: area.supersededByServiceAreaId ?? null,
++      updateUid: area.updateUid,
++    };
+   }
+-  getLogs() {
+-    return this.factoryLog.find();
++
++  private async serviceAreaManagementDto(area: ServiceArea) {
++    return {
++      ...area,
++      isUsed: await this.isServiceAreaUsed(area.serviceAreaId),
++    };
++  }
++
++  private async isServiceAreaUsed(
++    serviceAreaId: number,
++    manager?: EntityManager
++  ): Promise<boolean> {
++    const farmerRepo = manager?.getRepository(Farmer) ?? this.dataSource.getRepository(Farmer);
++    const bookRepo = manager?.getRepository(Book) ?? this.dataSource.getRepository(Book);
++    const qrCodeRepo = manager?.getRepository(QrCode) ?? this.dataSource.getRepository(QrCode);
++    const [farmerCount, bookCount, qrCodeCount] = await Promise.all([
++      farmerRepo.count({ where: { serviceAreaId } }),
++      bookRepo.count({ where: { serviceAreaId } }),
++      qrCodeRepo.count({ where: { serviceAreaId } }),
++    ]);
++    return farmerCount + bookCount + qrCodeCount > 0;
++  }
++
++  private hasServiceAreaChanges(
++    current: ServiceArea,
++    input: UpdateServiceAreaDto
++  ) {
++    const nextCode = input.code
++      ? normalizeServiceAreaCode(input.code)
++      : current.code;
++    const nextName = input.name ?? current.name;
++    const nextNote =
++      input.note !== undefined ? input.note || null : current.note ?? null;
++    return (
++      nextCode !== current.code ||
++      nextName !== current.name ||
++      nextNote !== (current.note ?? null)
++    );
++  }
++
++  private serviceAreaSnapshotEquals(
++    left: ReturnType<FactoriesService['serviceAreaSnapshot']>,
++    right: ReturnType<FactoriesService['serviceAreaSnapshot']>
++  ) {
++    return JSON.stringify(left) === JSON.stringify(right);
++  }
++
++  private async handleConflict<T>(callback: () => Promise<T>): Promise<T> {
++    try {
++      return await callback();
++    } catch (error: unknown) {
++      if (
++        error instanceof QueryFailedError &&
++        (error.driverError as { code?: string })?.code === '23505'
++      ) {
++        throw new ConflictException(
++          'Duplicate factory or active promotion-zone code'
++        );
++      }
++      throw error;
++    }
+   }
+ }
+diff --git a/src/service-area/service-areas/dto/create-service-area.dto.ts b/src/service-area/service-areas/dto/create-service-area.dto.ts
+index 6d4c275..04ffe2f 100644
+--- a/src/service-area/service-areas/dto/create-service-area.dto.ts
++++ b/src/service-area/service-areas/dto/create-service-area.dto.ts
+@@ -1,4 +1,9 @@
+-import { IsNotEmpty, IsNumber, IsString, Length } from 'class-validator';
++import {
++  IsNotEmpty,
++  IsOptional,
++  IsString,
++  Length,
++} from 'class-validator';
+ 
+ export class CreateServiceAreaDto {
+   @IsString()
+@@ -9,6 +14,7 @@ export class CreateServiceAreaDto {
+   @Length(0, 45)
+   name: string;
+ 
++  @IsOptional()
+   @IsString()
+   note?: string;
+ }
+diff --git a/src/service-area/service-areas/entities/service-area.entity.ts b/src/service-area/service-areas/entities/service-area.entity.ts
+index f124f1c..009ac5d 100644
+--- a/src/service-area/service-areas/entities/service-area.entity.ts
++++ b/src/service-area/service-areas/entities/service-area.entity.ts
+@@ -8,12 +8,9 @@ import {
+   JoinColumn,
+   ManyToOne,
+   PrimaryGeneratedColumn,
+-  RelationId,
+-  Unique,
+ } from 'typeorm';
+ 
+ @Entity('service_areas')
+-@Unique('unique_code_factory', ['code', 'factoryId'])
+ export class ServiceArea {
+   @PrimaryGeneratedColumn({ name: 'service_area_id' })
+   serviceAreaId: number;
+@@ -30,6 +27,22 @@ export class ServiceArea {
+   @Column({ name: 'note', type: 'text', nullable: true })
+   note: string;
+ 
++  @Column({ name: 'is_active', type: 'boolean', default: true })
++  isActive: boolean;
++
++  @Column({ name: 'effective_from', type: 'date', nullable: true })
++  effectiveFrom: string | null;
++
++  @Column({ name: 'effective_to', type: 'date', nullable: true })
++  effectiveTo: string | null;
++
++  @Column({
++    name: 'superseded_by_service_area_id',
++    type: 'int',
++    nullable: true,
++  })
++  supersededByServiceAreaId: number | null;
++
+   @Column({ name: 'update_uid', type: 'int' })
+   updateUid: number;
+ 
+diff --git a/src/service-area/service-areas/entities/service-area.log.entity.ts b/src/service-area/service-areas/entities/service-area.log.entity.ts
+index 357b380..df214cc 100644
+--- a/src/service-area/service-areas/entities/service-area.log.entity.ts
++++ b/src/service-area/service-areas/entities/service-area.log.entity.ts
+@@ -2,20 +2,12 @@ import { BaseLogEntity } from 'src/common/entities/base.log.entity';
+ import { Factory } from 'src/service-area/factories/entities/factory.entity';
+ import { User } from 'src/users/entities/user.entity';
+ import {
+-  BeforeInsert,
+-  BeforeUpdate,
+   Column,
+   Entity,
+-  JoinColumn,
+-  ManyToOne,
+   PrimaryColumn,
+-  PrimaryGeneratedColumn,
+-  RelationId,
+-  Unique,
+ } from 'typeorm';
+ 
+ @Entity('service_areas_logs')
+-@Unique('unique_code_factory_logs', ['code', 'factoryId'])
+ export class ServiceAreaLog extends BaseLogEntity{
+   @PrimaryColumn()
+   serviceAreaId: number;
+@@ -32,6 +24,28 @@ export class ServiceAreaLog extends BaseLogEntity{
+   @Column({ name: 'note', type: 'text', nullable: true })
+   note: string;
+ 
++  @Column({ name: 'is_active', type: 'boolean', default: true })
++  isActive: boolean;
++
++  @Column({ name: 'effective_from', type: 'date', nullable: true })
++  effectiveFrom: string | null;
++
++  @Column({ name: 'effective_to', type: 'date', nullable: true })
++  effectiveTo: string | null;
++
++  @Column({
++    name: 'superseded_by_service_area_id',
++    type: 'int',
++    nullable: true,
++  })
++  supersededByServiceAreaId: number | null;
++
+   @Column({ name: 'update_uid', type: 'int' })
+   updateUid: number;
++
++  @Column({ name: 'audit_event_id', type: 'uuid', nullable: true })
++  auditEventId: string | null;
++
++  @Column({ name: 'action', type: 'varchar', length: 20, nullable: true })
++  action: string | null;
+ }
+diff --git a/src/service-area/service-areas/service-areas.controller.ts b/src/service-area/service-areas/service-areas.controller.ts
+index 5f1be9a..10425d0 100644
+--- a/src/service-area/service-areas/service-areas.controller.ts
++++ b/src/service-area/service-areas/service-areas.controller.ts
+@@ -1,38 +1,42 @@
+ import {
+   Controller,
++  Delete,
+   Get,
+-  Post,
+-  Body,
+-  Patch,
+   Param,
+-  Delete,
+-  UseGuards,
+   ParseIntPipe,
++  Patch,
++  Post,
++  UseGuards,
++  Body,
+ } from '@nestjs/common';
+-import { ServiceAreasService } from './service-areas.service';
+-import { CreateServiceAreaDto } from './dto/create-service-area.dto';
+-import { UpdateServiceAreaDto } from './dto/update-service-area.dto';
+-import { User } from 'src/auth/decorators/user.decorator';
+ import { AuthGuard } from 'src/auth/auth.guard';
++import { Roles } from 'src/auth/decorators/roles.decorator';
++import { User } from 'src/auth/decorators/user.decorator';
++import { RolesGuard } from 'src/auth/roles.guard';
++import { UserRoles } from 'src/users/enums/user.enum';
++import { MoveServiceAreaDto } from './dto/move-service-area.dto';
++import { SupersedeServiceAreaDto } from './dto/supersede-service-area.dto';
++import { ServiceAreasService } from './service-areas.service';
+ 
+ @Controller('service-areas')
+ export class ServiceAreasController {
+-  constructor(private readonly serviceAreasService: ServiceAreasService) { }
+-  @UseGuards(AuthGuard)
+-  @Post()
+-  create(
+-    @Body() createServiceAreaDto: CreateServiceAreaDto,
+-    @User('sub') userId: number
+-  ) {
+-    return this.serviceAreasService.create(createServiceAreaDto, userId);
+-  }
++  constructor(private readonly serviceAreasService: ServiceAreasService) {}
+ 
+   @Get()
+   findAll() {
+     return this.serviceAreasService.findAll();
+   }
+ 
+-  @Get('/log')
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
++  @Get('management')
++  findAllManagement() {
++    return this.serviceAreasService.findAllManagement();
++  }
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
++  @Get('logs')
+   getLogs() {
+     return this.serviceAreasService.getLogs();
+   }
+@@ -43,22 +47,43 @@ export class ServiceAreasController {
+   }
+ 
+   @Get(':id')
+-  findOne(@Param('id') id: string) {
+-    return this.serviceAreasService.findOne(+id);
++  findOne(@Param('id', ParseIntPipe) id: number) {
++    return this.serviceAreasService.findOne(id);
+   }
+ 
+-  @UseGuards(AuthGuard)
+-  @Patch(':id')
+-  update(
+-    @Param('id') id: string,
+-    @Body() updateServiceAreaDto: UpdateServiceAreaDto,
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
++  @Patch(':id/move')
++  move(
++    @Param('id', ParseIntPipe) id: number,
++    @Body() moveServiceAreaDto: MoveServiceAreaDto,
+     @User('sub') userId: number
+   ) {
+-    return this.serviceAreasService.update(+id, updateServiceAreaDto, userId);
++    return this.serviceAreasService.move(id, moveServiceAreaDto, userId);
+   }
+-  @UseGuards(AuthGuard)
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
++  @Post(':id/supersede')
++  supersede(
++    @Param('id', ParseIntPipe) id: number,
++    @Body() supersedeServiceAreaDto: SupersedeServiceAreaDto,
++    @User('sub') userId: number
++  ) {
++    return this.serviceAreasService.supersede(
++      id,
++      supersedeServiceAreaDto,
++      userId
++    );
++  }
++
++  @UseGuards(AuthGuard, RolesGuard)
++  @Roles(UserRoles.Admin)
+   @Delete(':id')
+-  remove(@Param('id') id: string) {
+-    return this.serviceAreasService.remove(+id);
++  remove(
++    @Param('id', ParseIntPipe) id: number,
++    @User('sub') userId: number
++  ) {
++    return this.serviceAreasService.remove(id, userId);
+   }
+ }
+diff --git a/src/service-area/service-areas/service-areas.module.ts b/src/service-area/service-areas/service-areas.module.ts
+index ccb9b63..3b586bb 100644
+--- a/src/service-area/service-areas/service-areas.module.ts
++++ b/src/service-area/service-areas/service-areas.module.ts
+@@ -8,9 +8,14 @@ import { ServiceAreaLog } from './entities/service-area.log.entity';
+ import { Farmer } from 'src/farmers/entities/farmer.entity';
+ import { Book } from 'src/sample/books/entities/book.entity';
+ import { QrCode } from 'src/sample/qr-codes/entities/qr-code.entity';
++import { AuditOutboxModule } from 'src/audit-outbox/audit-outbox.module';
+ 
+ @Module({
+-  imports: [TypeOrmModule.forFeature([ServiceArea, Factory, ServiceAreaLog, Farmer, Book, QrCode])],
++  imports: [
++    TypeOrmModule.forFeature([ServiceArea, Factory, Farmer, Book, QrCode]),
++    TypeOrmModule.forFeature([ServiceAreaLog], 'logs'),
++    AuditOutboxModule,
++  ],
+   controllers: [ServiceAreasController],
+   providers: [ServiceAreasService],
+ })
+diff --git a/src/service-area/service-areas/service-areas.service.ts b/src/service-area/service-areas/service-areas.service.ts
+index 9c7505b..9b9d1a0 100644
+--- a/src/service-area/service-areas/service-areas.service.ts
++++ b/src/service-area/service-areas/service-areas.service.ts
+@@ -1,117 +1,302 @@
+-import { ConflictException, Injectable } from '@nestjs/common';
+-import { CreateServiceAreaDto } from './dto/create-service-area.dto';
+-import { UpdateServiceAreaDto } from './dto/update-service-area.dto';
+-import { InjectRepository } from '@nestjs/typeorm';
+-import { ServiceArea } from './entities/service-area.entity';
+-import { Repository } from 'typeorm';
+-import { Factory } from '../factories/entities/factory.entity';
+-import { ServiceAreaLog } from './entities/service-area.log.entity';
++import {
++  BadRequestException,
++  ConflictException,
++  Injectable,
++} from '@nestjs/common';
++import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
++import { AuditOutboxService } from 'src/audit-outbox/audit-outbox.service';
+ import { Farmer } from 'src/farmers/entities/farmer.entity';
+ import { Book } from 'src/sample/books/entities/book.entity';
+ import { QrCode } from 'src/sample/qr-codes/entities/qr-code.entity';
++import {
++  DataSource,
++  EntityManager,
++  QueryFailedError,
++  Repository,
++} from 'typeorm';
++import { Factory } from '../factories/entities/factory.entity';
++import { MoveServiceAreaDto } from './dto/move-service-area.dto';
++import { SupersedeServiceAreaDto } from './dto/supersede-service-area.dto';
++import { ServiceArea } from './entities/service-area.entity';
++import { ServiceAreaLog } from './entities/service-area.log.entity';
++import { normalizeServiceAreaCode } from './service-area-code.util';
+ 
+ @Injectable()
+ export class ServiceAreasService {
+   constructor(
++    @InjectDataSource() private readonly dataSource: DataSource,
+     @InjectRepository(ServiceArea)
+-    private serviceAreaRepo: Repository<ServiceArea>,
+-    @InjectRepository(ServiceAreaLog)
+-    private serviceAreaLog: Repository<ServiceAreaLog>,
+-
+-    @InjectRepository(Factory)
+-    private factoryRepo: Repository<Factory>,
+-
+-    @InjectRepository(Farmer)
+-    private farmerRepo: Repository<Farmer>,
+-
+-    @InjectRepository(Book)
+-    private bookRepo: Repository<Book>,
+-
+-    @InjectRepository(QrCode)
+-    private qrCodeRepo: Repository<QrCode>,
+-  ) { }
+-
+-  async checkCodes(codes: string[]): Promise<{ [key: string]: boolean }> {
+-    // Query to find existing codes
+-    const existingCodes = await this.serviceAreaRepo
+-      .createQueryBuilder('serviceArea')
+-      .select('serviceArea.code')
+-      .where('serviceArea.code IN (:...codes)', { codes })
+-      .getRawMany();
+-
+-    // Map results to object with code as key and boolean as value
+-    const result: { [key: string]: boolean } = {};
+-    codes.forEach((code) => {
+-      result[code] = existingCodes.some(
+-        (existing) => existing.serviceArea_code === code,
+-      );
+-    });
++    private readonly serviceAreaRepo: Repository<ServiceArea>,
++    @InjectRepository(ServiceAreaLog, 'logs')
++    private readonly serviceAreaLogRepo: Repository<ServiceAreaLog>,
++    @InjectRepository(Farmer) private readonly farmerRepo: Repository<Farmer>,
++    @InjectRepository(Book) private readonly bookRepo: Repository<Book>,
++    @InjectRepository(QrCode) private readonly qrCodeRepo: Repository<QrCode>,
++    private readonly auditOutbox: AuditOutboxService
++  ) {}
+ 
+-    return result;
++  async findAll() {
++    return (
++      await this.serviceAreaRepo.find({
++        where: { isActive: true },
++        order: { name: 'ASC' },
++      })
++    ).map(area => this.publicDto(area));
+   }
+ 
+-  // create(createServiceAreaDto: CreateServiceAreaDto) {
+-  //   const updatedIServiceAreas = createServiceAreaDto.map(serviceArea => ({
+-  //     ...serviceArea,
+-  //     createUid: 1, // Mock createUid
+-  //   }));
+-  //   const serviceArea = this.serviceAreaRepo.create(updatedIServiceAreas);
+-  //   return this.serviceAreaRepo.save(serviceArea);
+-  // }
+-
+-  create(createServiceAreaDto: CreateServiceAreaDto, Uid: number) {
+-    const serviceArea = this.serviceAreaRepo.create({
+-      ...createServiceAreaDto,
+-      updateUid: Uid,
++  async findAllManagement() {
++    const areas = await this.serviceAreaRepo.find({
++      relations: { factory: true, updateUser: true },
++      order: { name: 'ASC' },
++    });
++    return Promise.all(areas.map(area => this.managementDto(area)));
++  }
++
++  async findOne(id: number) {
++    const serviceArea = await this.serviceAreaRepo.findOne({
++      where: { serviceAreaId: id, isActive: true },
+     });
+-    return this.serviceAreaRepo.save(serviceArea);
++    return serviceArea ? this.publicDto(serviceArea) : null;
+   }
+ 
+-  findAll() {
+-    return this.serviceAreaRepo.find();
++  async findByFactoryId(factoryId: number) {
++    return (
++      await this.serviceAreaRepo.find({
++        where: { factoryId, isActive: true },
++        order: { name: 'ASC' },
++      })
++    ).map(area => this.publicDto(area));
+   }
+ 
+-  findOne(id: number) {
+-    return this.serviceAreaRepo.findOne({
+-      where: { serviceAreaId: id },
+-      relations: {
+-        factory: true,
+-        updateUser: true,
+-      },
++  async remove(id: number, userId: number) {
++    return this.dataSource.transaction(async manager => {
++      const serviceArea = await manager.findOne(ServiceArea, {
++        where: { serviceAreaId: id },
++        lock: { mode: 'pessimistic_write' },
++      });
++      if (!serviceArea) {
++        throw new BadRequestException('Promotion zone not found');
++      }
++      if (!serviceArea.isActive) {
++        throw new ConflictException(
++          'Cannot delete an inactive promotion zone history record'
++        );
++      }
++      if (await this.isServiceAreaUsed(id, manager)) {
++        throw new ConflictException(
++          'Cannot delete a promotion zone that has already been used'
++        );
++      }
++      await this.auditOutbox.enqueue(
++        manager,
++        'service_area',
++        id,
++        'delete',
++        userId,
++        this.snapshot(serviceArea),
++        null
++      );
++      return manager.remove(serviceArea);
+     });
+   }
+ 
+-  update(id: number, updateServiceAreaDto: UpdateServiceAreaDto, Uid: number) {
+-    return `This action updates a #${id} serviceArea`;
++  async move(id: number, dto: MoveServiceAreaDto, userId: number) {
++    try {
++      return await this.dataSource.transaction(async manager => {
++        const serviceArea = await manager.findOne(ServiceArea, {
++          where: { serviceAreaId: id },
++          lock: { mode: 'pessimistic_write' },
++        });
++        if (!serviceArea) {
++          throw new BadRequestException('Promotion zone not found');
++        }
++        if (!serviceArea.isActive) {
++          throw new ConflictException(
++            'Cannot move an inactive promotion zone history record'
++          );
++        }
++        if (serviceArea.factoryId === dto.targetFactoryId) {
++          throw new BadRequestException(
++            'Promotion zone is already assigned to the target factory'
++          );
++        }
++        const targetFactory = await manager.findOne(Factory, {
++          where: { factoryId: dto.targetFactoryId },
++        });
++        if (!targetFactory) {
++          throw new BadRequestException('Target factory not found');
++        }
++        if (await this.isServiceAreaUsed(id, manager)) {
++          throw new ConflictException(
++            'Cannot move a promotion zone that has already been used. Add a new zone instead.'
++          );
++        }
++
++        const beforeArea = this.snapshot(serviceArea);
++        serviceArea.factoryId = targetFactory.factoryId;
++        serviceArea.updateUid = userId;
++        const savedArea = await manager.save(serviceArea);
++        await this.auditOutbox.enqueue(
++          manager,
++          'service_area',
++          id,
++          'move',
++          userId,
++          beforeArea,
++          this.snapshot(savedArea)
++        );
++        return savedArea;
++      });
++    } catch (error: unknown) {
++      if (
++        error instanceof QueryFailedError &&
++        (error.driverError as { code?: string })?.code === '23505'
++      ) {
++        throw new ConflictException(
++          'Target factory already has this promotion-zone code'
++        );
++      }
++      throw error;
++    }
+   }
+ 
+-  async remove(id: number) {
+-    const farmerCount = await this.farmerRepo.count({
+-      where: { serviceAreaId: id },
+-    });
++  async supersede(id: number, dto: SupersedeServiceAreaDto, userId: number) {
++    try {
++      return await this.dataSource.transaction(async manager => {
++        const serviceArea = await manager.findOne(ServiceArea, {
++          where: { serviceAreaId: id },
++          lock: { mode: 'pessimistic_write' },
++        });
++        if (!serviceArea) {
++          throw new BadRequestException('Promotion zone not found');
++        }
++        if (!serviceArea.isActive) {
++          throw new ConflictException(
++            'Cannot supersede an inactive promotion zone history record'
++          );
++        }
++        if (!(await this.isServiceAreaUsed(id, manager))) {
++          throw new BadRequestException(
++            'Promotion zone has not been used yet. Move or edit it directly instead.'
++          );
++        }
+ 
+-    const bookCount = await this.bookRepo.count({
+-      where: { serviceAreaId: id },
+-    });
++        const targetFactory = await manager.findOne(Factory, {
++          where: { factoryId: dto.targetFactoryId },
++        });
++        if (!targetFactory) {
++          throw new BadRequestException('Target factory not found');
++        }
+ 
+-    const qrCodeCount = await this.qrCodeRepo.count({
+-      where: { serviceAreaId: id },
+-    });
++        const beforeArea = this.snapshot(serviceArea);
++        serviceArea.isActive = false;
++        serviceArea.effectiveTo = this.previousDate(dto.effectiveFrom);
++        serviceArea.updateUid = userId;
++        await manager.save(serviceArea);
+ 
+-    if (farmerCount > 0 || bookCount > 0 || qrCodeCount > 0) {
+-      throw new ConflictException('เขตส่งเสริมนี้มีการนำไปใช้แล้วทำให้ลบไม่ได้');
+-    }
++        const newArea = await manager.save(
++          manager.create(ServiceArea, {
++            factoryId: targetFactory.factoryId,
++            code: normalizeServiceAreaCode(dto.code ?? serviceArea.code),
++            name: dto.name?.trim() || serviceArea.name,
++            note: dto.note ?? serviceArea.note,
++            isActive: true,
++            effectiveFrom: dto.effectiveFrom,
++            effectiveTo: null,
++            supersededByServiceAreaId: null,
++            updateUid: userId,
++          })
++        );
++
++        serviceArea.supersededByServiceAreaId = newArea.serviceAreaId;
++        const savedOldArea = await manager.save(serviceArea);
+ 
+-    return this.serviceAreaRepo.delete(id);
++        await this.auditOutbox.enqueue(
++          manager,
++          'service_area',
++          id,
++          'supersede',
++          userId,
++          beforeArea,
++          this.snapshot(savedOldArea)
++        );
++        await this.auditOutbox.enqueue(
++          manager,
++          'service_area',
++          newArea.serviceAreaId,
++          'create',
++          userId,
++          null,
++          this.snapshot(newArea)
++        );
++        return this.managementDto(newArea, false);
++      });
++    } catch (error: unknown) {
++      if (
++        error instanceof QueryFailedError &&
++        (error.driverError as { code?: string })?.code === '23505'
++      ) {
++        throw new ConflictException(
++          'Target factory already has an active promotion-zone code'
++        );
++      }
++      throw error;
++    }
+   }
++
+   getLogs() {
+-    return this.serviceAreaLog.find();
++    return this.serviceAreaLogRepo.find();
+   }
+ 
+-  findByFactoryId(factoryId: number) {
+-    return this.serviceAreaRepo.find({
+-      where: { factoryId: factoryId },
+-      order: { name: 'ASC' },
+-    });
++  private async isServiceAreaUsed(
++    serviceAreaId: number,
++    manager?: EntityManager
++  ): Promise<boolean> {
++    const farmerRepo = manager?.getRepository(Farmer) ?? this.farmerRepo;
++    const bookRepo = manager?.getRepository(Book) ?? this.bookRepo;
++    const qrCodeRepo = manager?.getRepository(QrCode) ?? this.qrCodeRepo;
++    const [farmerCount, bookCount, qrCodeCount] = await Promise.all([
++      farmerRepo.count({ where: { serviceAreaId } }),
++      bookRepo.count({ where: { serviceAreaId } }),
++      qrCodeRepo.count({ where: { serviceAreaId } }),
++    ]);
++    return farmerCount + bookCount + qrCodeCount > 0;
++  }
++
++  private publicDto(area: ServiceArea) {
++    return {
++      serviceAreaId: area.serviceAreaId,
++      factoryId: area.factoryId,
++      code: area.code,
++      name: area.name,
++    };
++  }
++
++  private async managementDto(area: ServiceArea, isUsed?: boolean) {
++    return {
++      ...area,
++      isUsed: isUsed ?? (await this.isServiceAreaUsed(area.serviceAreaId)),
++    };
++  }
++
++  private snapshot(area: ServiceArea) {
++    return {
++      serviceAreaId: area.serviceAreaId,
++      factoryId: area.factoryId,
++      code: area.code,
++      name: area.name,
++      note: area.note ?? null,
++      isActive: area.isActive,
++      effectiveFrom: area.effectiveFrom ?? null,
++      effectiveTo: area.effectiveTo ?? null,
++      supersededByServiceAreaId: area.supersededByServiceAreaId ?? null,
++      updateUid: area.updateUid,
++    };
++  }
++
++  private previousDate(date: string) {
++    const value = new Date(`${date}T00:00:00.000Z`);
++    value.setUTCDate(value.getUTCDate() - 1);
++    return value.toISOString().slice(0, 10);
+   }
+ }
+diff --git a/src/users/users.service.ts b/src/users/users.service.ts
+index 16b117a..4afab04 100644
+--- a/src/users/users.service.ts
++++ b/src/users/users.service.ts
+@@ -10,6 +10,7 @@ import { UserRoles } from './enums/user.enum';
+ import { AuthenProfile } from 'src/auth/interfaces/authen.response';
+ import { UserSummaryDTO } from './dto/user-summary.dto';
+ import { UserLog } from './entities/user.log.entity';
++import { UpdateProfileDto } from './dto/update-profile.dto';
+ 
+ @Injectable()
+ export class UsersService {
+@@ -79,6 +80,20 @@ export class UsersService {
+     return this.userRepo.save(user);
+   }
+ 
++  async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
++    const user = await this.userRepo.findOneBy({ userId: id });
++    if (!user) {
++      throw new NotFoundException('User not found');
++    }
++
++    user.firstName = updateProfileDto.firstName;
++    user.lastName = updateProfileDto.lastName;
++    user.email = updateProfileDto.email;
++    user.updateUid = id;
++
++    return this.userRepo.save(user);
++  }
++
+   async remove(id: number) {
+     const userId = 99; // mockUid ...
+     const user = await this.userRepo.findOneBy({ userId: id });

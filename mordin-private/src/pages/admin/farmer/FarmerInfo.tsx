@@ -226,7 +226,7 @@ const FarmerInfo: React.FC = () => {
               </div>
             </div>
             <div className="private-card-body">
-              <div className="table-responsive">
+              <div>
                 {isLoading ? (
                   <div className="text-center p-5">
                     <div className="spinner-border text-primary" role="status">

@@ -16,6 +16,7 @@ import {
   MarkedDateStatus,
 } from '@/components/gui/GuiForm';
 import LabResultModal from '@/components/pages/lab-result/LabResultModal';
+import LabResultSummaryCard from '@/components/pages/lab-result/LabResultSummaryCard';
 import LabResultTable from '@/components/pages/lab-result/LabResultTable';
 import TableWithCheckbox from '@/components/pages/lab-result/LabResultTableWithCheckbox';
 import StandardLabResultTable from '@/components/pages/lab-result/StandardLabResultTable';
@@ -801,6 +802,13 @@ const LabResult: React.FC = () => {
 
       {selectedServiceCalendar ? (
         <>
+          {/* Summary cards — ข้อมูลจริงของวันบริการที่เลือก */}
+          <LabResultSummaryCard
+            numberOfSamples={selectedServiceCalendar.numberOfSamples}
+            numberOfBookings={selectedServiceCalendar.numberOfBookings}
+            numberOfExaminations={selectedServiceCalendar.numberOfExaminations}
+          />
+
           {/* Tools row: Scanner | CSV | Online input */}
           <div className="row g-4 mt-2">
             <div className="col-md-6">
@@ -1060,7 +1068,7 @@ const LabResult: React.FC = () => {
       ) : (
         <div className="mt-4 alert alert-light text-center shadow-sm">
           <i className="fas fa-calendar-day me-2" />
-          ไม่พบข้อมูลการให้บริการในวันนี้
+          เลือกวันที่และรถที่ให้บริการด้านบน เพื่อดูสรุปและกรอกผลการวิเคราะห์
         </div>
       )}
     </div>

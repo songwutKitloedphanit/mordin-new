@@ -94,6 +94,7 @@ export interface FarmerPublicProfile {
   firstName: string;
   lastName: string;
   phone: string;
+  birthDate?: string;
   thaiFarmerId?: string;
   factory?: {
     factoryId: number;

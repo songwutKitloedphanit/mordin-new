@@ -35,6 +35,7 @@ import {
   createAnalysisStandard,
   deleteAnalysisStandard,
   getAnalysisStandardsByCalendar,
+  updateAnalysisStandardRepeat,
 } from '@/services/api/standard-sample/AnalysisStandardsAPI';
 import { LaboratoryInfoInterface } from '@/types/Laboratory';
 import {
@@ -83,6 +84,10 @@ const ExamSetting: React.FC = () => {
     []
   );
   const [repeatCounts, setRepeatCounts] = useState<Record<number, number>>({});
+  // จำนวน repeat ที่กำลังแก้ของมาตรฐานที่บันทึกแล้ว (key = analysisStandardId)
+  const [existingRepeatEdits, setExistingRepeatEdits] = useState<
+    Record<number, number>
+  >({});
   const [showStandardModal, setShowStandardModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showBlankModal, setShowBlankModal] = useState(false);
@@ -101,6 +106,25 @@ const ExamSetting: React.FC = () => {
 
   const handleRepeatChange = (standardId: number, count: number) => {
     setRepeatCounts(prev => ({ ...prev, [standardId]: count }));
+  };
+
+  // รีเซ็ตค่าแก้ไข repeat ของตัวที่บันทึกแล้ว ให้ตรงกับค่าจริงทุกครั้งที่โหลดใหม่
+  useEffect(() => {
+    const m: Record<number, number> = {};
+    analysisStandards.forEach(a => {
+      if (a.type === 'crm') m[a.analysisStandardId] = a.repeatCount;
+    });
+    setExistingRepeatEdits(m);
+  }, [analysisStandards]);
+
+  const handleExistingRepeatChange = (
+    analysisStandardId: number,
+    newCount: number
+  ) => {
+    setExistingRepeatEdits(prev => ({
+      ...prev,
+      [analysisStandardId]: Math.max(1, newCount),
+    }));
   };
   const getExistingSelected = () =>
     analysisStandards
@@ -140,25 +164,69 @@ const ExamSetting: React.FC = () => {
       (s): s is StandardInfo => s != null && s.type === StandardType.CRM
     );
     const toAdd = visibleCRM.filter(s => !savedStandardIds.has(s.standardId));
-    if (toAdd.length === 0) {
+
+    // มาตรฐานที่บันทึกแล้วและจำนวน repeat ถูกแก้
+    const repeatChanges = analysisStandards
+      .filter(a => a.type === 'crm')
+      .map(a => ({
+        standard: a,
+        newCount: existingRepeatEdits[a.analysisStandardId] ?? a.repeatCount,
+      }))
+      .filter(c => c.newCount !== c.standard.repeatCount);
+
+    if (toAdd.length === 0 && repeatChanges.length === 0) {
       return Swal.fire({
         icon: 'info',
-        title: 'ไม่มีมาตรฐานใหม่ให้เพิ่ม',
-        text: 'คุณยังไม่ได้เลือกมาตรฐานใหม่ใด ๆ',
+        title: 'ไม่มีการเปลี่ยนแปลง',
+        text: 'ยังไม่ได้เลือกมาตรฐานใหม่หรือแก้จำนวน repeat ใด ๆ',
       });
     }
-    const payload = {
-      serviceCalendarId: selectedServiceCalendarId,
-      standard: toAdd.map(s => ({
-        standardId: s.standardId,
-        name: s.standardName,
-        repeatCount: repeatCounts[s.standardId] ?? 1,
-        type: StandardType.CRM,
-      })),
-    };
+
+    // เตือนก่อนถ้ามีการ "ลด" repeat
+    const decreases = repeatChanges.filter(
+      c => c.newCount < c.standard.repeatCount
+    );
+    if (decreases.length > 0) {
+      const lines = decreases.map(c => {
+        const dataLoss = c.standard.analysisStandardResults?.some(
+          r => r.repeatNumber > c.newCount && r.preValue != null
+        );
+        const name = c.standard.standard?.standardName ?? c.standard.name ?? '';
+        return `• ${name}: ${c.standard.repeatCount} → ${c.newCount}${
+          dataLoss ? ' <b class="text-danger">(มีค่าผลวัด)</b>' : ''
+        }`;
+      });
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: 'ลดจำนวน repeat?',
+        html: `จะลบ repeat ท้ายของ:<br/>${lines.join('<br/>')}`,
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยัน',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#d33',
+      });
+      if (!result.isConfirmed) return;
+    }
+
     setIsSaving(true);
     try {
-      await createAnalysisStandard(payload);
+      if (toAdd.length > 0) {
+        await createAnalysisStandard({
+          serviceCalendarId: selectedServiceCalendarId,
+          standard: toAdd.map(s => ({
+            standardId: s.standardId,
+            name: s.standardName,
+            repeatCount: repeatCounts[s.standardId] ?? 1,
+            type: StandardType.CRM,
+          })),
+        });
+      }
+      for (const c of repeatChanges) {
+        await updateAnalysisStandardRepeat(
+          c.standard.analysisStandardId,
+          c.newCount
+        );
+      }
       setShowStandardModal(false);
       await fetchAnalysisStandards(selectedServiceCalendarId);
       await Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ' });
@@ -877,6 +945,8 @@ const ExamSetting: React.FC = () => {
             onRemove={handleRemove}
             onDelete={handleDeleteStandard}
             onRepeatChange={handleRepeatChange}
+            existingRepeatEdits={existingRepeatEdits}
+            onExistingRepeatChange={handleExistingRepeatChange}
           />
         </>
       </SelectStandardModal>

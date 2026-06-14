@@ -52,6 +52,18 @@ export async function deleteAnalysisStandard(analysisStandardId: number) {
   return data;
 }
 
+/** แก้ไขจำนวน repeat ของมาตรฐานที่บันทึกแล้ว */
+export async function updateAnalysisStandardRepeat(
+  analysisStandardId: number,
+  repeatCount: number
+) {
+  const { data } = await api.patch(
+    `/analysis-standards/${analysisStandardId}`,
+    { repeatCount }
+  );
+  return data;
+}
+
 /** CRM: อัปเดต certificate_value ของ standard_certificates (composite key: standard_id + laboratory_id) */
 export async function inputStandardCertificates(
   payload: InputCrmCertificateCompositeDto[]

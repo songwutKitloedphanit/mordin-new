@@ -294,4 +294,62 @@ export class DashboardService {
   getDashboardSummary() {
     return 'Dashboard Summary';
   }
+
+  /**
+   * สรุปตัวเลขจริงทั้งระบบ สำหรับการ์ด/ภาพรวมหน้าต่างๆ
+   * - totals: จำนวนรวมของแต่ละโดเมน
+   * - qr: จำนวน QR แยกตามสถานะ (funnel) + total
+   * - soilQuality: การกระจายเกรดดินรวม (Total Score) ตามชื่อระดับ
+   */
+  async getStats() {
+    const [farmers, samples, serviceDays, landRows, qrRows, soilRows] =
+      await Promise.all([
+        this.farmerRepo.count(),
+        this.bookRepo.count(),
+        this.serviceCalendarRepo.count(),
+        this.dataSource.query(`SELECT count(*)::int AS c FROM lands`),
+        this.dataSource.query(
+          `SELECT status, count(*)::int AS c FROM qr_codes GROUP BY status`
+        ),
+        this.dataSource.query(`
+          SELECT sgl.score_name AS name, count(*)::int AS c
+          FROM fertilizer_major_land_scores s
+          JOIN soil_grades sg ON sg.soil_grade_id = s.soil_grade_id
+          JOIN soil_grade_levels sgl
+            ON sgl.soil_grade_level_id = s.soil_grade_level_id
+          WHERE sg.parameter = 'Total Score'
+          GROUP BY sgl.score_name, sgl.level
+          ORDER BY sgl.level
+        `),
+      ]);
+
+    const qr = {
+      total: 0,
+      distributed: 0,
+      collected: 0,
+      received: 0,
+      analyzing: 0,
+      analyzed: 0,
+      approved: 0,
+    };
+    for (const row of qrRows) {
+      if (row.status in qr) qr[row.status] = row.c;
+      qr.total += row.c;
+    }
+
+    const soilQuality: { name: string; count: number }[] = soilRows.map(
+      (r: { name: string; c: number }) => ({ name: r.name, count: r.c })
+    );
+
+    return {
+      totals: {
+        farmers,
+        lands: landRows[0]?.c ?? 0,
+        samples,
+        serviceDays,
+      },
+      qr,
+      soilQuality,
+    };
+  }
 }

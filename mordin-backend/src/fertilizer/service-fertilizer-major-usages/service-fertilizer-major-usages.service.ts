@@ -21,7 +21,7 @@ export class ServiceFertilizerMajorUsagesService {
 exists(serviceCategoryId: number, usageTypeId: number, arg2: number) {
     throw new Error('Method not implemented.');
   }
-  
+
 
   create(
     createServiceFertilizerMajorUsageDto: CreateServiceFertilizerMajorUsageDto,

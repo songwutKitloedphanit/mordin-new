@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import DataChart from '@/components/chart/DataChart';
+import DashboardOverview from '@/components/pages/dashboard/DashboardOverview';
 import DashboardSummary from '@/components/pages/executive/dashboard/DashBoardCard';
 import DashboardFilters from '@/components/pages/executive/dashboard/DashboardFilter';
 import { formatElementShort } from '@/components/pages/executive/executive-elements';
@@ -11,8 +13,8 @@ import {
 import ExecutiveReportToolbar from '@/components/pages/executive/ExecutiveReportToolbar';
 import SoilGradePanel from '@/components/pages/executive/SoilGradePanel';
 import UpcomingServiceRounds from '@/components/pages/executive/UpcomingServiceRounds';
+import GridWidgetBoard from '@/components/pages/executive/widgets/GridWidgetBoard';
 import type { WidgetDef } from '@/components/pages/executive/widgets/types';
-import WidgetBoard from '@/components/pages/executive/widgets/WidgetBoard';
 import EmptyState from '@/components/ui/EmptyState';
 import LoadingState from '@/components/ui/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,8 +49,32 @@ const yearList = [
   },
 ];
 
-// คีย์ localStorage สำหรับจำการจัดวางวิดเจ็ตของหน้านี้
-const WIDGET_STORAGE_KEY = 'exec-dashboard-widget-layout-v2';
+// คีย์ localStorage สำหรับจำการจัดวางวิดเจ็ตของหน้านี้ (กริดลากวาง v3)
+// คีย์ v2 ของ WidgetBoard เดิมเก็บไว้เพื่อ migrate layout ผู้ใช้เก่าครั้งแรก
+const GRID_STORAGE_KEY = 'exec-dashboard-grid-v3';
+const LEGACY_WIDGET_STORAGE_KEY = 'exec-dashboard-widget-layout-v2';
+
+// แปลงรายการสูตรปุ๋ยของช่วงการใส่หนึ่งเป็นข้อมูลกราฟ top 5
+// ค่า = จำนวนแปลงที่แนะนำ (ถ้ามี) ไม่งั้นใช้อัตรา กก./ไร่ — ตรรกะเดียวกับตารางอันดับ
+const formulaChartItems = (
+  items: { formula: string; useRate: number; count?: number }[]
+) => {
+  const usable = items
+    .map(item => ({
+      formula: item.formula || '-',
+      useRate: Number(item.useRate) || 0,
+      count: Number(item.count) || 0,
+    }))
+    .filter(item => item.useRate > 0);
+  const hasCount = usable.some(item => item.count > 0);
+  return usable
+    .map(item => ({
+      label: item.formula,
+      value: hasCount ? item.count : item.useRate,
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+};
 
 // คำทักทายตามช่วงเวลา (mockup: "สวัสดีตอนเช้า, คุณสมชาย 👋")
 const getTimeGreeting = () => {
@@ -264,14 +290,9 @@ const Dashboard = () => {
         const safeTypes = Array.isArray(types) ? types : [];
         setFactoryList(Array.isArray(factories) ? factories : []);
         setServiceTypes(safeTypes);
-        // ใช้ฟิลเตอร์จาก URL ถ้ามี ไม่งั้น default = ประเภทบริการแรก
+        // ใช้ฟิลเตอร์จาก URL ถ้ามี ไม่งั้น default = "ทุกประเภท" (ไม่บังคับเลือกประเภทแรก)
         const urlFilters = initialUrlRef.current ?? {};
-        const initialSearch: SelectedSearch = {
-          ...urlFilters,
-          typeId:
-            urlFilters.typeId ??
-            (safeTypes.length > 0 ? safeTypes[0].serviceTypeId : 0),
-        };
+        const initialSearch: SelectedSearch = { ...urlFilters };
         setDraftSearch(initialSearch);
         setProvinceList(Array.isArray(provinces) ? provinces : []);
         // เติม dropdown ที่ขึ้นต่อกัน (เขตส่งเสริม/อำเภอ/ตำบล) ให้ตรงกับค่าใน URL
@@ -601,6 +622,7 @@ const Dashboard = () => {
       defaultSpan: 'full',
       lockSpan: true,
       bare: true,
+      defaultGrid: { w: 12, h: 3, minW: 6, minH: 2 },
       render: () => <DashboardSummary />,
     },
     {
@@ -610,6 +632,7 @@ const Dashboard = () => {
       defaultSpan: 'full',
       lockSpan: true,
       bare: true,
+      defaultGrid: { w: 12, h: 3, minW: 6, minH: 2 },
       render: () => (
         <div
           className="exr-insights"
@@ -666,12 +689,19 @@ const Dashboard = () => {
       title: 'สัดส่วนระดับความอุดมสมบูรณ์ของดิน',
       icon: 'fas fa-chart-bar',
       defaultSpan: 'full',
-      render: () => (
+      defaultGrid: { w: 12, h: 8, minW: 6, minH: 4 },
+      vizOptions: [
+        { id: 'list', label: 'แถบแนวนอน', icon: 'fas fa-bars-progress' },
+        { id: 'bar-v', label: 'กราฟแท่งตั้ง', icon: 'fas fa-chart-column' },
+        { id: 'doughnut', label: 'กราฟโดนัท', icon: 'fas fa-chart-pie' },
+      ],
+      render: ctx => (
         <SoilGradePanel
           elements={graphData.map(item => ({
             elementName: item.elementName,
             bars: item.BarChartDataItem,
           }))}
+          viz={ctx?.viz}
         />
       ),
     },
@@ -680,7 +710,13 @@ const Dashboard = () => {
       title: 'ลำดับสูตรปุ๋ยที่แนะนำมากที่สุด',
       icon: 'fas fa-seedling',
       defaultSpan: 'half',
-      render: () =>
+      defaultGrid: { w: 6, h: 8, minW: 4, minH: 4 },
+      vizOptions: [
+        { id: 'table', label: 'ตารางอันดับ', icon: 'fas fa-table-list' },
+        { id: 'bar-h', label: 'กราฟแท่ง (top 5)', icon: 'fas fa-chart-bar' },
+        { id: 'doughnut', label: 'กราฟโดนัท', icon: 'fas fa-chart-pie' },
+      ],
+      render: ctx =>
         pieChartData.length > 0 ? (
           <div className="exr-grid-wide">
             {pieChartData.map(item => (
@@ -704,7 +740,15 @@ const Dashboard = () => {
                       <div className="exr-subhead">
                         <span>{type.usageTypeName}</span>
                       </div>
-                      <FormulaRankTable items={type.PieChartItemDto} />
+                      {ctx?.viz === 'bar-h' || ctx?.viz === 'doughnut' ? (
+                        <DataChart
+                          type={ctx.viz}
+                          dataItems={formulaChartItems(type.PieChartItemDto)}
+                          height={ctx.viz === 'doughnut' ? 240 : 200}
+                        />
+                      ) : (
+                        <FormulaRankTable items={type.PieChartItemDto} />
+                      )}
                     </div>
                   ))}
               </div>
@@ -719,41 +763,62 @@ const Dashboard = () => {
       title: 'การปรับปรุงสภาพดิน',
       icon: 'fas fa-leaf',
       defaultSpan: 'half',
-      render: () =>
+      defaultGrid: { w: 6, h: 5, minW: 4, minH: 3 },
+      vizOptions: [
+        { id: 'tiles', label: 'การ์ดสรุป', icon: 'fas fa-table-cells-large' },
+        {
+          id: 'bar-h',
+          label: 'กราฟแท่ง (สัดส่วนพื้นที่)',
+          icon: 'fas fa-chart-bar',
+        },
+        { id: 'doughnut', label: 'กราฟโดนัท', icon: 'fas fa-chart-pie' },
+      ],
+      render: ctx =>
         prepareData.length > 0 ? (
-          <div className="exr-grid">
-            {prepareData.map(item => (
-              <div key={item.fertilizerMinorName} className="exr-stat">
-                <div className="exr-stat-ic">
-                  <i className={getMinorIcon(item.fertilizerMinorName)}></i>
-                </div>
-                <div>
-                  <div className="exr-stat-name">
-                    {item.fertilizerMinorName}
+          ctx?.viz === 'bar-h' || ctx?.viz === 'doughnut' ? (
+            <DataChart
+              type={ctx.viz}
+              dataItems={prepareData.map(item => ({
+                label: item.fertilizerMinorName,
+                value: Number(item.useRatePercent) || 0,
+              }))}
+              height="100%"
+            />
+          ) : (
+            <div className="exr-grid">
+              {prepareData.map(item => (
+                <div key={item.fertilizerMinorName} className="exr-stat">
+                  <div className="exr-stat-ic">
+                    <i className={getMinorIcon(item.fertilizerMinorName)}></i>
                   </div>
-                  <div className="exr-stat-metrics">
-                    <div>
-                      <div className="exr-stat-metric-label">
-                        สัดส่วนพื้นที่
+                  <div>
+                    <div className="exr-stat-name">
+                      {item.fertilizerMinorName}
+                    </div>
+                    <div className="exr-stat-metrics">
+                      <div>
+                        <div className="exr-stat-metric-label">
+                          สัดส่วนพื้นที่
+                        </div>
+                        <div className="exr-stat-metric-value">
+                          {item.useRatePercent}%
+                        </div>
                       </div>
-                      <div className="exr-stat-metric-value">
-                        {item.useRatePercent}%
+                      <div>
+                        <div className="exr-stat-metric-label">
+                          อัตราเฉลี่ย/ไร่
+                        </div>
+                        <div className="exr-stat-metric-value">
+                          {item.useRatePerRai}
+                          <small>{item.unitName}</small>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div className="exr-stat-metric-label">
-                        อัตราเฉลี่ย/ไร่
-                      </div>
-                      <div className="exr-stat-metric-value">
-                        {item.useRatePerRai}
-                        <small>{item.unitName}</small>
-                      </div>
-                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
         ) : (
           <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />
         ),
@@ -764,6 +829,7 @@ const Dashboard = () => {
       icon: 'fas fa-calendar-days',
       defaultSpan: 'half',
       bare: true,
+      defaultGrid: { w: 6, h: 5, minW: 3, minH: 3 },
       render: () => <UpcomingServiceRounds />,
     },
   ];
@@ -802,6 +868,9 @@ const Dashboard = () => {
           })}
         />
       </div>
+
+      {/* ===================== ภาพรวมระบบ (ข้อมูลจริงทั้งระบบ) ===================== */}
+      <DashboardOverview />
 
       {/* ===================== ตัวกรอง (ยุบได้) ===================== */}
       <div className="exec-filter-card executive-report-no-print">
@@ -860,7 +929,11 @@ const Dashboard = () => {
       {/* ===================== WIDGET BOARD (ทุก section ปรับแต่งได้) ===================== */}
       {hasDashboardLoaded && (
         <div className="position-relative">
-          <WidgetBoard storageKey={WIDGET_STORAGE_KEY} widgets={widgets} />
+          <GridWidgetBoard
+            storageKey={GRID_STORAGE_KEY}
+            legacyStorageKey={LEGACY_WIDGET_STORAGE_KEY}
+            widgets={widgets}
+          />
 
           {isDashboardLoading && (
             <div

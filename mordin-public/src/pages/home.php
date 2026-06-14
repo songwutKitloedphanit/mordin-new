@@ -324,14 +324,14 @@ include_once COMPONENT_PATH . 'lib_header.php';
     header.classList.toggle('scrolled', scrollTop > 40);
 
     if (!reduceMotion) {
-      /* Flipboard fold: hero stays pinned (sticky) and tips backwards while the white sheet slides over it */
+      /* Flipboard fold: hero stays pinned (sticky) and tips back gently while the white sheet slides over it */
       hero.style.transform = progress > 0
-        ? 'perspective(1200px) rotateX(' + (16 * progress).toFixed(2) + 'deg) scale(' + (1 - 0.05 * progress).toFixed(3) + ')'
+        ? 'perspective(1600px) rotateX(' + (7 * progress).toFixed(2) + 'deg) scale(' + (1 - 0.03 * progress).toFixed(3) + ')'
         : '';
-      hero.style.filter = progress > 0 ? 'brightness(' + (1 - 0.35 * progress).toFixed(3) + ')' : '';
+      hero.style.filter = progress > 0 ? 'brightness(' + (1 - 0.12 * progress).toFixed(3) + ')' : '';
       if (heroInner) {
-        heroInner.style.opacity = String(Math.max(0, 1 - progress * 1.25));
-        heroInner.style.transform = 'translateY(' + (-56 * progress).toFixed(1) + 'px)';
+        heroInner.style.opacity = String(Math.max(0, 1 - progress * 1.35));
+        heroInner.style.transform = 'translateY(' + (-44 * progress).toFixed(1) + 'px)';
       }
       glows.forEach(function (glow) {
         glow.style.opacity = String(Math.max(0, 0.2 - progress * 0.2));
@@ -339,7 +339,7 @@ include_once COMPONENT_PATH . 'lib_header.php';
     }
 
     if (heroFade) {
-      var fadeOpacity = Math.max(0, Math.min(1, (progress - 0.35) / 0.5)) * 0.45;
+      var fadeOpacity = Math.max(0, Math.min(1, (progress - 0.45) / 0.5)) * 0.18;
       heroFade.style.opacity = String(fadeOpacity);
     }
 
@@ -379,7 +379,11 @@ include_once COMPONENT_PATH . 'lib_header.php';
       var heroHeight = Math.max(1, hero.offsetHeight);
       var yNow = window.scrollY;
       if (yNow <= 1 || yNow >= heroHeight - 1) { commitTarget = null; return; }
-      commitTarget = lastDir >= 0 ? heroHeight : 0;
+      /* Never rest half-folded: always glide to a full page. Continue in the
+         direction of travel, falling back to the nearer page when idle. */
+      var progress = yNow / heroHeight;
+      var goDown = lastDir !== 0 ? lastDir > 0 : progress >= 0.5;
+      commitTarget = goDown ? heroHeight : 0;
       window.scrollTo({ top: commitTarget, behavior: 'smooth' });
     }
 

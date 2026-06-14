@@ -371,7 +371,7 @@ const LabResultTable: React.FC<LabResultTableProps> = ({
                 </div>
               ) : (
                 <DataTableWrapper tableId={tableId} loading={loading}>
-                  <div className="table-responsive">
+                  <div>
                     <table
                       id={tableId}
                       className="table table-striped table-hover"

@@ -180,9 +180,14 @@ export class CalculationService {
     const extractAmountD = new Decimal(extractAmount);
     const dirtWeightMehlichD = new Decimal(dirtWeightMehlich);
 
+    // calculateLinearRegression เก็บค่าแบบ: slope = regression intercept (b),
+    // intercept = regression slope (m). Inverse calibration ที่ถูกต้องคือ
+    // conc = (absorbance - b) / m = (preValue - slope) / intercept
+    // (ของเดิมทำ (preValue - intercept)/slope → หารด้วย b ซึ่ง = 0 เมื่อเส้น
+    //  calibration ผ่านจุด origin → Division by zero)
     const value = preValue
-      .minus(interceptD)
-      .div(slopeD)
+      .minus(slopeD)
+      .div(interceptD)
       .times(25)
       .div(5)
       .times(extractAmountD.times(1000))

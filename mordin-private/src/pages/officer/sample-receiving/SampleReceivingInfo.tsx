@@ -395,6 +395,25 @@ const SampleReceivingInfo: React.FC = () => {
     }
   };
 
+  const openCollectionWizard = () => {
+    const step = !qrCodeData.book?.farmerId
+      ? 2
+      : !qrCodeData.book?.landId
+        ? 3
+        : 1;
+    setWizardStartStep(step);
+    setIsWizardOpen(true);
+  };
+
+  const handleSetupClick = () => {
+    if (!qrCodeData.book?.farmerId || !qrCodeData.book?.landId) {
+      openCollectionWizard();
+      return;
+    }
+
+    setSearchModal(true);
+  };
+
   let isDisabled = true;
 
   if (isPairingMode) {
@@ -528,7 +547,7 @@ const SampleReceivingInfo: React.FC = () => {
           <button
             type="button"
             className="btn btn-outline-primary d-flex align-items-center gap-2"
-            onClick={() => setSearchModal(true)}
+            onClick={handleSetupClick}
           >
             <i className="fas fa-cog" />
             ตั้งค่าและเชื่อมโยงข้อมูล

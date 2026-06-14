@@ -95,6 +95,7 @@ const CollectSample = () => {
     landId: null,
     firstName: '',
     lastName: '',
+    birthDate: '',
     landCode: '',
     landName: '',
     areaSize: '',
@@ -139,6 +140,7 @@ const CollectSample = () => {
     setCollectExamForm({
       firstName: qrCode?.firstName ?? '',
       lastName: qrCode?.lastName ?? '',
+      birthDate: qrCode?.birthDate ?? qrCode?.book?.farmer?.birthDate ?? '',
       landCode: qrCode?.landCode ?? '',
       landName: qrCode?.landName ?? '',
       areaSize: qrCode?.book?.areaSize ?? '',
@@ -476,6 +478,7 @@ const CollectSample = () => {
         landId: null,
         firstName: '',
         lastName: '',
+        birthDate: '',
         phoneNumber: '',
         thaiNationalId: '',
         landCode: '',
@@ -524,6 +527,7 @@ const CollectSample = () => {
         landId: null,
         firstName: farmer.firstName,
         lastName: farmer.lastName,
+        birthDate: farmer.birthDate ?? '',
         phoneNumber: formatPhoneNumber(farmer.phone),
         thaiNationalId: '',
         serviceAreaId: Number(
@@ -599,6 +603,16 @@ const CollectSample = () => {
       return;
     }
 
+    if (collectMode === 'first_time' && !collectExamForm.birthDate) {
+      Swal.fire({
+        title: 'ยังไม่ได้กรอกวันเกิด',
+        text: 'กรุณากรอกวันเกิดให้ครบถ้วน',
+        icon: 'warning',
+        confirmButtonText: 'ตกลง',
+      });
+      return;
+    }
+
     if (
       !collectExamForm.areaSize ||
       Number(collectExamForm.areaSize) <= 0 ||
@@ -660,14 +674,20 @@ const CollectSample = () => {
       };
 
       await updateDataByFarmer(code!, payload);
+      setIsCollected(prev =>
+        ({
+          ...(prev ?? {}),
+          ...payload,
+          status: SampleStatusEnum.COLLECTED,
+        }) as QrCode
+      );
+      setCollectMode('choice');
       await Swal.fire({
         title: 'เพิ่มข้อมูลตัวอย่างดินสำเร็จ',
         text: 'คุณได้เพิ่มข้อมูลตัวอย่างดินเรียบร้อยแล้ว',
         icon: 'success',
         confirmButtonText: 'ตกลง',
       });
-      // โหลดหน้าเดิมใหม่ 1 ครั้ง
-      window.location.reload();
     } catch (error) {
       console.error('Error updating data:', error);
       Swal.fire({
@@ -866,6 +886,24 @@ const CollectSample = () => {
                         label="หมายเลขโทรศัพท์"
                         placeholder="เช่น 080xxxxxxx"
                         value={collectExamForm.phoneNumber}
+                        onChange={handleChange}
+                        readOnly={
+                          isCollected?.status !==
+                            SampleStatusEnum.DISTRIBUTED && isCollected
+                            ? true
+                            : false
+                        }
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <GenFormText1
+                        id="birthDate"
+                        isRequired={true}
+                        name="birthDate"
+                        label="วันเกิด"
+                        placeholder=""
+                        type="date"
+                        value={collectExamForm.birthDate}
                         onChange={handleChange}
                         readOnly={
                           isCollected?.status !==

@@ -1,0 +1,2691 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mordin Smart Soil - Dashboard & Reports Hub</title>
+  
+  <!-- Bootstrap 5 CSS via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome 6 for modern UI icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  
+  <!-- Google Fonts: Sarabun (Primary for official look) & Inter (Secondary for UI numbers) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Chart.js for interactive high-fidelity charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Mordin CSS Design System & Variables */
+    :root {
+      --mp-primary: #005092;       /* Mitr Phol Brand Blue */
+      --mp-primary-light: #4895ef; /* Soft Light Blue */
+      --mp-accent: #2e7d32;        /* Fertilizer/Agriculture Green */
+      --mp-accent-light: #e8f5e9;
+      --mp-danger: #dc2626;
+      --mp-danger-light: #fee2e2;
+      --mp-warning: #d97706;
+      --mp-warning-light: #fef3c7;
+      --mp-info: #0284c7;
+      --mp-info-light: #e0f2fe;
+      --mp-gray: #64748b;
+      --mp-gray-light: #f1f5f9;
+      
+      /* Light Theme Base Colors */
+      --bg-base: #f8fafc;
+      --bg-sidebar: #0f172a;       /* Slate Dark Sidebar */
+      --bg-card: #ffffff;
+      --bg-card-header: #f8fafc;
+      --border-color: #e2e8f0;
+      --text-main: #334155;
+      --text-muted: #64748b;
+      --text-title: #0f172a;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(226, 232, 240, 0.8);
+    }
+
+    body.dark-theme {
+      /* Dark Theme Base Colors */
+      --bg-base: #0f172a;
+      --bg-sidebar: #020617;
+      --bg-card: #1e293b;
+      --bg-card-header: #1e293b;
+      --border-color: #334155;
+      --text-main: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-title: #f8fafc;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.15), 0 2px 4px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 10px 10px -5px rgba(0, 0, 0, 0.15);
+      --glass-bg: rgba(30, 41, 59, 0.85);
+      --glass-border: rgba(51, 65, 85, 0.8);
+    }
+
+    * {
+      box-sizing: border-box;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    
+    body {
+      font-family: 'Sarabun', 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Layout Shell */
+    .mordin-layout-root {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    .mordin-sidebar {
+      width: 270px;
+      background-color: var(--bg-sidebar);
+      color: #e2e8f0;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 100;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .sidebar-brand {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo-circle {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--mp-primary) 0%, var(--mp-accent) 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 10px rgba(0, 80, 146, 0.3);
+    }
+
+    .brand-name {
+      font-weight: 700;
+      font-size: 1.25rem;
+      line-height: 1.2;
+      background: linear-gradient(90deg, #ffffff 0%, var(--mp-primary-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sidebar-menu {
+      padding: 1.25rem 0.75rem;
+      list-style: none;
+      margin: 0;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .menu-category {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, 0.4);
+      padding: 0.75rem 1rem 0.4rem;
+      font-weight: 700;
+    }
+
+    .menu-item-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: rgba(255, 255, 255, 0.65);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.25s ease;
+    }
+
+    .menu-item-link i {
+      width: 20px;
+      font-size: 1.05rem;
+      text-align: center;
+    }
+
+    .menu-item-link:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+
+    .menu-item-link.active {
+      background: linear-gradient(135deg, var(--mp-primary) 0%, rgba(0, 80, 146, 0.8) 100%);
+      color: #ffffff;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 80, 146, 0.25);
+    }
+
+    .sidebar-footer {
+      padding: 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.45);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Main Content Area */
+    .mordin-main {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Topbar Header */
+    .mordin-topbar {
+      height: 70px;
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      box-shadow: var(--shadow-sm);
+      z-index: 90;
+      position: sticky;
+      top: 0;
+    }
+
+    .topbar-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-title);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      background-color: var(--bg-card-header);
+      border-color: var(--mp-primary-light);
+      color: var(--mp-primary);
+      transform: translateY(-1px);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-left: 1rem;
+      border-left: 1px solid var(--border-color);
+    }
+
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--mp-primary-light) 0%, var(--mp-primary) 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .user-info {
+      line-height: 1.3;
+    }
+
+    .user-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-title);
+      display: block;
+    }
+
+    .user-role {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Content Wrapper */
+    .mordin-content {
+      padding: 2rem;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    /* KPI Cards */
+    .kpi-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 4px;
+      background-color: var(--card-accent, var(--mp-primary));
+    }
+
+    .kpi-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .kpi-value-group {
+      display: flex;
+      align-items: baseline;
+      gap: 0.25rem;
+    }
+
+    .kpi-number {
+      font-family: 'Inter', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--text-title);
+      line-height: 1.1;
+    }
+
+    .kpi-unit {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-left: 2px;
+    }
+
+    .kpi-icon-wrapper {
+      position: absolute;
+      right: 1.25rem;
+      bottom: 1.25rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background-color: var(--card-bg-light, rgba(0, 80, 146, 0.06));
+      color: var(--card-accent, var(--mp-primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+    }
+
+    /* Brief Tiles */
+    .brief-tile {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      height: 100%;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border-left: 4px solid var(--tile-color, var(--mp-primary));
+    }
+
+    .brief-tile:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .brief-icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      background-color: var(--tile-bg-light, rgba(0, 80, 146, 0.06));
+      color: var(--tile-color, var(--mp-primary));
+    }
+
+    .brief-content {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    .brief-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.15rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .brief-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-title);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brief-subtext {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    /* Filter cards */
+    .filter-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-header-btn {
+      width: 100%;
+      border: none;
+      background: var(--bg-card-header);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-title);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .filter-body {
+      padding: 1.5rem;
+    }
+
+    .filter-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+      border-top: 1px solid var(--border-color);
+      padding-top: 1rem;
+    }
+
+    /* Cards */
+    .dashboard-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      box-shadow: var(--shadow-sm);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .dashboard-card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--bg-card-header);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dashboard-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-title);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dashboard-card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+      display: block;
+    }
+
+    .dashboard-card-body {
+      padding: 1.5rem;
+      flex-grow: 1;
+      position: relative;
+    }
+
+    /* Status Chips / Badges */
+    .mordin-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+      border: 1px solid transparent;
+    }
+    
+    .mordin-chip-green {
+      background-color: var(--mp-accent-light);
+      color: var(--mp-accent);
+      border-color: rgba(46, 125, 50, 0.2);
+    }
+
+    .mordin-chip-amber {
+      background-color: var(--mp-warning-light);
+      color: var(--mp-warning);
+      border-color: rgba(217, 119, 6, 0.2);
+    }
+
+    .mordin-chip-red {
+      background-color: var(--mp-danger-light);
+      color: var(--mp-danger);
+      border-color: rgba(220, 38, 38, 0.2);
+    }
+
+    .mordin-chip-blue {
+      background-color: var(--mp-info-light);
+      color: var(--mp-info);
+      border-color: rgba(2, 132, 199, 0.2);
+    }
+
+    .mordin-chip-gray {
+      background-color: var(--mp-gray-light);
+      color: var(--mp-gray);
+      border-color: rgba(100, 116, 139, 0.2);
+    }
+
+    body.dark-theme .mordin-chip-green {
+      background-color: rgba(46, 125, 50, 0.18);
+      color: #81c784;
+    }
+    body.dark-theme .mordin-chip-amber {
+      background-color: rgba(217, 119, 6, 0.18);
+      color: #fbbf24;
+    }
+    body.dark-theme .mordin-chip-red {
+      background-color: rgba(220, 38, 38, 0.18);
+      color: #f87171;
+    }
+    body.dark-theme .mordin-chip-blue {
+      background-color: rgba(2, 132, 199, 0.18);
+      color: #38bdf8;
+    }
+    body.dark-theme .mordin-chip-gray {
+      background-color: rgba(100, 116, 139, 0.18);
+      color: #cbd5e1;
+    }
+
+    /* Soil Analysis Report Table */
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .report-table th, 
+    .report-table td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .report-table th {
+      font-weight: 700;
+      color: var(--text-muted);
+      background-color: var(--bg-card-header);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .report-table tbody tr {
+      transition: background-color 0.15s ease;
+      cursor: pointer;
+    }
+
+    .report-table tbody tr:hover {
+      background-color: var(--mp-gray-light);
+    }
+    
+    body.dark-theme .report-table tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .table-container {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg-card);
+    }
+
+    /* Progress Rings / Bars */
+    .improve-progress-container {
+      margin-bottom: 1.25rem;
+    }
+
+    .improve-progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .improve-progress-bar-wrapper {
+      height: 10px;
+      border-radius: 5px;
+      background-color: var(--border-color);
+      overflow: hidden;
+    }
+
+    .improve-progress-bar {
+      height: 100%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, var(--mp-primary) 0%, var(--mp-primary-light) 100%);
+      transition: width 0.8s ease;
+    }
+
+    /* Map Styles */
+    .thailand-map-svg {
+      width: 100%;
+      max-height: 480px;
+    }
+
+    .map-region {
+      fill: var(--border-color);
+      stroke: var(--bg-card);
+      stroke-width: 1.5;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .map-region:hover {
+      filter: brightness(0.92);
+      stroke: var(--mp-primary-light);
+      stroke-width: 2;
+    }
+
+    body.dark-theme .map-region:hover {
+      filter: brightness(1.15);
+    }
+
+    .map-region.active-low {
+      fill: rgba(220, 38, 38, 0.2);
+      stroke: rgba(220, 38, 38, 0.5);
+    }
+    .map-region.active-medium {
+      fill: rgba(217, 119, 6, 0.2);
+      stroke: rgba(217, 119, 6, 0.5);
+    }
+    .map-region.active-high {
+      fill: rgba(46, 125, 50, 0.2);
+      stroke: rgba(46, 125, 50, 0.5);
+    }
+
+    .map-region.selected {
+      stroke: var(--mp-primary);
+      stroke-width: 2.5;
+      filter: brightness(0.96);
+    }
+
+    .map-marker {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .map-marker:hover {
+      transform: scale(1.25);
+    }
+
+    .map-tooltip {
+      position: absolute;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      box-shadow: var(--shadow-lg);
+      pointer-events: none;
+      display: none;
+      z-index: 100;
+      color: var(--text-main);
+      backdrop-filter: blur(8px);
+      line-height: 1.4;
+    }
+
+    .map-legend {
+      display: flex;
+      gap: 1.25rem;
+      margin-top: 1rem;
+      justify-content: center;
+      font-size: 0.82rem;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text-muted);
+    }
+
+    .legend-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+
+    /* Star rating formula table styling */
+    .formula-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .formula-table th, 
+    .formula-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .formula-table th {
+      font-weight: 600;
+      color: var(--text-muted);
+      background-color: var(--bg-card-header);
+      font-size: 0.8rem;
+    }
+
+    .formula-table tbody tr.row-recommended {
+      background-color: var(--mp-accent-light);
+      color: var(--mp-accent);
+    }
+
+    body.dark-theme .formula-table tbody tr.row-recommended {
+      background-color: rgba(46, 125, 50, 0.15);
+      color: #81c784;
+    }
+
+    /* Soil Analysis Certificate Drawer (Slide Out) */
+    .cert-drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1050;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .cert-drawer-backdrop.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .cert-drawer {
+      position: fixed;
+      top: 0;
+      right: -600px;
+      width: 600px;
+      max-width: 100%;
+      height: 100vh;
+      background-color: var(--bg-card);
+      border-left: 1px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+      z-index: 1060;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .cert-drawer.active {
+      right: 0;
+    }
+
+    .cert-drawer-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--bg-card-header);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cert-drawer-body {
+      padding: 2rem;
+      flex-grow: 1;
+      overflow-y: auto;
+      background-color: #ffffff;
+      color: #1e293b;
+    }
+    
+    body.dark-theme .cert-drawer-body {
+      background-color: #1e293b;
+      color: #cbd5e1;
+    }
+
+    .cert-drawer-footer {
+      padding: 1.25rem 1.5rem;
+      border-top: 1px solid var(--border-color);
+      background-color: var(--bg-card-header);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    /* Official Soil Certificate Style */
+    .cert-document {
+      border: 2px solid #005092;
+      border-radius: 12px;
+      padding: 2rem;
+      background-color: #fff;
+      font-family: 'Sarabun', sans-serif;
+      box-shadow: 0 4px 20px rgba(0, 80, 146, 0.1);
+      position: relative;
+    }
+
+    body.dark-theme .cert-document {
+      background-color: #0f172a;
+      border-color: var(--mp-primary-light);
+    }
+
+    .cert-logo-sec {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #005092;
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    body.dark-theme .cert-logo-sec {
+      border-bottom-color: var(--mp-primary-light);
+    }
+
+    .cert-title {
+      color: #005092;
+      font-weight: 700;
+      font-size: 1.35rem;
+      margin: 0;
+    }
+
+    body.dark-theme .cert-title {
+      color: var(--mp-primary-light);
+    }
+
+    .cert-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.88rem;
+    }
+
+    .cert-meta-item {
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 0.4rem;
+    }
+
+    .cert-meta-label {
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-right: 0.25rem;
+    }
+
+    .cert-score-card {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      background-color: var(--bg-base);
+    }
+
+    /* Certificate Progress slider pointer */
+    .cert-scale-wrapper {
+      margin-bottom: 1.25rem;
+    }
+
+    .cert-scale-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .cert-scale-track {
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #ef4444 0%, #fbbf24 40%, #10b981 70%, #0284c7 100%);
+      position: relative;
+    }
+
+    .cert-scale-pointer {
+      position: absolute;
+      top: -3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      border: 3px solid #005092;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      transform: translateX(-50%);
+    }
+
+    /* Star rating */
+    .cert-stars {
+      color: #fbbf24;
+      font-size: 1.2rem;
+    }
+
+    /* Section animations */
+    .mordin-section {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Print styling overrides */
+    @media print {
+      .mordin-sidebar,
+      .mordin-topbar,
+      .filter-card,
+      .btn,
+      .no-print {
+        display: none !important;
+      }
+      .mordin-main {
+        width: 100% !important;
+      }
+      .mordin-content {
+        padding: 0 !important;
+      }
+      .cert-drawer {
+        position: static !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .cert-document {
+        border: 2px solid #005092 !important;
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="mordin-layout-root">
+  
+  <!-- Sidebar Navigation -->
+  <aside class="mordin-sidebar no-print">
+    <div class="sidebar-brand">
+      <div class="brand-logo-circle">
+        <i class="fas fa-leaf text-white"></i>
+      </div>
+      <div class="brand-name">มอดิน SMART SOIL</div>
+    </div>
+    
+    <ul class="sidebar-menu">
+      <li class="menu-category">ภาพรวม & วิเคราะห์</li>
+      <li>
+        <a href="javascript:void(0)" class="menu-item-link active" onclick="switchMainView('dashboard', this)">
+          <i class="fas fa-chart-pie"></i>
+          <span>แดชบอร์ดสรุปผล</span>
+        </a>
+      </li>
+      <li>
+        <a href="javascript:void(0)" class="menu-item-link" onclick="switchMainView('map', this)">
+          <i class="fas fa-map-location-dot"></i>
+          <span>แผนที่ธาตุอาหาร</span>
+        </a>
+      </li>
+      
+      <li class="menu-category">ระบบปฏิบัติการ</li>
+      <li>
+        <a href="javascript:void(0)" class="menu-item-link" onclick="switchMainView('reports', this)">
+          <i class="fas fa-file-invoice"></i>
+          <span>ศูนย์รายงานผลวิเคราะห์</span>
+        </a>
+      </li>
+      <li>
+        <a href="javascript:void(0)" class="menu-item-link">
+          <i class="fas fa-clipboard-check"></i>
+          <span>ตรวจสอบผลแล็บ</span>
+        </a>
+      </li>
+      
+      <li class="menu-category">จัดการระบบ</li>
+      <li>
+        <a href="javascript:void(0)" class="menu-item-link">
+          <i class="fas fa-industry"></i>
+          <span>โรงงาน & เขตส่งเสริม</span>
+        </a>
+      </li>
+      <li>
+        <a href="javascript:void(0)" class="menu-item-link">
+          <i class="fas fa-cogs"></i>
+          <span>สูตรปุ๋ย & เกณฑ์คะแนน</span>
+        </a>
+      </li>
+    </ul>
+    
+    <div class="sidebar-footer">
+      <i class="fas fa-circle-check text-success"></i>
+      <div>
+        <span class="d-block fw-bold" style="font-size: 0.75rem; color:#fff">ระบบใช้งานได้ปกติ</span>
+        <span style="font-size: 0.7rem opacity: 0.8">เชื่อมต่อกับ NestJS Server</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="mordin-main">
+    
+    <!-- Topbar Header -->
+    <header class="mordin-topbar no-print">
+      <h3 class="topbar-title" id="pageTitle">
+        <i class="fas fa-chart-pie text-primary"></i>
+        แดชบอร์ดสรุปข้อมูลวิเคราะห์ดินและปุ๋ย
+      </h3>
+      
+      <div class="topbar-actions">
+        <!-- Theme Toggle -->
+        <button class="theme-toggle-btn" id="themeToggle" title="สลับธีมสว่าง/มืด">
+          <i class="fas fa-moon"></i>
+        </button>
+        
+        <!-- User Profile widget -->
+        <div class="user-profile">
+          <div class="user-avatar">MP</div>
+          <div class="user-info">
+            <span class="user-name">คุณพงษ์ศักดิ์ มิตรดี</span>
+            <span class="user-role">ผู้ตรวจวิเคราะห์ดินอาวุโส</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Panel Body -->
+    <main class="mordin-content">
+      
+      <!-- ============================================== -->
+      <!-- VIEW 1: EXECUTIVE DASHBOARD                    -->
+      <!-- ============================================== -->
+      <div id="view-dashboard" class="mordin-section">
+        
+        <!-- Welcome banner & brief info -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+          <div>
+            <h2 class="fw-bold mb-1" style="color: var(--text-title)">สรุปผลการวิเคราะห์และแผนภาพจำลองดิน</h2>
+            <p class="text-muted mb-0">ข้อมูลจำลองสถิติสะสมจากเขตส่งเสริมและรถวิเคราะห์เคลื่อนที่ประจำปี 2569</p>
+          </div>
+          <div class="no-print">
+            <button class="btn btn-outline-primary me-2" onclick="switchMainView('reports', document.querySelectorAll('.menu-item-link')[2])">
+              <i class="fas fa-search-plus me-1"></i> ดูรายงานรายแปลง
+            </button>
+            <button class="btn btn-primary" onclick="window.print()">
+              <i class="fas fa-file-pdf me-1"></i> ออกรายงาน PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI strip -->
+        <section class="row mb-4 g-3">
+          <div class="col-sm-6 col-lg-3">
+            <div class="kpi-card" style="--card-accent: var(--mp-primary); --card-bg-light: rgba(0, 80, 146, 0.06);">
+              <div>
+                <div class="kpi-label">พื้นที่วิเคราะห์ดินสะสม</div>
+                <div class="kpi-value-group">
+                  <span class="kpi-number">12,450</span>
+                  <span class="kpi-unit">ไร่</span>
+                </div>
+              </div>
+              <div class="kpi-icon-wrapper">
+                <i class="fas fa-map-marked-alt"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-sm-6 col-lg-3">
+            <div class="kpi-card" style="--card-accent: var(--mp-accent); --card-bg-light: rgba(46, 125, 50, 0.06);">
+              <div>
+                <div class="kpi-label">จำนวนชาวไร่ในระบบ</div>
+                <div class="kpi-value-group">
+                  <span class="kpi-number">1,822</span>
+                  <span class="kpi-unit">คน</span>
+                </div>
+              </div>
+              <div class="kpi-icon-wrapper">
+                <i class="fas fa-users"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-sm-6 col-lg-3">
+            <div class="kpi-card" style="--card-accent: var(--mp-warning); --card-bg-light: rgba(217, 119, 6, 0.06);">
+              <div>
+                <div class="kpi-label">ตัวอย่างดินวิเคราะห์สะสม</div>
+                <div class="kpi-value-group">
+                  <span class="kpi-number">2,544</span>
+                  <span class="kpi-unit">ถุงตรวจ</span>
+                </div>
+              </div>
+              <div class="kpi-icon-wrapper">
+                <i class="fas fa-vials"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-sm-6 col-lg-3">
+            <div class="kpi-card" style="--card-accent: var(--mp-info); --card-bg-light: rgba(2, 132, 199, 0.06);">
+              <div>
+                <div class="kpi-label">ค่าความสมบูรณ์เฉลี่ย</div>
+                <div class="kpi-value-group">
+                  <span class="kpi-number">72.4</span>
+                  <span class="kpi-unit">/100</span>
+                </div>
+              </div>
+              <div class="kpi-icon-wrapper">
+                <i class="fas fa-gauge-high"></i>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Dynamic Filter Panel -->
+        <section class="filter-card no-print">
+          <button class="filter-header-btn" type="button" onclick="toggleFilterPanel('dashFilter')">
+            <span>
+              <i class="fas fa-filter me-2 text-primary"></i>
+              ตัวกรองข้อมูลเชิงสรุป (สถิติรวม)
+            </span>
+            <i class="fas fa-chevron-down" id="dashFilterChevron"></i>
+          </button>
+          
+          <div class="filter-body" id="dashFilterPanel" style="display: none;">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label fw-bold">ประเภทบริการวิเคราะห์</label>
+                <select class="form-select" id="dashServiceType" onchange="updateDashboardMockData()">
+                  <option value="all">ทุกบริการ (รถตรวจ & แล็บ)</option>
+                  <option value="bus">รถวิเคราะห์ดินเคลื่อนที่</option>
+                  <option value="lab">ห้องปฏิบัติการกลาง (Central Lab)</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <label class="form-label fw-bold">ปีส่งเสริม</label>
+                <select class="form-select" id="dashYear" onchange="updateDashboardMockData()">
+                  <option value="2569">2569 (ปีปัจจุบัน)</option>
+                  <option value="2568">2568</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">สังกัดโรงงาน</label>
+                <select class="form-select" id="dashFactory" onchange="updateDashboardMockData()">
+                  <option value="all">ทุกโรงงานกลุ่มมิตรผล</option>
+                  <option value="ด่านช้าง">โรงงานน้ำตาลด่านช้าง (สุพรรณบุรี)</option>
+                  <option value="ภูเขียว">โรงงานน้ำตาลภูเขียว (ชัยภูมิ)</option>
+                  <option value="กาฬสินธุ์">โรงงานน้ำตาลกาฬสินธุ์ (กาฬสินธุ์)</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">พื้นที่โปรโมชั่นโซน</label>
+                <select class="form-select" id="dashZone" onchange="updateDashboardMockData()">
+                  <option value="all">ทุกเขตส่งเสริม</option>
+                  <option value="zone-a">เขตส่งเสริมเหนือ 01</option>
+                  <option value="zone-b">เขตส่งเสริมลุ่มน้ำ 02</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="filter-actions">
+              <button class="btn btn-outline-secondary" onclick="resetDashboardFilters()">ล้างตัวเลือก</button>
+              <button class="btn btn-primary" onclick="updateDashboardMockData()">
+                <i class="fas fa-search me-1"></i>อัปเดตสถิติ
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Highlights Row -->
+        <section class="row mb-4 g-3">
+          <div class="col-lg-4 col-md-6">
+            <div class="brief-tile" style="--tile-color: var(--mp-primary); --tile-bg-light: rgba(0, 80, 146, 0.06);">
+              <div class="brief-icon-circle">
+                <i class="fas fa-vial"></i>
+              </div>
+              <div class="brief-content">
+                <div class="brief-label">สภาพดินสะสมส่วนใหญ่</div>
+                <div class="brief-value" id="highlightSoil">อินทรียวัตถุ (OM) ต่ำมาก</div>
+                <div class="brief-subtext">ครองสัดส่วน <strong class="text-danger" id="highlightSoilPct">65.2%</strong> ของแปลงวิเคราะห์</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-4 col-md-6">
+            <div class="brief-tile" style="--tile-color: var(--mp-accent); --tile-bg-light: rgba(46, 125, 50, 0.06);">
+              <div class="brief-icon-circle">
+                <i class="fas fa-star text-warning"></i>
+              </div>
+              <div class="brief-content">
+                <div class="brief-label">สูตรปุ๋ยรองพื้นที่ต้องใช้มากสุด</div>
+                <div class="brief-value" id="highlightFert">สูตร 16-8-8</div>
+                <div class="brief-subtext">แนะนำรวม <strong id="highlightFertCount">1,248</strong> แปลงการเกษตร</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-4 col-md-6">
+            <div class="brief-tile" style="--tile-color: var(--mp-warning); --tile-bg-light: rgba(217, 119, 6, 0.06);">
+              <div class="brief-icon-circle">
+                <i class="fas fa-leaf"></i>
+              </div>
+              <div class="brief-content">
+                <div class="brief-label">สารปรับปรุงดินเด่นรอบปี</div>
+                <div class="brief-value" id="highlightConditioner">ยิปซัม (Gypsum)</div>
+                <div class="brief-subtext">แนะนำให้ใช้ในดินเค็มรวม <strong id="highlightConditionerPct">42.8%</strong> ของพื้นที่</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Charts row: NPK analysis -->
+        <section class="row mb-4 g-4">
+          <div class="col-lg-8">
+            <div class="dashboard-card">
+              <div class="dashboard-card-header">
+                <div>
+                  <h5 class="dashboard-card-title">
+                    <i class="fas fa-chart-column text-primary"></i>
+                    สัดส่วนผลวิเคราะห์ธาตุอาหารดินเคมีสะสม
+                  </h5>
+                  <span class="dashboard-card-subtitle">แสดงสัดส่วนสะสมของ Nitrogen, Phosphorus, Potassium</span>
+                </div>
+              </div>
+              <div class="dashboard-card-body">
+                <div style="height: 300px; position: relative;">
+                  <canvas id="chartNpkBars"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-4">
+            <div class="dashboard-card">
+              <div class="dashboard-card-header">
+                <div>
+                  <h5 class="dashboard-card-title">
+                    <i class="fas fa-chart-pie text-success"></i>
+                    สัดส่วนความต้องการสูตรปุ๋ย
+                  </h5>
+                  <span class="dashboard-card-subtitle">เปรียบเทียบระหว่าง ปุ๋ยรองพื้น vs แต่งหน้า</span>
+                </div>
+              </div>
+              <div class="dashboard-card-body d-flex align-items-center justify-content-center">
+                <div style="width: 240px; height: 240px; position: relative;">
+                  <canvas id="chartFertilizerDoughnut"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Fertilizer Tables & Conditioners Progress -->
+        <section class="row g-4">
+          <div class="col-md-6">
+            <div class="dashboard-card">
+              <div class="dashboard-card-header">
+                <h5 class="dashboard-card-title">
+                  <i class="fas fa-ranking-star text-primary"></i>
+                  ความนิยมการแนะนำสูตรปุ๋ยผสม
+                </h5>
+              </div>
+              <div class="dashboard-card-body p-0">
+                <div class="table-responsive">
+                  <table class="formula-table align-middle">
+                    <thead>
+                      <tr>
+                        <th>สูตรปุ๋ย</th>
+                        <th>ช่วงใส่ปุ๋ย</th>
+                        <th class="text-end">จำนวนแปลง</th>
+                        <th class="text-end">อัตราแนะแนว</th>
+                      </tr>
+                    </thead>
+                    <tbody id="fertilizerRankTable">
+                      <tr class="row-recommended">
+                        <td class="fw-bold"><i class="fas fa-star text-warning me-2"></i>16-8-8</td>
+                        <td>รองพื้นอ้อยโรงงาน</td>
+                        <td class="text-end fw-bold">1,248 แปลง</td>
+                        <td class="text-end">50 กก./ไร่</td>
+                      </tr>
+                      <tr>
+                        <td class="fw-bold">21-7-14</td>
+                        <td>แต่งหน้าระยะเจริญเติบโต</td>
+                        <td class="text-end">845 แปลง</td>
+                        <td class="text-end">35 กก./ไร่</td>
+                      </tr>
+                      <tr>
+                        <td class="fw-bold">46-0-0 (Urea)</td>
+                        <td>เพิ่มการแตกกอช่วงแล้ง</td>
+                        <td class="text-end">412 แปลง</td>
+                        <td class="text-end">20 กก./ไร่</td>
+                      </tr>
+                      <tr>
+                        <td class="fw-bold">15-15-15</td>
+                        <td>รองพื้นแปลงดินร่วนซุย</td>
+                        <td class="text-end">320 แปลง</td>
+                        <td class="text-end">40 กก./ไร่</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="dashboard-card">
+              <div class="dashboard-card-header">
+                <h5 class="dashboard-card-title">
+                  <i class="fas fa-hand-holding-heart text-success"></i>
+                  การแนะนำการใส่สารปรับปรุงสภาพดิน (Conditioners)
+                </h5>
+              </div>
+              <div class="dashboard-card-body">
+                <div class="improve-progress-container">
+                  <div class="improve-progress-header">
+                    <span>ยิปซัม (Gypsum) - สำหรับดินด่าง/เค็ม</span>
+                    <strong class="text-primary" id="condPct1">42.8%</strong>
+                  </div>
+                  <div class="improve-progress-bar-wrapper">
+                    <div class="improve-progress-bar" id="condBar1" style="width: 42.8%;"></div>
+                  </div>
+                </div>
+
+                <div class="improve-progress-container">
+                  <div class="improve-progress-header">
+                    <span>กากหม้อกรอง (Filter Cake) - เพิ่ม OM ดินทราย</span>
+                    <strong class="text-primary" id="condPct2">28.5%</strong>
+                  </div>
+                  <div class="improve-progress-bar-wrapper">
+                    <div class="improve-progress-bar" id="condBar2" style="width: 28.5%;"></div>
+                  </div>
+                </div>
+
+                <div class="improve-progress-container">
+                  <div class="improve-progress-header">
+                    <span>ปูนขาว / โดโลไมต์ - ลดความเป็นกรดจัด</span>
+                    <strong class="text-primary" id="condPct3">18.4%</strong>
+                  </div>
+                  <div class="improve-progress-bar-wrapper">
+                    <div class="improve-progress-bar" id="condBar3" style="width: 18.4%;"></div>
+                  </div>
+                </div>
+
+                <div class="improve-progress-container">
+                  <div class="improve-progress-header">
+                    <span>อินทรียสารชีวภาพ - ปรับโครงสร้างทางชีวภาพ</span>
+                    <strong class="text-primary" id="condPct4">10.3%</strong>
+                  </div>
+                  <div class="improve-progress-bar-wrapper">
+                    <div class="improve-progress-bar" id="condBar4" style="width: 10.3%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- VIEW 2: SPATIAL NUTRIENT DISTRIBUTION MAP      -->
+      <!-- ============================================== -->
+      <div id="view-map" class="mordin-section d-none">
+        <div class="mb-4">
+          <h2 class="fw-bold mb-1" style="color: var(--text-title)">แผนภาพการกระจายตัวธาตุอาหารระดับภูมิภาค</h2>
+          <p class="text-muted mb-0">แสดงแผนจำลองระดับความอุดมสมบูรณ์ของสารอินทรีย์และการแนะนำตามพิกัดโรงงานมิตรผล</p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="dashboard-card">
+              <div class="dashboard-card-header">
+                <h5 class="dashboard-card-title">
+                  <i class="fas fa-map-location-dot text-primary"></i>
+                  แผนภาพจำลองการเจาะสำรวจดินรายภาค
+                </h5>
+              </div>
+              <div class="dashboard-card-body position-relative">
+                <div class="text-center py-4">
+                  <!-- Custom Thailand Vector SVG representing regions -->
+                  <svg class="thailand-map-svg" viewBox="0 0 400 600" width="100%">
+                    <!-- North Region -->
+                    <path class="map-region active-medium" id="mapRegNorth" data-name="ภาคเหนือ (กลุ่มโรงงานบ้านไร่)" data-samples="412" data-om="1.8" data-fert="15-15-15" d="M 120 40 L 190 60 L 220 120 L 180 180 L 110 160 L 90 90 Z" />
+                    <!-- Northeast Region -->
+                    <path class="map-region active-low" id="mapRegNortheast" data-name="ภาคตะวันออกเฉียงเหนือ (กลุ่มโรงงานภูเขียว/กาฬสินธุ์)" data-samples="1,352" data-om="1.1" data-fert="16-8-8" d="M 220 120 L 310 130 L 350 200 L 310 280 L 220 220 Z" />
+                    <!-- Central Region -->
+                    <path class="map-region active-low" id="mapRegCentral" data-name="ภาคกลาง (กลุ่มโรงงานด่านช้าง/สิงห์บุรี)" data-samples="780" data-om="1.3" data-fert="16-8-8" d="M 140 180 L 220 220 L 210 300 L 160 320 L 120 250 Z" />
+                    <!-- East Region -->
+                    <path class="map-region active-medium" id="mapRegEast" data-name="ภาคตะวันออก" data-samples="122" data-om="2.0" data-fert="21-7-14" d="M 210 300 L 260 290 L 270 350 L 220 360 Z" />
+                    <!-- South Region -->
+                    <path class="map-region active-high" id="mapRegSouth" data-name="ภาคใต้" data-samples="122" data-om="3.2" data-fert="16-16-8" d="M 120 360 L 170 380 L 140 500 L 100 480 Z" />
+
+                    <!-- Phu Khieo Factory Marker -->
+                    <g class="map-marker" data-factory="โรงงานน้ำตาลภูเขียว" data-zone="ชัยภูมิ" data-samples="620" data-om="1.2 (ต่ำ)" onclick="clickMapMarker(this)">
+                      <circle cx="240" cy="180" r="9" fill="var(--mp-primary)" stroke="#ffffff" stroke-width="2" />
+                      <circle cx="240" cy="180" r="16" fill="rgba(0, 80, 146, 0.2)" />
+                    </g>
+                    <!-- Dan Chang Factory Marker -->
+                    <g class="map-marker" data-factory="โรงงานน้ำตาลด่านช้าง" data-zone="สุพรรณบุรี" data-samples="680" data-om="1.1 (ต่ำมาก)" onclick="clickMapMarker(this)">
+                      <circle cx="160" cy="240" r="9" fill="var(--mp-primary)" stroke="#ffffff" stroke-width="2" />
+                      <circle cx="160" cy="240" r="16" fill="rgba(0, 80, 146, 0.2)" />
+                    </g>
+                    <!-- Kalasin Factory Marker -->
+                    <g class="map-marker" data-factory="โรงงานน้ำตาลกาฬสินธุ์" data-zone="กาฬสินธุ์" data-samples="452" data-om="1.3 (ต่ำ)" onclick="clickMapMarker(this)">
+                      <circle cx="280" cy="170" r="9" fill="var(--mp-primary)" stroke="#ffffff" stroke-width="2" />
+                      <circle cx="280" cy="170" r="16" fill="rgba(0, 80, 146, 0.2)" />
+                    </g>
+                  </svg>
+                  
+                  <div class="map-tooltip" id="mapRegTooltip"></div>
+                </div>
+
+                <div class="map-legend">
+                  <div class="legend-item">
+                    <div class="legend-box" style="background-color: rgba(220, 38, 38, 0.3); border: 1px solid #dc2626"></div>
+                    <span>อินทรียวัตถุต่ำมาก (< 1.5% OM)</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-box" style="background-color: rgba(217, 119, 6, 0.3); border: 1px solid #d97706"></div>
+                    <span>อินทรียวัตถุปานกลาง (1.5-2.5%)</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-box" style="background-color: rgba(46, 125, 50, 0.3); border: 1px solid #2e7d32"></div>
+                    <span>อินทรียวัตถุสูง (> 2.5%)</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-box" style="border: 2px solid var(--mp-primary); background-color: white;"></div>
+                    <span>ศูนย์วิจัย / โรงงานมิตรผล</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="dashboard-card">
+              <div class="dashboard-card-header">
+                <h5 class="dashboard-card-title" id="mapDetailTitle">วิเคราะห์รายละเอียดรายพื้นที่</h5>
+              </div>
+              <div class="dashboard-card-body" id="mapDetailBody">
+                <div class="text-center py-5 text-muted">
+                  <i class="fas fa-hand-pointer fs-1 mb-3 text-primary"></i>
+                  <p>เอาเมาส์ชี้ภูมิภาค หรือคลิกเลือกตำแหน่งโรงงานบนแผนที่ เพื่อแสดงข้อมูลเชิงลึกด้านสัดส่วนดินและการแนะปุ๋ย</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- VIEW 3: REPORTS CENTER (OFFICER PORTAL)        -->
+      <!-- ============================================== -->
+      <div id="view-reports" class="mordin-section d-none">
+        
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+          <div>
+            <h2 class="fw-bold mb-1" style="color: var(--text-title)">ศูนย์บริหารผลการวิเคราะห์ตัวอย่างดิน</h2>
+            <p class="text-muted mb-0">ค้นหา ตรวจสอบ อนุมัติผลวิเคราะห์ และสั่งพิมพ์รายงานใบรับรองดินส่งเสริมเกษตรกร</p>
+          </div>
+          
+          <div class="no-print d-flex gap-2">
+            <button class="btn btn-success" onclick="batchApproveSelected()">
+              <i class="fas fa-circle-check me-1"></i> อนุมัติผลที่เลือก
+            </button>
+            <button class="btn btn-warning text-white" onclick="batchDownloadSelected()">
+              <i class="fas fa-download me-1"></i> ดาวน์โหลด ZIP
+            </button>
+            <button class="btn btn-secondary" onclick="batchPrintSelected()">
+              <i class="fas fa-print me-1"></i> พิมพ์ PDF รวม
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Status Metrics Row -->
+        <section class="row mb-3 g-2">
+          <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-3 bg-light text-center h-100 dark-theme-card-dark">
+              <span class="d-block text-muted small fw-bold uppercase">ตัวอย่างรวม</span>
+              <strong class="fs-4 text-dark" id="reportCountAll">8</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-3 bg-light text-center h-100 dark-theme-card-dark" style="border-left: 3px solid var(--mp-accent) !important;">
+              <span class="d-block text-success small fw-bold uppercase">พร้อมอนุมัติ</span>
+              <strong class="fs-4 text-success" id="reportCountReady">3</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-3 bg-light text-center h-100 dark-theme-card-dark" style="border-left: 3px solid var(--mp-warning) !important;">
+              <span class="d-block text-warning small fw-bold uppercase">รอแล็บกรอกเกณฑ์</span>
+              <strong class="fs-4 text-warning" id="reportCountPending">3</strong>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-3 bg-light text-center h-100 dark-theme-card-dark" style="border-left: 3px solid var(--mp-danger) !important;">
+              <span class="d-block text-danger small fw-bold uppercase">ข้อมูลชาวไร่/แปลงไม่ครบ</span>
+              <strong class="fs-4 text-danger" id="reportCountIncomplete">2</strong>
+            </div>
+          </div>
+        </section>
+
+        <!-- Interactive Search & Filtering Toolbar -->
+        <section class="filter-card no-print">
+          <div class="filter-body py-3">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted mb-1">ค้นหาตัวอย่าง</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                  <input type="text" id="reportSearchInput" class="form-control form-control-sm border-start-0" placeholder="รหัสตัวอย่าง / ชื่อเกษตรกร..." onkeyup="filterReportsTable()">
+                </div>
+              </div>
+              
+              <div class="col-md-2">
+                <label class="form-label small fw-bold text-muted mb-1">สถานะรายงาน</label>
+                <select class="form-select form-select-sm" id="reportFilterStatus" onchange="filterReportsTable()">
+                  <option value="all">แสดงสถานะทั้งหมด</option>
+                  <option value="ready">พร้อมอนุมัติ</option>
+                  <option value="pending">รอเกณฑ์คะแนน</option>
+                  <option value="incomplete">ข้อมูลไม่ครบ</option>
+                  <option value="approved">อนุมัติแล้ว</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted mb-1">โรงงานปลายทาง</label>
+                <select class="form-select form-select-sm" id="reportFilterFactory" onchange="filterReportsTable()">
+                  <option value="all">ทุกโรงงานมิตรผล</option>
+                  <option value="ด่านช้าง">โรงงานด่านช้าง</option>
+                  <option value="ภูเขียว">โรงงานภูเขียว</option>
+                  <option value="กาฬสินธุ์">โรงงานกาฬสินธุ์</option>
+                </select>
+              </div>
+
+              <div class="col-md-2 col-6">
+                <label class="form-label small fw-bold text-muted mb-1">วันที่รับตัวอย่าง</label>
+                <input type="date" class="form-control form-control-sm" id="reportFilterDate" onchange="filterReportsTable()">
+              </div>
+              
+              <div class="col-md-2 col-6 text-end">
+                <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetReportTableFilters()">
+                  <i class="fas fa-arrow-rotate-left me-1"></i> ล้างฟิลเตอร์
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reports List Table -->
+        <div class="table-container">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th style="width: 40px;" class="text-center">
+                  <input type="checkbox" id="checkAllReports" onclick="toggleSelectAllReports(this)">
+                </th>
+                <th style="width: 90px;" class="text-center">ใบรับรอง</th>
+                <th>รหัสตัวอย่างดิน</th>
+                <th>ชื่อเกษตรกร</th>
+                <th>รหัสแปลง</th>
+                <th>โรงงานส่งเสริม</th>
+                <th>วิเคราะห์ดิน</th>
+                <th>สถานะใบรายงาน</th>
+                <th>รับตัวอย่างเมื่อ</th>
+              </tr>
+            </thead>
+            <tbody id="reportsTableBody">
+              <!-- Row 1: Ready to approve -->
+              <tr data-status="ready" data-factory="ด่านช้าง" onclick="toggleReportRow(this, event)">
+                <td class="text-center" onclick="event.stopPropagation()">
+                  <input type="checkbox" class="report-row-checkbox" value="MP-2569-001">
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info text-white py-1 px-2" onclick="openReportCertificate('MP-2569-001', event)" title="ดูรายละเอียดใบรายงาน">
+                    <i class="fas fa-file-contract"></i>
+                  </button>
+                </td>
+                <td class="fw-bold">MP-2569-001</td>
+                <td>นายสมเจตน์ รักดินดี</td>
+                <td>LND-72641-A</td>
+                <td>ด่านช้าง</td>
+                <td><span class="badge bg-secondary">N, P, K, OM, pH, EC</span></td>
+                <td><span class="mordin-chip mordin-chip-green"><i class="fas fa-check-circle"></i> พร้อมอนุมัติ</span></td>
+                <td>11/06/2569</td>
+              </tr>
+              
+              <!-- Row 2: Incomplete details -->
+              <tr data-status="incomplete" data-factory="ด่านช้าง" onclick="toggleReportRow(this, event)">
+                <td class="text-center" onclick="event.stopPropagation()">
+                  <input type="checkbox" disabled>
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info text-white py-1 px-2" onclick="openReportCertificate('MP-2569-002', event)">
+                    <i class="fas fa-file-contract"></i>
+                  </button>
+                </td>
+                <td class="fw-bold">MP-2569-002</td>
+                <td>นายมนัส ข้าวโพดงาม</td>
+                <td class="text-danger fw-bold"><i class="fas fa-triangle-exclamation me-1"></i>ไม่มีรหัสแปลง</td>
+                <td>ด่านช้าง</td>
+                <td><span class="badge bg-secondary">N, P, K</span></td>
+                <td><span class="mordin-chip mordin-chip-red"><i class="fas fa-circle-exclamation"></i> ข้อมูลไม่ครบ</span></td>
+                <td>10/06/2569</td>
+              </tr>
+
+              <!-- Row 3: Pending Grade -->
+              <tr data-status="pending" data-factory="ภูเขียว" onclick="toggleReportRow(this, event)">
+                <td class="text-center" onclick="event.stopPropagation()">
+                  <input type="checkbox" disabled>
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info text-white py-1 px-2" onclick="openReportCertificate('MP-2569-003', event)">
+                    <i class="fas fa-file-contract"></i>
+                  </button>
+                </td>
+                <td class="fw-bold">MP-2569-003</td>
+                <td>นางวิไลลักษณ์ อ้อยเจริญ</td>
+                <td>LND-00124-B</td>
+                <td>ภูเขียว</td>
+                <td><span class="badge bg-secondary">N, P, K, OM</span></td>
+                <td><span class="mordin-chip mordin-chip-amber"><i class="fas fa-hourglass-half"></i> รอแล็บกรอกเกณฑ์</span></td>
+                <td>09/06/2569</td>
+              </tr>
+
+              <!-- Row 4: Approved & Print Ready -->
+              <tr data-status="approved" data-factory="ภูเขียว" onclick="toggleReportRow(this, event)">
+                <td class="text-center" onclick="event.stopPropagation()">
+                  <input type="checkbox" class="report-row-checkbox" value="MP-2569-004">
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info text-white py-1 px-2" onclick="openReportCertificate('MP-2569-004', event)">
+                    <i class="fas fa-file-contract"></i>
+                  </button>
+                </td>
+                <td class="fw-bold">MP-2569-004</td>
+                <td>นายสมพงษ์ สวนมะลิ</td>
+                <td>LND-88902-C</td>
+                <td>ภูเขียว</td>
+                <td><span class="badge bg-secondary">N, P, K, OM, pH, EC</span></td>
+                <td><span class="mordin-chip mordin-chip-blue"><i class="fas fa-circle-check"></i> อนุมัติแล้ว</span></td>
+                <td>08/06/2569</td>
+              </tr>
+
+              <!-- Row 5: Ready to approve -->
+              <tr data-status="ready" data-factory="กาฬสินธุ์" onclick="toggleReportRow(this, event)">
+                <td class="text-center" onclick="event.stopPropagation()">
+                  <input type="checkbox" class="report-row-checkbox" value="MP-2569-005">
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info text-white py-1 px-2" onclick="openReportCertificate('MP-2569-005', event)">
+                    <i class="fas fa-file-contract"></i>
+                  </button>
+                </td>
+                <td class="fw-bold">MP-2569-005</td>
+                <td>นางราตรี หวานฉ่ำ</td>
+                <td>LND-55410-F</td>
+                <td>กาฬสินธุ์</td>
+                <td><span class="badge bg-secondary">N, P, K, OM, pH</span></td>
+                <td><span class="mordin-chip mordin-chip-green"><i class="fas fa-check-circle"></i> พร้อมอนุมัติ</span></td>
+                <td>07/06/2569</td>
+              </tr>
+
+              <!-- Row 6: Incomplete details -->
+              <tr data-status="incomplete" data-factory="กาฬสินธุ์" onclick="toggleReportRow(this, event)">
+                <td class="text-center" onclick="event.stopPropagation()">
+                  <input type="checkbox" disabled>
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info text-white py-1 px-2" onclick="openReportCertificate('MP-2569-006', event)">
+                    <i class="fas fa-file-contract"></i>
+                  </button>
+                </td>
+                <td class="fw-bold">MP-2569-006</td>
+                <td class="text-danger fw-bold"><i class="fas fa-triangle-exclamation me-1"></i>ไม่มีชื่อเกษตรกร</td>
+                <td>LND-11005-K</td>
+                <td>กาฬสินธุ์</td>
+                <td><span class="badge bg-secondary">N, P, K, OM</span></td>
+                <td><span class="mordin-chip mordin-chip-red"><i class="fas fa-circle-exclamation"></i> ข้อมูลไม่ครบ</span></td>
+                <td>07/06/2569</td>
+              </tr>
+
+              <!-- Row 7: Pending Grade -->
+              <tr data-status="pending" data-factory="ด่านช้าง" onclick="toggleReportRow(this, event)">
+                <td class="text-center" onclick="event.stopPropagation()">
+                  <input type="checkbox" disabled>
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info text-white py-1 px-2" onclick="openReportCertificate('MP-2569-007', event)">
+                    <i class="fas fa-file-contract"></i>
+                  </button>
+                </td>
+                <td class="fw-bold">MP-2569-007</td>
+                <td>นายเกษตร ทรัพย์สมบูรณ์</td>
+                <td>LND-41009-S</td>
+                <td>ด่านช้าง</td>
+                <td><span class="badge bg-secondary">N, P, K, OM, pH, EC</span></td>
+                <td><span class="mordin-chip mordin-chip-amber"><i class="fas fa-hourglass-half"></i> รอแล็บกรอกเกณฑ์</span></td>
+                <td>06/06/2569</td>
+              </tr>
+
+              <!-- Row 8: Approved -->
+              <tr data-status="approved" data-factory="ด่านช้าง" onclick="toggleReportRow(this, event)">
+                <td class="text-center" onclick="event.stopPropagation()">
+                  <input type="checkbox" class="report-row-checkbox" value="MP-2569-008">
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info text-white py-1 px-2" onclick="openReportCertificate('MP-2569-008', event)">
+                    <i class="fas fa-file-contract"></i>
+                  </button>
+                </td>
+                <td class="fw-bold">MP-2569-008</td>
+                <td>นางคำปัน ดินชุ่ม</td>
+                <td>LND-12345-X</td>
+                <td>ด่านช้าง</td>
+                <td><span class="badge bg-secondary">N, P, K, OM, pH, EC</span></td>
+                <td><span class="mordin-chip mordin-chip-blue"><i class="fas fa-circle-check"></i> อนุมัติแล้ว</span></td>
+                <td>05/06/2569</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+    </main>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL / SLIDE-OUT DRAWER: REPORT CERTIFICATE  -->
+<!-- ============================================== -->
+<div class="cert-drawer-backdrop" id="certBackdrop" onclick="closeReportCertificate()"></div>
+<div class="cert-drawer" id="certDrawer">
+  <div class="cert-drawer-header">
+    <h5 class="m-0 fw-bold" style="color: var(--mp-primary)"><i class="fas fa-file-invoice me-2"></i>รายละเอียดใบรับรองผลวิเคราะห์ดิน</h5>
+    <button type="button" class="btn-close" onclick="closeReportCertificate()"></button>
+  </div>
+  
+  <div class="cert-drawer-body">
+    <!-- Official Mitr Phol Soil Certificate Mockup -->
+    <div class="cert-document">
+      <div class="cert-logo-sec">
+        <div>
+          <h4 class="cert-title"><i class="fas fa-leaf me-1"></i> มิตรผลวิจัยและพัฒนา</h4>
+          <span style="font-size: 0.75rem; color: var(--text-muted)">ฝ่ายบริการส่งเสริมและวิเคราะห์ปัจจัยการผลิตอ้อย</span>
+        </div>
+        <div class="text-end" style="line-height: 1.2">
+          <span class="badge bg-success" id="certStatusLabel">พร้อมอนุมัติ</span>
+          <div class="mt-1 fw-bold" style="font-size: 0.82rem; color: #005092" id="certDocCode">MP-2569-001</div>
+        </div>
+      </div>
+      
+      <h5 class="text-center fw-bold mb-3" style="color: #005092">ใบรายงานผลการวิเคราะห์ธาตุอาหารดินและคำแนะนำผสมปุ๋ย</h5>
+
+      <!-- Farmer & Land Meta Info -->
+      <div class="cert-meta-grid">
+        <div class="cert-meta-item">
+          <span class="cert-meta-label">ชื่อชาวไร่:</span>
+          <span id="certFarmerName">นายสมเจตน์ รักดินดี</span>
+        </div>
+        <div class="cert-meta-item">
+          <span class="cert-meta-label">รหัสชาวไร่ (โควต้า):</span>
+          <span id="certFarmerQuota">081-9876-543</span>
+        </div>
+        <div class="cert-meta-item">
+          <span class="cert-meta-label">รหัสแปลงอ้อย:</span>
+          <span id="certLandCode">LND-72641-A</span>
+        </div>
+        <div class="cert-meta-item">
+          <span class="cert-meta-label">ขนาดแปลง:</span>
+          <span id="certLandSize">15.5 ไร่</span>
+        </div>
+        <div class="cert-meta-item">
+          <span class="cert-meta-label">ตำบล/อำเภอ/จังหวัด:</span>
+          <span>ต.ด่านช้าง อ.ด่านช้าง จ.สุพรรณบุรี</span>
+        </div>
+        <div class="cert-meta-item">
+          <span class="cert-meta-label">โรงงานรับซื้อ:</span>
+          <span>โรงงานน้ำตาลด่านช้าง</span>
+        </div>
+      </div>
+
+      <!-- Soil Chemical Test Scale Indicators -->
+      <h6 class="fw-bold border-bottom pb-1 mb-3" style="color: #005092"><i class="fas fa-flask me-2"></i>ระดับผลวิเคราะห์ทางเคมีของดิน</h6>
+      
+      <!-- pH Scale -->
+      <div class="cert-scale-wrapper">
+        <div class="cert-scale-label">
+          <span>ความเป็นกรด-ด่าง (pH)</span>
+          <span class="text-danger" id="certValpH">pH 5.2 (กรดจัด)</span>
+        </div>
+        <div class="cert-scale-track">
+          <!-- Pointer at 5.2 (around 35% of track width) -->
+          <div class="cert-scale-pointer" style="left: 35%;"></div>
+        </div>
+      </div>
+
+      <!-- OM Scale -->
+      <div class="cert-scale-wrapper">
+        <div class="cert-scale-label">
+          <span>ปริมาณอินทรียวัตถุ (OM)</span>
+          <span class="text-danger" id="certValOM">1.1% (ต่ำมาก)</span>
+        </div>
+        <div class="cert-scale-track">
+          <!-- Pointer at 1.1 (around 22% of track width) -->
+          <div class="cert-scale-pointer" style="left: 22%;"></div>
+        </div>
+      </div>
+
+      <!-- Phosphorus (P) Scale -->
+      <div class="cert-scale-wrapper">
+        <div class="cert-scale-label">
+          <span>ฟอสฟอรัสที่เป็นประโยชน์ (P)</span>
+          <span class="text-warning" id="certValP">8 ppm (ต่ำ)</span>
+        </div>
+        <div class="cert-scale-track">
+          <!-- Pointer at 8 ppm (around 45% of track width) -->
+          <div class="cert-scale-pointer" style="left: 45%;"></div>
+        </div>
+      </div>
+
+      <!-- Potassium (K) Scale -->
+      <div class="cert-scale-wrapper">
+        <div class="cert-scale-label">
+          <span>โพแทสเซียมที่แลกเปลี่ยนได้ (K)</span>
+          <span class="text-success" id="certValK">110 ppm (ปานกลาง)</span>
+        </div>
+        <div class="cert-scale-track">
+          <!-- Pointer at 110 ppm (around 65% of track width) -->
+          <div class="cert-scale-pointer" style="left: 65%;"></div>
+        </div>
+      </div>
+
+      <!-- Recommendations section -->
+      <h6 class="fw-bold border-bottom pb-1 mb-2 mt-4" style="color: #2e7d32"><i class="fas fa-star-of-life me-2"></i>คำแนะนำผสมปุ๋ยบำรุงอ้อยและการปรับปรุงดิน</h6>
+      
+      <div class="cert-score-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-bold" style="color: #2e7d32">สูตรปุ๋ยรองพื้นแนะนำหลัก:</span>
+          <span class="cert-stars">★★★★★ <span class="text-muted small" style="font-size:0.75rem">(ความเหมาะสมสูงสุด)</span></span>
+        </div>
+        <h4 class="fw-bold text-center my-2 text-accent" style="color: #2e7d32" id="certRecommendFert">สูตรผสม 16-8-8</h4>
+        <div class="small text-muted text-center">แนะนำให้ใส่ในอัตรา <strong class="text-dark">50 กิโลกรัมต่อไร่</strong> ช่วงรองก้นหลุมเพาะปลูก</div>
+      </div>
+
+      <!-- Soil Conditioners recommendation -->
+      <div class="p-3 rounded bg-light border" id="certImproveBox">
+        <h6 class="fw-bold mb-1" style="color: #d97706"><i class="fas fa-circle-exclamation me-2"></i>การปรับปรุงดินเพื่อแก้ไขกรด/เค็ม</h6>
+        <p class="small mb-0 text-muted">
+          เนื่องจากค่าความเป็นกรดสูง (pH 5.2) แนะนำให้หว่าน <strong class="text-dark">ปูนขาวหรือโดโลไมต์ 150 กก./ไร่</strong> 
+          ก่อนเตรียมดินอย่างน้อย 15 วันเพื่อปรับสภาพหน้าดิน
+        </p>
+      </div>
+
+    </div>
+  </div>
+  
+  <div class="cert-drawer-footer">
+    <button type="button" class="btn btn-outline-secondary" onclick="closeReportCertificate()">ปิด</button>
+    <button type="button" class="btn btn-success" id="certApproveBtn" onclick="approveSingleCertificate()">อนุมัติใบรับรองนี้</button>
+    <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fas fa-print me-1"></i> พิมพ์เอกสาร</button>
+  </div>
+</div>
+
+<!-- CDN dependency for Chart.js -->
+<script>
+  // Mock Database for views
+  let charts = {};
+  let currentTheme = 'light';
+  
+  // Dashboard mock DB
+  const dashboardMockDb = {
+    all: {
+      soil: [65.2, 58.7, 15.2], // OM Low, P Low, K Low (as percentage)
+      doughnut: [60, 40],
+      conds: [42.8, 28.5, 18.4, 10.3]
+    },
+    'ด่านช้าง': {
+      soil: [78.2, 65.0, 20.4],
+      doughnut: [75, 25],
+      conds: [55.2, 22.1, 15.0, 7.7]
+    },
+    'ภูเขียว': {
+      soil: [58.4, 52.1, 12.0],
+      doughnut: [55, 45],
+      conds: [35.0, 38.0, 17.0, 10.0]
+    },
+    'กาฬสินธุ์': {
+      soil: [60.0, 60.0, 14.0],
+      doughnut: [50, 50],
+      conds: [40.0, 30.0, 20.0, 10.0]
+    }
+  };
+
+  // Report database list (matches the UI table)
+  const reportDb = {
+    'MP-2569-001': {
+      code: 'MP-2569-001',
+      farmer: 'นายสมเจตน์ รักดินดี',
+      quota: '081-9876-543',
+      land: 'LND-72641-A',
+      size: '15.5 ไร่',
+      status: 'ready',
+      ph: 5.2,
+      phText: 'pH 5.2 (กรดจัด)',
+      phPos: '35%',
+      om: 1.1,
+      omText: '1.1% (ต่ำมาก)',
+      omPos: '22%',
+      p: 8,
+      pText: '8 ppm (ต่ำ)',
+      pPos: '45%',
+      k: 110,
+      kText: '110 ppm (ปานกลาง)',
+      kPos: '65%',
+      fert: 'สูตรผสม 16-8-8',
+      improve: 'เนื่องจากค่าความเป็นกรดสูง (pH 5.2) แนะนำให้หว่าน ปูนขาวหรือโดโลไมต์ 150 กก./ไร่ ก่อนเตรียมดินอย่างน้อย 15 วันเพื่อปรับสภาพหน้าดิน'
+    },
+    'MP-2569-002': {
+      code: 'MP-2569-002',
+      farmer: 'นายมนัส ข้าวโพดงาม',
+      quota: '089-1234-567',
+      land: 'LND-PENDING-B',
+      size: '8.0 ไร่',
+      status: 'incomplete',
+      ph: 6.8,
+      phText: 'pH 6.8 (ปกติ)',
+      phPos: '70%',
+      om: 2.2,
+      omText: '2.2% (ปานกลาง)',
+      omPos: '60%',
+      p: 18,
+      pText: '18 ppm (ปานกลาง)',
+      pPos: '65%',
+      k: 140,
+      kText: '140 ppm (สูง)',
+      kPos: '80%',
+      fert: 'สูตรผสม 15-15-15',
+      improve: 'สภาพดินทางเคมีค่อนข้างสมบูรณ์ปกติ ไม่ต้องการสารปรับปรุงดินเฉพาะหน้า ให้เพิ่มปุ๋ยหมักใบอ้อยเพื่อรักษา OM'
+    },
+    'MP-2569-003': {
+      code: 'MP-2569-003',
+      farmer: 'นางวิไลลักษณ์ อ้อยเจริญ',
+      quota: '081-4567-890',
+      land: 'LND-00124-B',
+      size: '22.0 ไร่',
+      status: 'pending',
+      ph: 4.8,
+      phText: 'pH 4.8 (กรดจัดรุนแรง)',
+      phPos: '24%',
+      om: 0.8,
+      omText: '0.8% (ต่ำมากที่สุด)',
+      omPos: '16%',
+      p: 5,
+      pText: '5 ppm (ต่ำมาก)',
+      pPos: '30%',
+      k: 80,
+      kText: '80 ppm (ต่ำ)',
+      kPos: '48%',
+      fert: 'สูตรผสม 16-8-8',
+      improve: 'ดินกรดจัดรุนแรงและขาด OM หนัก แนะนำให้ใส่ โดโลไมต์ 200 กก./ไร่ ร่วมกับการใส่กากหม้อกรองเพื่อเติมฟอสเฟตธรรมชาติ'
+    },
+    'MP-2569-004': {
+      code: 'MP-2569-004',
+      farmer: 'นายสมพงษ์ สวนมะลิ',
+      quota: '082-3456-789',
+      land: 'LND-88902-C',
+      size: '12.2 ไร่',
+      status: 'approved',
+      ph: 5.8,
+      phText: 'pH 5.8 (กรดอ่อน)',
+      phPos: '48%',
+      om: 1.6,
+      omText: '1.6% (ปานกลาง)',
+      omPos: '45%',
+      p: 14,
+      pText: '14 ppm (ปานกลาง)',
+      pPos: '55%',
+      k: 95,
+      kText: '95 ppm (ปานกลาง)',
+      kPos: '58%',
+      fert: 'สูตรผสม 16-16-8',
+      improve: 'สภาพดินมีความเหมาะสมดี ใส่ปูนขาวบำรุงเพียงเล็กน้อย 50 กก./ไร่ เพื่อพยุงสภาพ'
+    },
+    'MP-2569-005': {
+      code: 'MP-2569-005',
+      farmer: 'นางราตรี หวานฉ่ำ',
+      quota: '083-9988-776',
+      land: 'LND-55410-F',
+      size: '18.0 ไร่',
+      status: 'ready',
+      ph: 5.5,
+      phText: 'pH 5.5 (กรดปานกลาง)',
+      phPos: '42%',
+      om: 1.2,
+      omText: '1.2% (ต่ำ)',
+      omPos: '26%',
+      p: 9,
+      pText: '9 ppm (ต่ำ)',
+      pPos: '46%',
+      k: 120,
+      kText: '120 ppm (ปานกลาง)',
+      kPos: '68%',
+      fert: 'สูตรผสม 16-8-8',
+      improve: 'แนะนำให้เพิ่ม ปูนโดโลไมต์ 100 กก./ไร่ เพื่อช่วยเรื่องธาตุอาหารรองแคลเซียมและแมกนีเซียม'
+    },
+    'MP-2569-006': {
+      code: 'MP-2569-006',
+      farmer: 'ไม่ทราบชื่อชาวไร่ (กรุณาระบุ)',
+      quota: 'ไม่ระบุโควต้า',
+      land: 'LND-11005-K',
+      size: '10.5 ไร่',
+      status: 'incomplete',
+      ph: 6.2,
+      phText: 'pH 6.2 (ปกติ)',
+      phPos: '60%',
+      om: 1.5,
+      omText: '1.5% (ปานกลาง)',
+      omPos: '42%',
+      p: 12,
+      pText: '12 ppm (ปานกลาง)',
+      pPos: '52%',
+      k: 130,
+      kText: '130 ppm (สูง)',
+      kPos: '74%',
+      fert: 'สูตรผสม 15-15-15',
+      improve: 'ไม่สามารถระบุแผนได้เนื่องจากไม่มีข้อมูลเกษตรกรผู้มีส่วนได้ส่วนเสีย กรุณาเติมรายละเอียด'
+    },
+    'MP-2569-007': {
+      code: 'MP-2569-007',
+      farmer: 'นายเกษตร ทรัพย์สมบูรณ์',
+      quota: '085-7766-554',
+      land: 'LND-41009-S',
+      size: '30.0 ไร่',
+      status: 'pending',
+      ph: 5.1,
+      phText: 'pH 5.1 (กรดจัด)',
+      phPos: '33%',
+      om: 1.0,
+      omText: '1.0% (ต่ำมาก)',
+      omPos: '20%',
+      p: 7,
+      pText: '7 ppm (ต่ำ)',
+      pPos: '42%',
+      k: 105,
+      kText: '105 ppm (ปานกลาง)',
+      kPos: '62%',
+      fert: 'สูตรผสม 16-8-8',
+      improve: 'แนะนำให้หว่าน ปูนขาว 120 กก./ไร่ และเพิ่มปุ๋ยอินทรีย์ขี้ค้างคาวหรือวัสดุอินทรีย์อื่นๆ 50 กก./ไร่ เพื่อปรับโครงสร้าง'
+    },
+    'MP-2569-008': {
+      code: 'MP-2569-008',
+      farmer: 'นางคำปัน ดินชุ่ม',
+      quota: '086-1122-334',
+      land: 'LND-12345-X',
+      size: '25.0 ไร่',
+      status: 'approved',
+      ph: 6.0,
+      phText: 'pH 6.0 (ปกติ)',
+      phPos: '58%',
+      om: 1.8,
+      omText: '1.8% (ปกติ)',
+      omPos: '48%',
+      p: 15,
+      pText: '15 ppm (ปกติ)',
+      pPos: '56%',
+      k: 125,
+      kText: '125 ppm (สูง)',
+      kPos: '71%',
+      fert: 'สูตรผสม 21-7-14',
+      improve: 'ดินมีธาตุอาหารค่อนข้างพร้อม ให้เน้นปุ๋ยบำรุงสูตรแต่งหน้าตามช่วงอายุและไถกลบใบอ้อยเพื่อคงระดับอินทรียวัตถุ'
+    }
+  };
+
+  // Switch Main View Panels (Dashboard vs Map vs Reports)
+  function switchMainView(viewId, element) {
+    // Hide all views
+    document.querySelectorAll('.mordin-section').forEach(v => v.classList.add('d-none'));
+    
+    // Show selected view
+    document.getElementById('view-' + viewId).classList.remove('d-none');
+    
+    // Update active class in sidebar
+    document.querySelectorAll('.menu-item-link').forEach(link => link.classList.remove('active'));
+    element.classList.add('active');
+
+    // Update Header title
+    const headerTitle = document.getElementById('pageTitle');
+    if (viewId === 'dashboard') {
+      headerTitle.innerHTML = '<i class="fas fa-chart-pie text-primary"></i> แดชบอร์ดสรุปข้อมูลวิเคราะห์ดินและปุ๋ย';
+    } else if (viewId === 'map') {
+      headerTitle.innerHTML = '<i class="fas fa-map-location-dot text-primary"></i> แผนที่เชิงรังสีธาตุอาหารพืชระดับประเทศ';
+      // Trigger details update for map
+      resetMapDetailPanel();
+    } else if (viewId === 'reports') {
+      headerTitle.innerHTML = '<i class="fas fa-file-invoice text-primary"></i> ศูนย์จัดการและอนุมัติรายงานวิเคราะห์ดิน';
+      updateReportsStatusCounters();
+    }
+  }
+
+  // Toggle filter cards panel (accordion-like)
+  function toggleFilterPanel(panelId) {
+    const panel = document.getElementById(panelId + 'Panel');
+    const chevron = document.getElementById(panelId + 'Chevron');
+    
+    if (panel.style.display === 'none') {
+      panel.style.display = 'block';
+      chevron.className = 'fas fa-chevron-up';
+    } else {
+      panel.style.display = 'none';
+      chevron.className = 'fas fa-chevron-down';
+    }
+  }
+
+  // Dashboard calculations based on filter selection
+  function updateDashboardMockData() {
+    // Show loaders or trigger updates
+    const factory = document.getElementById('dashFactory').value;
+    const dataset = dashboardMockDb[factory] || dashboardMockDb['all'];
+    
+    // Update KPI metrics
+    if (factory === 'ด่านช้าง') {
+      document.getElementById('highlightSoil').textContent = 'อินทรียวัตถุ (OM) ต่ำจัด';
+      document.getElementById('highlightSoilPct').textContent = '78.2%';
+      document.getElementById('highlightFert').textContent = 'สูตร 16-8-8 (เน้นดินเหนียว)';
+      document.getElementById('highlightFertCount').textContent = '390';
+      document.getElementById('highlightConditioner').textContent = 'โดโลไมต์จัดแต่ง';
+      document.getElementById('highlightConditionerPct').textContent = '55.2%';
+    } else if (factory === 'ภูเขียว') {
+      document.getElementById('highlightSoil').textContent = 'อินทรียวัตถุ (OM) ต่ำปานกลาง';
+      document.getElementById('highlightSoilPct').textContent = '58.4%';
+      document.getElementById('highlightFert').textContent = 'สูตร 16-8-8';
+      document.getElementById('highlightFertCount').textContent = '298';
+      document.getElementById('highlightConditioner').textContent = 'ยิปซัมหว่านซ้ำ';
+      document.getElementById('highlightConditionerPct').textContent = '35.0%';
+    } else {
+      document.getElementById('highlightSoil').textContent = 'อินทรียวัตถุ (OM) ต่ำมาก';
+      document.getElementById('highlightSoilPct').textContent = '65.2%';
+      document.getElementById('highlightFert').textContent = 'สูตร 16-8-8';
+      document.getElementById('highlightFertCount').textContent = '1,248';
+      document.getElementById('highlightConditioner').textContent = 'ยิปซัม (Gypsum)';
+      document.getElementById('highlightConditionerPct').textContent = '42.8%';
+    }
+
+    // Update charts
+    charts.npk.data.datasets[0].data = [dataset.soil[0], dataset.soil[0] - 6.5, dataset.soil[1]]; // Low percentages
+    charts.npk.data.datasets[1].data = [dataset.soil[1], dataset.soil[1] + 4, dataset.soil[2]];   // Medium percentages
+    charts.npk.data.datasets[2].data = [dataset.soil[2], 100 - (dataset.soil[0] + dataset.soil[1]), 100 - dataset.soil[2]]; // High percentages
+    charts.npk.update();
+
+    charts.doughnut.data.datasets[0].data = dataset.doughnut;
+    charts.doughnut.update();
+
+    // Update conditioners bars
+    document.getElementById('condPct1').textContent = dataset.conds[0] + '%';
+    document.getElementById('condBar1').style.width = dataset.conds[0] + '%';
+    document.getElementById('condPct2').textContent = dataset.conds[1] + '%';
+    document.getElementById('condBar2').style.width = dataset.conds[1] + '%';
+    document.getElementById('condPct3').textContent = dataset.conds[2] + '%';
+    document.getElementById('condBar3').style.width = dataset.conds[2] + '%';
+    document.getElementById('condPct4').textContent = dataset.conds[3] + '%';
+    document.getElementById('condBar4').style.width = dataset.conds[3] + '%';
+  }
+
+  function resetDashboardFilters() {
+    document.getElementById('dashServiceType').value = 'all';
+    document.getElementById('dashYear').value = '2569';
+    document.getElementById('dashFactory').value = 'all';
+    document.getElementById('dashZone').value = 'all';
+    updateDashboardMockData();
+  }
+
+  // ==============================================
+  // CHART INITIALIZATION
+  // ==============================================
+  function initCharts() {
+    const isDark = document.body.classList.contains('dark-theme');
+    const textColor = isDark ? '#cbd5e1' : '#475569';
+    
+    // NPK stacked/grouped bar charts
+    const ctxNpk = document.getElementById('chartNpkBars').getContext('2d');
+    charts.npk = new Chart(ctxNpk, {
+      type: 'bar',
+      data: {
+        labels: ['อินทรียวัตถุ (O.M.)', 'ฟอสฟอรัสที่เป็นประโยชน์ (P)', 'โพแทสเซียมที่แลกเปลี่ยนได้ (K)'],
+        datasets: [
+          {
+            label: 'สัดส่วน: ระดับต่ำ (Low)',
+            data: [65.2, 58.7, 15.2],
+            backgroundColor: '#f87171', // soft red
+            borderRadius: 5
+          },
+          {
+            label: 'สัดส่วน: ปานกลาง (Medium)',
+            data: [22.8, 26.3, 30.5],
+            backgroundColor: '#fbbf24', // soft yellow
+            borderRadius: 5
+          },
+          {
+            label: 'สัดส่วน: สูง (High)',
+            data: [12.0, 15.0, 54.3],
+            backgroundColor: '#34d399', // soft green
+            borderRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { color: textColor, font: { family: 'Sarabun', size: 12 } }
+          }
+        },
+        scales: {
+          x: { ticks: { color: textColor, font: { family: 'Sarabun' } } },
+          y: { 
+            ticks: { color: textColor, font: { family: 'Sarabun' } }, 
+            max: 100,
+            title: { display: true, text: 'ร้อยละ (%) ของตัวอย่างทดสอบ', color: textColor, font: { family: 'Sarabun' } }
+          }
+        }
+      }
+    });
+
+    // Fertilizer Doughnut
+    const ctxDoughnut = document.getElementById('chartFertilizerDoughnut').getContext('2d');
+    charts.doughnut = new Chart(ctxDoughnut, {
+      type: 'doughnut',
+      data: {
+        labels: ['สูตรรองพื้นแนะนำ', 'สูตรแต่งหน้าแนะนำ'],
+        datasets: [{
+          data: [60, 40],
+          backgroundColor: ['#005092', '#2e7d32'],
+          borderColor: isDark ? '#1e293b' : '#ffffff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: textColor, font: { family: 'Sarabun', size: 12 } }
+          }
+        }
+      }
+    });
+  }
+
+  // Theme support
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    
+    if (body.classList.contains('dark-theme')) {
+      body.classList.remove('dark-theme');
+      btn.innerHTML = '<i class="fas fa-moon"></i>';
+      currentTheme = 'light';
+    } else {
+      body.classList.add('dark-theme');
+      btn.innerHTML = '<i class="fas fa-sun"></i>';
+      currentTheme = 'dark';
+    }
+    
+    // Rebuild charts with theme color
+    if (charts.npk) charts.npk.destroy();
+    if (charts.doughnut) charts.doughnut.destroy();
+    initCharts();
+  });
+
+  // Thailand Map tooltip/hover interactions
+  const mapRegions = document.querySelectorAll('.map-region');
+  const regTooltip = document.getElementById('mapRegTooltip');
+
+  mapRegions.forEach(reg => {
+    reg.addEventListener('mousemove', (e) => {
+      const name = reg.getAttribute('data-name');
+      const samples = reg.getAttribute('data-samples');
+      const om = reg.getAttribute('data-om');
+      const fert = reg.getAttribute('data-fert');
+
+      regTooltip.innerHTML = `
+        <div class="fw-bold mb-1" style="color: var(--mp-primary)">${name}</div>
+        <div style="font-size: 0.8rem">
+          <div>จำนวนตรวจวิเคราะห์: <strong>${samples} ถุง</strong></div>
+          <div>สัดส่วนอินทรียสารเฉลี่ย: <strong>${om}%</strong></div>
+          <div>สูตรแนะนำเด่น: <strong>${fert}</strong></div>
+        </div>
+      `;
+      regTooltip.style.display = 'block';
+      regTooltip.style.left = (e.pageX - 100) + 'px';
+      regTooltip.style.top = (e.pageY - 110) + 'px';
+    });
+
+    reg.addEventListener('mouseleave', () => {
+      regTooltip.style.display = 'none';
+    });
+
+    reg.addEventListener('click', () => {
+      mapRegions.forEach(r => r.classList.remove('selected'));
+      reg.classList.add('selected');
+      
+      const name = reg.getAttribute('data-name');
+      const samples = reg.getAttribute('data-samples');
+      const om = reg.getAttribute('data-om');
+      const fert = reg.getAttribute('data-fert');
+
+      const titleEl = document.getElementById('mapDetailTitle');
+      const bodyEl = document.getElementById('mapDetailBody');
+      
+      titleEl.textContent = name;
+      
+      let omState = '<span class="badge bg-danger">อินทรียวัตถุต่ำมาก</span>';
+      if (Number(om) > 2) omState = '<span class="badge bg-success">อินทรียวัตถุสูง</span>';
+      else if (Number(om) > 1.5) omState = '<span class="badge bg-warning text-dark">อินทรียวัตถุปานกลาง</span>';
+
+      bodyEl.innerHTML = `
+        <div class="mb-4">
+          <h6 class="fw-bold text-muted mb-2">สรุปปริมาณการเพาะปลูกอ้อย</h6>
+          <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+            <span>จำนวนแปลงที่เจาะสำรวจ:</span>
+            <strong>${samples} แปลง</strong>
+          </div>
+          <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+            <span>พื้นที่บำรุงรวมโดยประมาณ:</span>
+            <strong>${Number(samples.replace(/,/g, '')) * 6} ไร่</strong>
+          </div>
+          <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+            <span>เกรดสารอาหารเฉลี่ย:</span>
+            <span>${omState}</span>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-3" style="background-color: var(--bg-card-header); border: 1px solid var(--border-color)">
+          <h6 class="fw-bold" style="color: var(--mp-primary)">
+            <i class="fas fa-hand-holding-droplet me-2"></i>ข้อเสนอปุ๋ยในกลุ่มผู้ปลูก
+          </h6>
+          <p class="small text-muted mb-2">
+            สูตรผสมบำรุงดินที่เหมาะสมที่สุดตามสารเคมีที่เป็นประโยชน์:
+          </p>
+          <div class="fw-bold text-accent mb-1 fs-5 text-success">${fert}</div>
+          <div class="small text-muted">แนะนำรองก้นหลุมอัตรา 50 กิโลกรัม/ไร่</div>
+        </div>
+      `;
+    });
+  });
+
+  function clickMapMarker(marker) {
+    const factory = marker.getAttribute('data-factory');
+    const zone = marker.getAttribute('data-zone');
+    const samples = marker.getAttribute('data-samples');
+    const om = marker.getAttribute('data-om');
+
+    const titleEl = document.getElementById('mapDetailTitle');
+    const bodyEl = document.getElementById('mapDetailBody');
+    
+    titleEl.textContent = factory;
+    
+    bodyEl.innerHTML = `
+      <div class="text-center mb-4">
+        <div class="brand-logo-circle mx-auto mb-2" style="width: 54px; height: 54px; border-radius:50%">
+          <i class="fas fa-industry text-white"></i>
+        </div>
+        <h6 class="fw-bold text-primary">${factory}</h6>
+        <span class="text-muted small">ฝ่ายส่งเสริมการเกษตร จังหวัด${zone}</span>
+      </div>
+
+      <div class="border-top pt-3">
+        <div class="d-flex justify-content-between mb-2">
+          <span>เขตส่งเสริมหลัก:</span>
+          <strong>${zone}</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>ตัวอย่างวิเคราะห์รวม:</span>
+          <strong>${samples} ตัวอย่าง</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>สภาพ OM ทั่วไป:</span>
+          <strong class="text-danger">${om}</strong>
+        </div>
+        
+        <div class="p-2 alert alert-info rounded-3 mt-3" style="font-size:0.8rem">
+          <i class="fas fa-info-circle me-1"></i> โซนนี้แนะนำให้เกษตรกรสั่งซื้อปุ๋ยผ่านแอพ Mordin Public เพื่อรับส่วนลดการขนส่งจากโรงงาน
+        </div>
+      </div>
+    `;
+  }
+
+  function resetMapDetailPanel() {
+    const titleEl = document.getElementById('mapDetailTitle');
+    const bodyEl = document.getElementById('mapDetailBody');
+    titleEl.textContent = 'วิเคราะห์รายละเอียดรายพื้นที่';
+    bodyEl.innerHTML = `
+      <div class="text-center py-5 text-muted">
+        <i class="fas fa-hand-pointer fs-1 mb-3 text-primary"></i>
+        <p>เอาเมาส์ชี้ภูมิภาค หรือคลิกเลือกตำแหน่งโรงงานบนแผนที่ เพื่อแสดงข้อมูลเชิงลึกด้านสัดส่วนดินและการแนะปุ๋ย</p>
+      </div>
+    `;
+    mapRegions.forEach(r => r.classList.remove('selected'));
+  }
+
+  // ==============================================
+  // REPORT TAB & INTERACTION LOGIC (OFFICER)
+  // ==============================================
+  let selectedReportCode = null;
+
+  // Counters for reports page
+  function updateReportsStatusCounters() {
+    const rows = document.querySelectorAll('#reportsTableBody tr');
+    let all = 0, ready = 0, pending = 0, incomplete = 0;
+    
+    rows.forEach(row => {
+      all++;
+      const status = row.getAttribute('data-status');
+      if (status === 'ready') ready++;
+      else if (status === 'pending') pending++;
+      else if (status === 'incomplete') incomplete++;
+    });
+
+    document.getElementById('reportCountAll').textContent = all;
+    document.getElementById('reportCountReady').textContent = ready;
+    document.getElementById('reportCountPending').textContent = pending;
+    document.getElementById('reportCountIncomplete').textContent = incomplete;
+  }
+
+  // Search and filter table list
+  function filterReportsTable() {
+    const term = document.getElementById('reportSearchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('reportFilterStatus').value;
+    const factoryFilter = document.getElementById('reportFilterFactory').value;
+    const rows = document.querySelectorAll('#reportsTableBody tr');
+
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      const status = row.getAttribute('data-status');
+      const factory = row.getAttribute('data-factory');
+      
+      const matchesSearch = text.includes(term);
+      const matchesStatus = (statusFilter === 'all' || status === statusFilter);
+      const matchesFactory = (factoryFilter === 'all' || factory === factoryFilter);
+
+      if (matchesSearch && matchesStatus && matchesFactory) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  function resetReportTableFilters() {
+    document.getElementById('reportSearchInput').value = '';
+    document.getElementById('reportFilterStatus').value = 'all';
+    document.getElementById('reportFilterFactory').value = 'all';
+    document.getElementById('reportFilterDate').value = '';
+    filterReportsTable();
+  }
+
+  // Checkbox batch selection
+  function toggleSelectAllReports(checkbox) {
+    const checkboxes = document.querySelectorAll('.report-row-checkbox');
+    checkboxes.forEach(cb => {
+      if (!cb.disabled) {
+        cb.checked = checkbox.checked;
+      }
+    });
+  }
+
+  function toggleReportRow(row, event) {
+    // Check if clicked directly on checkbox or action button to avoid dual triggers
+    if (event.target.type === 'checkbox' || event.target.closest('button')) {
+      return;
+    }
+    
+    const cb = row.querySelector('.report-row-checkbox');
+    if (cb && !cb.disabled) {
+      cb.checked = !cb.checked;
+    }
+  }
+
+  // Slide-over Certificate Modal
+  function openReportCertificate(code, event) {
+    if (event) event.stopPropagation();
+    
+    const record = reportDb[code];
+    if (!record) return;
+
+    selectedReportCode = code;
+    document.getElementById('certDocCode').textContent = code;
+    document.getElementById('certFarmerName').textContent = record.farmer;
+    document.getElementById('certFarmerQuota').textContent = record.quota;
+    document.getElementById('certLandCode').textContent = record.land;
+    document.getElementById('certLandSize').textContent = record.size;
+    
+    // Status badges in certificate
+    const label = document.getElementById('certStatusLabel');
+    const approveBtn = document.getElementById('certApproveBtn');
+    
+    if (record.status === 'ready') {
+      label.className = 'badge bg-success';
+      label.textContent = 'พร้อมอนุมัติ';
+      approveBtn.style.display = 'inline-block';
+      approveBtn.textContent = 'อนุมัติใบรับรองนี้';
+    } else if (record.status === 'approved') {
+      label.className = 'badge bg-primary';
+      label.textContent = 'อนุมัติแล้ว';
+      approveBtn.style.display = 'none';
+    } else if (record.status === 'pending') {
+      label.className = 'badge bg-warning text-dark';
+      label.textContent = 'รอแล็บกรอกเกณฑ์';
+      approveBtn.style.display = 'none';
+    } else {
+      label.className = 'badge bg-danger';
+      label.textContent = 'ข้อมูลไม่ครบ';
+      approveBtn.style.display = 'none';
+    }
+
+    // Set chemical values and sliders
+    document.getElementById('certValpH').textContent = record.phText;
+    document.getElementById('certValpH').className = record.ph < 6 ? 'text-danger fw-bold' : 'text-success fw-bold';
+    
+    document.getElementById('certValOM').textContent = record.omText;
+    document.getElementById('certValOM').className = record.om < 1.5 ? 'text-danger fw-bold' : 'text-success fw-bold';
+
+    document.getElementById('certValP').textContent = record.pText;
+    document.getElementById('certValP').className = record.p < 10 ? 'text-warning fw-bold' : 'text-success fw-bold';
+
+    document.getElementById('certValK').textContent = record.kText;
+    document.getElementById('certValK').className = record.k < 120 ? 'text-success fw-bold' : 'text-success fw-bold';
+
+    // Slide positions
+    document.querySelectorAll('.cert-scale-pointer')[0].style.left = record.phPos;
+    document.querySelectorAll('.cert-scale-pointer')[1].style.left = record.omPos;
+    document.querySelectorAll('.cert-scale-pointer')[2].style.left = record.pPos;
+    document.querySelectorAll('.cert-scale-pointer')[3].style.left = record.kPos;
+
+    document.getElementById('certRecommendFert').textContent = record.fert;
+    document.getElementById('certImproveBox').querySelector('p').textContent = record.improve;
+
+    // Show drawer
+    document.getElementById('certBackdrop').classList.add('active');
+    document.getElementById('certDrawer').classList.add('active');
+  }
+
+  function closeReportCertificate() {
+    document.getElementById('certBackdrop').classList.remove('active');
+    document.getElementById('certDrawer').classList.remove('active');
+    selectedReportCode = null;
+  }
+
+  // Actions
+  function approveSingleCertificate() {
+    if (!selectedReportCode) return;
+    
+    // Update data state
+    reportDb[selectedReportCode].status = 'approved';
+    
+    // Find table row and update badge
+    const rows = document.querySelectorAll('#reportsTableBody tr');
+    rows.forEach(row => {
+      const codeCell = row.cells[2].textContent;
+      if (codeCell === selectedReportCode) {
+        row.setAttribute('data-status', 'approved');
+        row.cells[7].innerHTML = '<span class="mordin-chip mordin-chip-blue"><i class="fas fa-circle-check"></i> อนุมัติแล้ว</span>';
+      }
+    });
+
+    closeReportCertificate();
+    updateReportsStatusCounters();
+    alert('อนุมัติผลการวิเคราะห์ตัวอย่าง ' + selectedReportCode + ' เรียบร้อยแล้ว!');
+  }
+
+  // Batch actions
+  function getSelectedReportCodes() {
+    const checkboxes = document.querySelectorAll('.report-row-checkbox:checked');
+    const codes = [];
+    checkboxes.forEach(cb => codes.push(cb.value));
+    return codes;
+  }
+
+  function batchApproveSelected() {
+    const codes = getSelectedReportCodes();
+    if (codes.length === 0) {
+      alert('กรุณาติ๊กเลือกตัวอย่างอย่างน้อย 1 รายการเพื่ออนุมัติ');
+      return;
+    }
+    
+    codes.forEach(code => {
+      if (reportDb[code] && reportDb[code].status === 'ready') {
+        reportDb[code].status = 'approved';
+        
+        // Update table row
+        const rows = document.querySelectorAll('#reportsTableBody tr');
+        rows.forEach(row => {
+          if (row.cells[2].textContent === code) {
+            row.setAttribute('data-status', 'approved');
+            row.cells[7].innerHTML = '<span class="mordin-chip mordin-chip-blue"><i class="fas fa-circle-check"></i> อนุมัติแล้ว</span>';
+          }
+        });
+      }
+    });
+    
+    updateReportsStatusCounters();
+    alert('ระบบทำการอนุมัติ ' + codes.length + ' รายการสำเร็จ!');
+  }
+
+  function batchDownloadSelected() {
+    const codes = getSelectedReportCodes();
+    if (codes.length === 0) {
+      alert('กรุณาติ๊กเลือกตัวอย่างเพื่อดาวน์โหลดไฟล์รายงาน');
+      return;
+    }
+    alert('ระบบสร้างคิวจัดทำ ZIP ไฟล์จำนวน ' + codes.length + ' รายการเรียบร้อย! กรุณารอความคืบหน้าการบีบอัด');
+  }
+
+  function batchPrintSelected() {
+    const codes = getSelectedReportCodes();
+    if (codes.length === 0) {
+      alert('กรุณาติ๊กเลือกตัวอย่างเพื่อส่งพิมพ์');
+      return;
+    }
+    alert('เปิดคิวพิมพ์เอกสาร PDF ผลวิเคราะห์ดินรวมจำนวน ' + codes.length + ' รายการในแท็บใหม่');
+  }
+
+  // Initialize charts on load
+  window.onload = function() {
+    initCharts();
+    updateReportsStatusCounters();
+  };
+</script>
+
+<!-- Bootstrap JS bundle via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

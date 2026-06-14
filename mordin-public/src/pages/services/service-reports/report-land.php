@@ -90,17 +90,15 @@ $cPAGE['hide_page_title'] = true;
 include_once COMPONENT_PATH . 'lib_header.php';
 ?>
 
-<div class="public-farmer-toolbar">
-  <div class="container-fluid container-xl">
-    <div class="public-segment-tabs" role="navigation" aria-label="เมนูจองและผลวิเคราะห์ดิน">
-      <a href="/services/book/farmer" class="public-segment-tab">จองวิเคราะห์ดิน</a>
-      <a href="/services/report/land" class="public-segment-tab is-active">ผลวิเคราะห์ดิน</a>
-    </div>
-  </div>
-</div>
-
 <section class="section public-report-page">
   <div class="container">
+
+    <div class="public-farmer-toolbar">
+      <div class="public-segment-tabs" role="navigation" aria-label="เมนูจองและผลวิเคราะห์ดิน">
+        <a href="/services/book/farmer" class="public-segment-tab">จองวิเคราะห์ดิน</a>
+        <a href="/services/report/land" class="public-segment-tab is-active">ผลวิเคราะห์ดิน</a>
+      </div>
+    </div>
 
     <div class="mp-report-header scroll-reveal">
       <div>

@@ -47,6 +47,9 @@ export class QrCodeLog extends BaseLogEntity {
   @Column({ name: 'last_name', type: 'varchar', length: 100, nullable: true })
   lastName: string;
 
+  @Column({ name: 'birth_date', type: 'date', nullable: true })
+  birthDate: string;
+
   @Column({ name: 'phone_number', type: 'varchar', length: 10, nullable: true })
   phoneNumber: string;
 

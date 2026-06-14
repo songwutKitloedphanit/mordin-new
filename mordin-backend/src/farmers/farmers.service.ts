@@ -22,7 +22,6 @@ import { UpdateFarmerDto } from './dto/update-farmer.dto';
 import { Farmer } from './entities/farmer.entity';
 import { FarmerLog } from './entities/farmer.log.entity';
 
-
 interface ReportItem {
   bookId: number;
   sampleCode: string;

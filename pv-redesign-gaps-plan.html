@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mordin Private UI Redesign — Gap Analysis & Action Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --brand:        #005092;
+      --brand-dark:   #003e72;
+      --brand-deep:   #002b50;
+      --accent:       #ffd45e;
+      --accent-dark:  #d98f0c;
+      
+      --bg:           #f3f5f8;
+      --surface:      #ffffff;
+      --line:         #e2e8f0;
+      --line-soft:    #f1f5f9;
+
+      --ink:          #1e293b;
+      --ink-muted:    #64748b;
+      --ink-light:    #94a3b8;
+
+      --green:        #18a05c;
+      --green-bg:     #e5f7ed;
+      --amber:        #d98f0c;
+      --amber-bg:     #fdf3dd;
+      --red:          #d9483b;
+      --red-bg:       #fceae8;
+      --blue:         #3b9bd9;
+      --blue-bg:      #eef6ff;
+      --violet:       #7a5af5;
+      --violet-bg:    #f0ecfe;
+
+      --radius:       14px;
+      --radius-sm:    8px;
+      --shadow:       0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 80, 146, 0.05);
+      --shadow-lg:    0 10px 40px rgba(0, 80, 146, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ════════════ HEADER ════════════ */
+    header {
+      background: linear-gradient(135deg, var(--brand-deep) 0%, var(--brand) 60%, var(--brand-dark) 100%);
+      color: #fff;
+      padding: 40px;
+      border-radius: var(--radius);
+      margin-bottom: 30px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 65%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .header-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+    }
+
+    .header-logo i {
+      color: var(--accent);
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 15px;
+      max-width: 750px;
+    }
+
+    /* ════════════ CARDS ════════════ */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 30px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--brand-dark);
+      border-bottom: 2px solid var(--line-soft);
+      padding-bottom: 12px;
+    }
+
+    .card-title i {
+      color: var(--brand);
+    }
+
+    /* ════════════ STATUS CHIPS ════════════ */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .status-done { background: var(--green-bg); color: var(--green); }
+    .status-pending { background: var(--amber-bg); color: var(--amber); }
+    .status-missing { background: var(--red-bg); color: var(--red); }
+    .status-info { background: var(--blue-bg); color: var(--blue); }
+
+    /* ════════════ COMPARISON TABLE ════════════ */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th {
+      background: var(--line-soft);
+      color: var(--brand-dark);
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 2px solid var(--line);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: #fafcff;
+    }
+
+    .item-name {
+      font-weight: 600;
+      font-size: 14.5px;
+    }
+
+    .sub-item {
+      color: var(--ink-muted);
+      font-size: 12.5px;
+      margin-top: 2px;
+    }
+
+    /* ════════════ CODE BLOCKS ════════════ */
+    pre {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 18px;
+      border-radius: var(--radius-sm);
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin: 12px 0 20px;
+      border: 1px solid #334155;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    .code-comment {
+      color: #64748b;
+    }
+
+    .code-keyword {
+      color: #f472b6;
+    }
+
+    .code-string {
+      color: #38bdf8;
+    }
+
+    /* ════════════ STEPS ════════════ */
+    .step-list {
+      list-style-type: none;
+      margin-top: 15px;
+    }
+
+    .step-item {
+      position: relative;
+      padding-left: 35px;
+      margin-bottom: 25px;
+    }
+
+    .step-item::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 24px;
+      bottom: -18px;
+      width: 2px;
+      background: var(--line);
+    }
+
+    .step-item:last-child::before {
+      display: none;
+    }
+
+    .step-number {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 80, 146, 0.3);
+    }
+
+    .step-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--brand-dark);
+      margin-bottom: 6px;
+    }
+
+    .highlight-box {
+      background: var(--blue-bg);
+      border-left: 4px solid var(--blue);
+      padding: 16px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+
+    .highlight-box i {
+      color: var(--blue);
+      margin-right: 8px;
+    }
+
+    /* ════════════ PROGRESS FLOW SIMULATOR ════════════ */
+    .flow-demo {
+      display: flex;
+      gap: 0;
+      margin: 20px 0;
+      background: #fafafa;
+      padding: 20px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+    }
+
+    .flow-step-demo {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+
+    .flow-dot-demo {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      margin: 0 auto 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: var(--line);
+      color: var(--ink-light);
+      border: 2px solid var(--line);
+      position: relative;
+      z-index: 1;
+      font-weight: 700;
+    }
+
+    .flow-step-demo.done .flow-dot-demo {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+
+    .flow-step-demo.now .flow-dot-demo {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(0,80,146,.15);
+    }
+
+    .flow-step-demo::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: -50%;
+      right: 50%;
+      height: 2px;
+      background: var(--line);
+    }
+
+    .flow-step-demo:first-child::before {
+      display: none;
+    }
+
+    .flow-step-demo.done::before, .flow-step-demo.now::before {
+      background: var(--green);
+    }
+
+    .flow-label-demo {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      font-weight: 600;
+    }
+
+    .flow-step-demo.done .flow-label-demo, .flow-step-demo.now .flow-label-demo {
+      color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header>
+      <div class="header-logo">
+        <i class="fas fa-wand-magic-sparkles"></i> GAP ANALYSIS &amp; ACTION PLAN
+      </div>
+      <h1>แผนเปรียบเทียบและปรับปรุง UX/UI ส่วน Mordin Private</h1>
+      <p>เปรียบเทียบสถานะหน้าจอของแอปพลิเคชันระบบจัดการภายใน (React App) กับสติกเกอร์ต้นแบบดีไซน์ในไฟล์ <code>ui-redesign-mockup.html</code> พร้อมรายละเอียดส่วนต่างที่ต้องปรับแต่งเพิ่มเติมและขั้นตอนเชิงลึกในการพัฒนาต่อยอด</p>
+    </header>
+
+    <!-- OVERVIEW STATUS -->
+    <div class="card">
+      <h3 class="card-title"><i class="fas fa-check-double"></i> สรุปสถานะการดำเนินงานปัจจุบัน (Rounds 1 - 6)</h3>
+      <p style="margin-bottom: 15px;">ระบบได้รับการปรับโครงสร้างสไตล์ชีตและการแสดงผลกลางผ่านไฟล์ <a href="file:///c:/mordin/mordin-private/src/index.css">index.css</a> รวมถึงโครงหลักของแอปพลิเคชัน (Sidebar, Header, Layout) ไปแล้วกว่า 90% ตามเป้าหมายของ <code>UI_REDESIGN_PLAN.md</code> ซึ่งช่วยให้ฟอร์ม ตาราง ปุ่ม ลิงก์ และสเต็ปการทำรายการแสดงผลสอดคล้องกันทุกหน้าจอโดยไม่ส่งผลกระทบต่อ logic การประมวลผลหรือโครงสร้างฐานข้อมูลเดิม</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-top: 10px;">
+        <div style="background: var(--green-bg); color: #0b6637; padding: 15px; border-radius: var(--radius-sm); border: 1px solid #ccecdc;">
+          <div style="font-weight: 700; font-size: 14px;"><i class="fas fa-paint-brush me-1"></i> ธีมสีน้ำเงินมิตรผล (#005092)</div>
+          <div style="font-size: 12px; margin-top: 4px;">ปรับใช้เป็นชุดสีหลักทั่วทั้งแอปพลิเคชันรวมถึงสถานะของ Badge และปุ่มกดสำเร็จรูป</div>
+        </div>
+        <div style="background: var(--green-bg); color: #0b6637; padding: 15px; border-radius: var(--radius-sm); border: 1px solid #ccecdc;">
+          <div style="font-weight: 700; font-size: 14px;"><i class="fas fa-list-ul me-1"></i> โครงสร้างเมนูแบนเรียบ (Flat Menu)</div>
+          <div style="font-size: 12px; margin-top: 4px;">Sidebar แสดงรายการเมนูครบถ้วนทันที แบ่งกลุ่มหัวข้อการทำงานชัดเจนพร้อมโลโก้</div>
+        </div>
+        <div style="background: var(--green-bg); color: #0b6637; padding: 15px; border-radius: var(--radius-sm); border: 1px solid #ccecdc;">
+          <div style="font-weight: 700; font-size: 14px;"><i class="fas fa-mobile-alt me-1"></i> Mobile Responsive Overrides</div>
+          <div style="font-size: 12px; margin-top: 4px;">ตารางกรอบข้อมูลและปุ่มควบคุมขยายขนาด touch-targets และรองรับ horizontal-scroll บนมือถือ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARISON MATRIX -->
+    <div class="card">
+      <h3 class="card-title"><i class="fas fa-th-list"></i> ตารางเปรียบเทียบองค์ประกอบ (Mockup vs. Codebase)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 28%;">องค์ประกอบดีไซน์</th>
+            <th style="width: 32%;">ต้นแบบดีไซน์ (ui-redesign-mockup.html)</th>
+            <th style="width: 25%;">สถานะในโค้ดปัจจุบัน (React App)</th>
+            <th style="width: 15%;">ประเมินผล</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="item-name">Sidebar Logo &amp; Menu</div>
+              <div class="sub-item">หัวแถบเมนูด้านซ้ายและโลโก้หลัก</div>
+            </td>
+            <td>โลโก้ MITR PHOL ในกรอบโค้งมนพื้นหลังขาว, เมนูกลุ่มแบนราบ, รายการ active มีเส้นขอบสีทองด้านซ้าย</td>
+            <td>เหมือนต้นแบบ (Sidebar.tsx ได้รับการเขียนใหม่ด้วย Tailwind/JSX)</td>
+            <td><span class="status-badge status-done"><i class="fas fa-check"></i> เรียบร้อย</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Sidebar User Footer</div>
+              <div class="sub-item">โปรไฟล์ผู้ใช้ด้านล่างเมนูซ้าย</div>
+            </td>
+            <td>มีบล็อกโปรไฟล์ผู้ใช้ (รูปย่อ, ชื่อจริง, บทบาท, ปุ่มไอคอน Logout) ด้านล่างสุดของ Sidebar</td>
+            <td>ไม่มีส่วนนี้ใน Sidebar, ข้อมูลผู้ใช้และปุ่มออกจากระบบถูกย้ายไปรวมอยู่ที่เมนู dropdown ด้านบนมุมขวา (Header.tsx)</td>
+            <td><span class="status-badge status-missing"><i class="fas fa-circle-exclamation"></i> รอปรับปรุง</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Topbar Search Input</div>
+              <div class="sub-item">กล่องค้นหาหลักบนแถบด้านบน</div>
+            </td>
+            <td>มีกล่องค้นหาแบบจำลอง <code>⌘K</code> อยู่ตรงกลาง Topbar สำหรับค้นหาแปลง ชาวไร่ หรือตัวอย่างแบบด่วน</td>
+            <td>ไม่มีกล่องค้นหากลางบน Header, ฟังก์ชันค้นหาแยกใช้ระดับโมดูลในตารางของแต่ละหน้าโดยเฉพาะ</td>
+            <td><span class="status-badge status-missing"><i class="fas fa-circle-exclamation"></i> รอปรับปรุง</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Dashboard KPIs &amp; Insights</div>
+              <div class="sub-item">การ์ดสถิติเด่นและคำแนะนำปุ๋ย</div>
+            </td>
+            <td>KPI การ์ดแสดงผลขอบสีซ้าย, มีกล่อง Insights 3 คอลัมน์แสดงข้อมูลสรุปธาตุอาหาร/สูตรปุ๋ยเด่น</td>
+            <td>การ์ดสถิติหลักปรับสไตล์และขอบสีแล้วตาม R5, ยังไม่มีแถบแสดงกล่อง Insights 3 คอลัมน์ด้านล่างการ์ดสถิติ</td>
+            <td><span class="status-badge status-pending"><i class="fas fa-hourglass-half"></i> มีบางส่วน</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Soil Nutrient Analysis Tabs</div>
+              <div class="sub-item">กราฟสถิติแสดงผลดินรายธาตุ</div>
+            </td>
+            <td>มีปุ่มสลับแท็บ (N, P, K, pH, OM) แสดงแถบระดับความอุดมสมบูรณ์เป็นเปอร์เซ็นต์สะสมแบบนอน</td>
+            <td>ใช้กราฟวงกลม/กราฟแท่งแบบไดนามิกเต็มรูปแบบด้วย ECharts/Chart.js ซึ่งยืดหยุ่นกว่าข้อมูลสถิติจำลอง</td>
+            <td><span class="status-badge status-info"><i class="fas fa-info-circle"></i> ใช้ระบบจริง</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Sample Status Stepper Timeline</div>
+              <div class="sub-item">ขั้นตอนสเต็ปบนหน้ารายละเอียดรับดิน</div>
+            </td>
+            <td>แสดงจุดสเต็ป 5 ขั้นตอน (เก็บตัวอย่าง &gt; รับเข้า &gt; แล็บ &gt; ประมวลผล &gt; ออกรายงาน) บ่งชี้สถานะตัวอย่างดินที่สแกนล่าสุด</td>
+            <td>แสดงผลข้อมูลในรูปแบบตารางรายละเอียด (InfoTable) และ Badge กำกับสถานะ ยังไม่มีสเต็ปไทม์ไลน์ 5 ขั้นตอนที่วาดด้วย CSS</td>
+            <td><span class="status-badge status-missing"><i class="fas fa-circle-exclamation"></i> รอปรับปรุง</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="item-name">Lab Result Batch Sheet</div>
+              <div class="sub-item">ตารางป้อนข้อมูลผลแล็บ</div>
+            </td>
+            <td>ตารางป้อนค่าแล็บแบบทีละตัวอย่าง ช่องป้อนคอลัมน์ pH เกินขอบเขตมีกรอบแดง และมีป้ายกำกับสถานะการตรวจสอบซ้ำ</td>
+            <td>ใช้ spreadsheet ของ Handsontable บน Desktop มีการลงสี highlight ข้อมูลผิดปกติ และเพิ่มป้ายแจ้งเตือนผู้ใช้มือถือให้ไปกรอกแบบเดี่ยว</td>
+            <td><span class="status-badge status-done"><i class="fas fa-check"></i> เรียบร้อย</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ACTION PLAN SECTION -->
+    <div class="card">
+      <h3 class="card-title"><i class="fas fa-clipboard-list"></i> ขั้นตอนการดำเนินการเพิ่มเติม (Gaps Action Plan)</h3>
+      <p style="margin-bottom: 20px;">เพื่อให้ UI ของแอปพลิเคชันจริงตรงตามต้นแบบจำลอง 100% มีงานปรับแต่งโครงสร้าง React และ JSX 4 รายการที่สามารถเพิ่มเข้าไปในโค้ดปัจจุบันได้ทันที ดังนี้:</p>
+      
+      <div class="step-list">
+        
+        <!-- STEP 1: SIDEBAR FOOTER -->
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-title">เพิ่มแถบข้อมูลผู้ใช้ (sb-foot) ที่ส่วนท้ายของ Sidebar.tsx</div>
+          <p class="text-muted">ดึงข้อมูลผู้ใช้ปัจจุบันจาก <code>useAuth()</code> เข้าไปแสดงที่ด้านล่างสุดของ Sidebar พร้อมปุ่มเรียกใช้งาน <code>logout()</code> โดยตรง เช่นเดียวกับ mockup</p>
+          <div class="highlight-box">
+            <i class="fas fa-code"></i> <strong>ไฟล์ที่ต้องแก้ไข:</strong> <code>src/components/layout/admin/Sidebar.tsx</code>
+          </div>
+          <pre><code><span class="code-comment">// เพิ่มโค้ด HTML/JSX ด้านล่างสุด ก่อนปิดแท็ก &lt;/aside&gt;</span>
+<span class="code-keyword">const</span> { user, logout } = useAuth();
+<span class="code-keyword">const</span> displayName = [user?.firstName, user?.lastName].filter(Boolean).join(<span class="code-string">' '</span>) || user?.username || <span class="code-string">'ผู้ใช้งาน'</span>;
+<span class="code-keyword">const</span> avatarInitial = displayName.charAt(0).toUpperCase();
+
+<span class="code-keyword">return</span> (
+  &lt;<span class="code-keyword">aside</span> className=...&gt;
+    <span class="code-comment">{/* เนื้อหา Sidebar Nav เดิม */}</span>
+    
+    <span class="code-comment">{/* Sidebar Footer (sb-foot) */}</span>
+    &lt;<span class="code-keyword">div</span> className=<span class="code-string">"sb-foot d-flex align-items-center gap-2 px-3 py-3 border-top border-white/10"</span> style={{ background: <span class="code-string">'rgba(0, 0, 0, 0.15)'</span> }}&gt;
+      &lt;<span class="code-keyword">div</span> className=<span class="code-string">"sb-avatar rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold"</span> style={{ width: 34, height: 34, color: <span class="code-string">'#005092'</span> }}&gt;
+        {avatarInitial}
+      &lt;/<span class="code-keyword">div</span>&gt;
+      &lt;<span class="code-keyword">div</span> className=<span class="code-string">"flex-grow-1 min-w-0"</span>&gt;
+        &lt;<span class="code-keyword">div</span> className=<span class="code-string">"text-white fw-bold text-truncate"</span> style={{ fontSize: 13 }}&gt;{displayName}&lt;/<span class="code-keyword">div</span>&gt;
+        &lt;<span class="code-keyword">small</span> className=<span class="code-string">"text-white-50"</span> style={{ fontSize: 11 }}&gt;{user?.role}&lt;/<span class="code-keyword">small</span>&gt;
+      &lt;/<span class="code-keyword">div</span>&gt;
+      &lt;<span class="code-keyword">button</span> 
+        onClick={() =&gt; logout()} 
+        className=<span class="code-string">"btn btn-link p-0 text-white-50 hover-text-danger border-0"</span>
+        title=<span class="code-string">"ออกจากระบบ"</span>
+      &gt;
+        &lt;<span class="code-keyword">i</span> className=<span class="code-string">"fas fa-right-from-bracket"</span> /&gt;
+      &lt;/<span class="code-keyword">button</span>&gt;
+    &lt;/<span class="code-keyword">div</span>&gt;
+  &lt;/<span class="code-keyword">aside</span>&gt;
+);</code></pre>
+        </div>
+
+        <!-- STEP 2: TOPBAR SEARCH -->
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-title">เพิ่มช่องค้นหาด่วนกลาง (top-search) บน Header.tsx</div>
+          <p class="text-muted">ใส่ Input ค้นหาเทียมหรือกล่องสแกนข้อมูลเพื่อเลียนแบบช่อง <code>⌘K</code> ใน mockup ช่วยให้ผู้ใช้เข้าใจว่าสามารถป้อนค้นหาข้อมูลทั่วไปได้จากจุดเดียว</p>
+          <div class="highlight-box">
+            <i class="fas fa-code"></i> <strong>ไฟล์ที่ต้องแก้ไข:</strong> <code>src/components/layout/admin/Header.tsx</code>
+          </div>
+          <pre><code><span class="code-comment">// ค้นหาจุดวางระหว่างชื่อหน้า และ Theme Toggle ใน Header.tsx</span>
+&lt;<span class="code-keyword">div</span> className=<span class="code-string">"top-search d-none d-md-flex align-items-center gap-2 bg-light border rounded px-3 py-1.5 ms-auto me-3"</span> style={{ width: 250, color: <span class="code-string">'#8b9bae'</span> }}&gt;
+  &lt;<span class="code-keyword">i</span> className=<span class="code-string">"fas fa-magnifying-glass"</span> /&gt;
+  &lt;<span class="code-keyword">span</span> style={{ fontSize: 13 }}&gt;ค้นหาชาวไร่, ตัวอย่าง, แปลง…&lt;/<span class="code-keyword">span</span>&gt;
+  &lt;<span class="code-keyword">span</span> className=<span class="code-string">"badge bg-white border text-muted ms-auto"</span> style={{ fontSize: 10 }}&gt;⌘K&lt;/<span class="code-keyword">span</span>&gt;
+&lt;/<span class="code-keyword">div</span>&gt;</code></pre>
+        </div>
+
+        <!-- STEP 3: SAMPLE TIMELINE -->
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-title">เพิ่มจุดไทม์ไลน์สถานะ (Timeline Stepper) ในหน้ารายละเอียดรับตัวอย่างดิน</div>
+          <p class="text-muted">วาดแถบสเต็ป 5 ขั้นตอน (Timeline Stepper) ด้วย CSS <code>.flow</code> และ <code>.flow-step</code> เพื่อช่วยให้ผู้ใช้รับทราบจุดความก้าวหน้าการทำงานของตัวอย่างดินที่เพิ่งถูกสแกน/สืบค้น</p>
+          <div class="highlight-box">
+            <i class="fas fa-code"></i> <strong>ไฟล์ที่ต้องแก้ไข:</strong> <code>src/pages/officer/sample-receiving/SampleReceivingInfo.tsx</code>
+          </div>
+          
+          <div class="flow-demo">
+            <div class="flow-step-demo done"><div class="flow-dot-demo"><i class="fas fa-check"></i></div><div class="flow-label-demo">เก็บตัวอย่าง</div></div>
+            <div class="flow-step-demo now"><div class="flow-dot-demo">2</div><div class="flow-label-demo">รับเข้าระบบ</div></div>
+            <div class="flow-step-demo"><div class="flow-dot-demo">3</div><div class="flow-label-demo">วิเคราะห์แล็บ</div></div>
+            <div class="flow-step-demo"><div class="flow-dot-demo">4</div><div class="flow-label-demo">ประมวลผล</div></div>
+            <div class="flow-step-demo"><div class="flow-dot-demo">5</div><div class="flow-label-demo">ออกรายงาน</div></div>
+          </div>
+          
+          <pre><code><span class="code-comment">// นำไปพ่นแสดงในกรอบรายละเอียด หรือส่วนแสดงผลรับตัวอย่างสำเร็จ</span>
+<span class="code-keyword">const</span> getStepClass = (currentStatus: string, stepIndex: number) =&gt; {
+  <span class="code-comment">// เขียน Logic กำหนดคลาส done / now ตามลำดับขั้นตอนสถานะจริง</span>
+  <span class="code-keyword">return</span> ...; 
+};
+
+<span class="code-comment">// โค้ด JSX สำหรับ Timeline</span>
+&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow mt-4 mb-2 d-flex justify-content-between align-items-center"</span>&gt;
+  &lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-step done"</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-dot"</span>&gt;&lt;<span class="code-keyword">i</span> className=<span class="code-string">"fa fa-check"</span> /&gt;&lt;/<span class="code-keyword">div</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-label"</span>&gt;เก็บตัวอย่าง&lt;/<span class="code-keyword">div</span>&gt;&lt;/<span class="code-keyword">div</span>&gt;
+  &lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-step now"</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-dot"</span>&gt;2&lt;/<span class="code-keyword">div</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-label"</span>&gt;รับเข้าระบบ&lt;/<span class="code-keyword">div</span>&gt;&lt;/<span class="code-keyword">div</span>&gt;
+  &lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-step"</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-dot"</span>&gt;3&lt;/<span class="code-keyword">div</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-label"</span>&gt;วิเคราะห์แล็บ&lt;/<span class="code-keyword">div</span>&gt;&lt;/<span class="code-keyword">div</span>&gt;
+  &lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-step"</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-dot"</span>&gt;4&lt;/<span class="code-keyword">div</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-label"</span>&gt;ประมวลผล&lt;/<span class="code-keyword">div</span>&gt;&lt;/<span class="code-keyword">div</span>&gt;
+  &lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-step"</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-dot"</span>&gt;5&lt;/<span class="code-keyword">div</span>&gt;&lt;<span class="code-keyword">div</span> className=<span class="code-string">"flow-label"</span>&gt;ออกรายงาน&lt;/<span class="code-keyword">div</span>&gt;&lt;/<span class="code-keyword">div</span>&gt;
+&lt;/<span class="code-keyword">div</span>&gt;</code></pre>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FEEDBACK REQUEST -->
+    <div class="card" style="background: var(--line-soft); border-color: var(--line); text-align: center; padding: 40px 20px;">
+      <h4 style="font-weight: 700; margin-bottom: 10px; color: var(--brand-dark);"><i class="fas fa-question-circle"></i> ยืนยันการดำเนินงานเพื่อเข้าสู่การปรับปรุง</h4>
+      <p style="color: var(--ink-muted); font-size: 14.5px; max-width: 600px; margin: 0 auto 20px;">กรุณาตรวจสอบข้อมูลและเปรียบเทียบในรายละเอียด หากต้องการให้แก้ไขโค้ด JSX/TSX ตามแผนงานดังกล่าว สามารถแจ้งยืนยันการเริ่มงานพัฒนาให้ทีมบอร์ดระบบดำเนินการแก้ไขได้ทันที!</p>
+      <div style="font-size: 12.5px; color: var(--ink-light);">
+        Mitr Phol Research Soil Analysis System · UX/UI Redesign Round 7 Planning
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

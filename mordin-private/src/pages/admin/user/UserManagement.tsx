@@ -114,7 +114,7 @@ const UserManagement = () => {
       autoWidth: false,
       dom:
         "<'dt-top d-flex justify-content-end align-items-center mb-2'l>" +
-        "<'row'<'col-12't>>" +
+        "<'row'<'col-12 table-responsive't>>" +
         "<'dt-bottom d-flex flex-column align-items-center gap-2 mt-3'ip>",
       language: {
         emptyTable: 'ไม่มีข้อมูลในตาราง',

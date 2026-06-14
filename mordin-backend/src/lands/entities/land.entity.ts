@@ -80,9 +80,4 @@ export class Land {
     this.updatedAt = now;
   }
 
-  
-
-  
-
-  
 }

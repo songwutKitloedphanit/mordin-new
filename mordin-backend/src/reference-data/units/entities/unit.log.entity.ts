@@ -1,8 +1,8 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import { Column, Entity, PrimaryColumn, Unique } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
+// History table: no UNIQUE business-key constraint (see analysis-standard.log.entity).
 @Entity('units_logs')
-@Unique('unique_name_log', ['name'])
 export class UnitLog extends BaseLogEntity {
   @PrimaryColumn()
   unitId: number;

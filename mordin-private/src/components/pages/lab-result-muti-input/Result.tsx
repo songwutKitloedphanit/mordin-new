@@ -173,6 +173,22 @@ export const ResultComponent: React.FC<{
     }
   };
 
+  // ป้ายกำกับประเภทแถว
+  const typeLabel: Record<'sample' | 'blank' | 'crm', string> = {
+    sample: 'ตัวอย่าง',
+    blank: 'Blank',
+    crm: 'CRM / Standard',
+  };
+
+  // นับจำนวนแต่ละประเภทไว้แสดงในหัวข้อ
+  const typeCounts = labResults.reduce(
+    (acc, r) => {
+      acc[detectRowType(r)] += 1;
+      return acc;
+    },
+    { sample: 0, blank: 0, crm: 0 }
+  );
+
   // ===== Render table summary =====
   // รวม header ตามชื่อแลบ (shortNameBefore) จากทุกประเภท (sample/blank/crm)
   const uniqueHeaders =
@@ -196,7 +212,9 @@ export const ResultComponent: React.FC<{
             <h4 className="private-card-title">
               ผลวิเคราะห์{' '}
               <span className="text-secondary">
-                {labResults.length} ตัวอย่าง
+                รวม {labResults.length} รายการ
+                {' '}(ตัวอย่าง {typeCounts.sample} · Blank {typeCounts.blank} ·
+                CRM {typeCounts.crm})
               </span>
             </h4>
           </div>
@@ -207,7 +225,8 @@ export const ResultComponent: React.FC<{
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>SAMPLE-CODE</th>
+                      <th>ประเภท</th>
+                      <th>CODE</th>
                       {uniqueHeaders.slice(2).map(header => (
                         <th key={`hdr:${header}`}>{header}</th>
                       ))}
@@ -217,7 +236,8 @@ export const ResultComponent: React.FC<{
                   <tbody>
                     {labResults.map((result, index) => (
                       <tr key={buildRowKey(result, index)}>
-                        <td align="center">{result.id || '-'}</td>
+                        <td align="center">{index + 1}</td>
+                        <td align="center">{typeLabel[detectRowType(result)]}</td>
                         <td align="center">{result.examId || '-'}</td>
                         {uniqueHeaders.slice(2).map(header => {
                           const matchingResult = (result.results || []).find(

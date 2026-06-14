@@ -41,6 +41,12 @@ const RECEIVED_SEARCH = {
   sortBy: 'sampleCode',
 };
 
+const getDisplayThaiNationalId = (qrCode: QrCodeInfo) =>
+  qrCode.thaiNationalId || qrCode.book?.farmer?.thaiNationalId || '';
+
+const getDisplayLandCode = (qrCode: QrCodeInfo) =>
+  qrCode.landCode || qrCode.book?.land?.landCode || '-';
+
 interface ReceivingSummaryCounts {
   collectedTotal: number;
   receivedTotal: number;
@@ -879,11 +885,13 @@ const SampleReceivingManagement: React.FC = () => {
                       {
                         header: 'หมายเลขบัตรประชาชน',
                         accessor: collected =>
-                          formatThaiNationalId(collected.thaiNationalId),
+                          formatThaiNationalId(
+                            getDisplayThaiNationalId(collected)
+                          ),
                       },
                       {
                         header: 'รหัสแปลง',
-                        accessor: collected => collected.landCode ?? '-',
+                        accessor: collected => getDisplayLandCode(collected),
                       },
                       {
                         header: 'รหัส QR CODE',
@@ -977,7 +985,7 @@ const SampleReceivingManagement: React.FC = () => {
                       },
                       {
                         header: 'รหัสแปลง',
-                        accessor: collected => collected.landCode ?? '-',
+                        accessor: collected => getDisplayLandCode(collected),
                       },
                       {
                         header: 'รหัส QR CODE',

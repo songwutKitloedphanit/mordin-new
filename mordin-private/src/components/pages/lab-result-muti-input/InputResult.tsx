@@ -1,6 +1,6 @@
 import { HotTable, HotTableRef } from '@handsontable/react-wrapper';
 import { registerAllModules } from 'handsontable/registry';
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 
 import ConfirmAlert from '@/components/gui/ConfirmAlert';
 import { QrCode } from '@/types/qr-code/QrCode';
@@ -105,7 +105,12 @@ export const GetResultComponent: React.FC<Props> = ({
           const key =
             result.resultId?.toString() ||
             `${rowId}_${result.laboratorySetting.laboratory.shortNameBefore}`;
-          if (result.preValue !== null && result.preValue !== undefined) {
+          // 0 = ยังไม่ได้กรอก (ตามคอนเวนชันที่ใช้ในหน้าอื่น) → ไม่ต้องเติมค่า
+          if (
+            result.preValue !== null &&
+            result.preValue !== undefined &&
+            result.preValue !== 0
+          ) {
             init[key] = String(result.preValue);
           }
         });
@@ -115,7 +120,7 @@ export const GetResultComponent: React.FC<Props> = ({
       blankService.forEach(row => {
         row.result.forEach((r: any) => {
           const key = keyBlank(r);
-          if (r.preValue !== null && r.preValue !== undefined) {
+          if (r.preValue !== null && r.preValue !== undefined && r.preValue !== 0) {
             init[key] = String(r.preValue);
           }
         });
@@ -134,6 +139,41 @@ export const GetResultComponent: React.FC<Props> = ({
       return init;
     }
   );
+
+  // blankService / crmService มาแบบ async (โหลดหลัง mount) แต่ initializer ของ
+  // inputValues รันแค่ครั้งเดียวตอน mount → ค่าที่เติมไว้ล่วงหน้า (cert ของ CRM,
+  // preValue เดิมของ Sample/Blank) จะไม่เข้า inputValues ทำให้ buildDataToSend
+  // ส่งค่าว่างไป step 2. seed เพิ่มเมื่อข้อมูลมา โดยไม่ทับค่าที่ผู้ใช้แก้ไปแล้ว
+  useEffect(() => {
+    setInputValues(prev => {
+      const next = { ...prev };
+      sortedAnalysisService.forEach(sample => {
+        sample.result.forEach((r: any) => {
+          const key = r.resultId ? String(r.resultId) : '';
+          if (key && !(key in next) && r.preValue != null && r.preValue !== 0) {
+            next[key] = String(r.preValue);
+          }
+        });
+      });
+      blankService.forEach(row => {
+        row.result.forEach((r: any) => {
+          const key = keyBlank(r);
+          if (!(key in next) && r.preValue != null && r.preValue !== 0) {
+            next[key] = String(r.preValue);
+          }
+        });
+      });
+      crmService.forEach(row => {
+        row.result.forEach((r: any) => {
+          const key = keyCrmCert(r);
+          if (!(key in next) && r.certificateValue != null) {
+            next[key] = String(r.certificateValue);
+          }
+        });
+      });
+      return next;
+    });
+  }, [sortedAnalysisService, blankService, crmService]);
 
   const [editedResults, setEditedResults] = useState<LabResult[]>([]);
   const [showConfirm, setShowConfirm] = useState<{
@@ -245,7 +285,9 @@ export const GetResultComponent: React.FC<Props> = ({
           const key = cell ? keyBlank(cell) : '';
           const display = key
             ? (inputValues[key] ??
-              (cell?.preValue != null ? String(cell.preValue) : ''))
+              (cell?.preValue != null && cell.preValue !== 0
+                ? String(cell.preValue)
+                : ''))
             : '';
           data.push(display);
         });
@@ -630,7 +672,7 @@ export const GetResultComponent: React.FC<Props> = ({
               <h4 className="private-card-title">
                 ผลวิเคราะห์ (Standard / CRM)
                 <span className="text-secondary ms-2">
-                  บันทึกเฉพาะที่กรอกค่า
+                  ค่าที่แสดงคือค่า certificate ปัจจุบันของ standard — แก้ไขแล้วบันทึกได้
                 </span>
               </h4>
             </div>

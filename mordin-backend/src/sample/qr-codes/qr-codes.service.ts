@@ -469,24 +469,7 @@ export class QrCodesService {
   async findOneByEncryptCode(code: string) {
     try {
       const decrypted = this.cryptoService.decrypt(code);
-      const qrCode = await this.qrCodeRepo.findOne({
-        where: { qrCode: decrypted },
-      });
-      if (!qrCode) {
-        throw new NotFoundException('QrCode not found');
-      }
-      if (qrCode.status !== SampleStatusEnum.DISTRIBUTED) {
-        return {
-          status: qrCode.status,
-          message: 'Soil sample information has already been recorded',
-        };
-      }
-      return {
-        status: qrCode.status,
-        type: qrCode.type,
-        serviceAreaId: qrCode.serviceAreaId,
-        serviceCalendarId: qrCode.serviceCalendarId,
-      };
+      return await this.findOne(decrypted);
     } catch (error) {
       throw new NotFoundException('QrCode not found');
     }
@@ -509,6 +492,7 @@ export class QrCodesService {
     const {
       firstName,
       lastName,
+      birthDate,
       phoneNumber,
       thaiNationalId,
       landCode,
@@ -521,6 +505,7 @@ export class QrCodesService {
       ...qrCode,
       ...(firstName !== undefined && { firstName }),
       ...(lastName !== undefined && { lastName }),
+      ...(birthDate !== undefined && { birthDate }),
       ...(phoneNumber !== undefined && { phoneNumber }),
       ...(thaiNationalId !== undefined && { thaiNationalId }),
       ...(landCode !== undefined && { landCode }),
@@ -597,6 +582,7 @@ export class QrCodesService {
       const {
         firstName,
         lastName,
+        birthDate,
         phoneNumber,
         thaiNationalId,
         landCode,
@@ -624,6 +610,7 @@ export class QrCodesService {
         firstName,
         status: SampleStatusEnum.COLLECTED,
         lastName,
+        birthDate,
         phoneNumber,
         thaiNationalId,
         landCode,

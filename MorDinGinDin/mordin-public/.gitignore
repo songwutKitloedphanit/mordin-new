@@ -1,0 +1,15 @@
+# Environment configuration
+.env
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary directories and files
+temp/
+tmp/
+*.log
+
+# Dependencies (if any in future)
+vendor/
+node_modules/

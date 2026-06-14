@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>หมอดินโมบาย — แพลตฟอร์มวิเคราะห์ดินอัจฉริยะ มิตรผล</title>
+  
+  <!-- Fonts: Plus Jakarta Sans (Headers/Numbers) & Sarabun (Thai Text) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@450;600;750;850&family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5 CSS via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons & FontAwesome -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet Map CSS via CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    /* ════════════════════════════════════════════════════════════
+       Google Antigravity & Mitr Phol Adaptive Scroll-Snap Theme
+       ════════════════════════════════════════════════════════════ */
+    :root {
+      --ag-bg: #FFFFFF;
+      --ag-text: #0F172A;
+      --ag-text-muted: #5F6368;
+      --ag-border: #E8EAED;
+      
+      /* Mitr Phol Corporate Colors */
+      --mp-blue: #005BAC;
+      --mp-blue-dark: #004685;
+      --mp-green: #0F8E45;
+      --mp-green-light: #20C997;
+      --mp-yellow: #EAB308;
+      
+      /* Header Colors - Dynamic Variables */
+      --header-bg: transparent;
+      --header-border: rgba(255, 255, 255, 0.1);
+      --header-text: #FFFFFF;
+      --header-brand-blue: #FFFFFF;
+      --header-brand-green: #20C997;
+      --header-shadow: none;
+
+      --transition-base: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      letter-spacing: -0.2px;
+    }
+
+    /* Scroll Snap Wrapper */
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .scroll-container {
+      height: 100vh;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+    }
+
+    /* Snapped sections - Only Hero & Content Wrapper snap */
+    .snap-section {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      position: relative;
+    }
+
+    /* Section 1: Hero has Mitr Phol Blue bg, absolute 100vh height */
+    .section-hero-blue {
+      background-color: var(--mp-blue);
+      color: #FFFFFF !important;
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin: 0;
+      transition: background-color 0.1s ease-out;
+    }
+
+    /* Section 2: Continuous Content Block with normal scrolling */
+    .section-content-wrapper {
+      background-color: var(--ag-bg);
+      width: 100%;
+      position: relative;
+    }
+
+    /* Sub-sections inside the white block (tight density layout) */
+    .ag-sub-section {
+      padding: 56px 0;
+      border-bottom: 1px solid var(--ag-border);
+    }
+
+    .ag-sub-section-light {
+      background-color: #FAFAFA;
+    }
+
+    /* Smooth Slide-up animations on load/scroll with premium blur focus */
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      filter: blur(4px);
+      transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), 
+                  transform 0.8s cubic-bezier(0.25, 1, 0.5, 1),
+                  filter 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .scroll-reveal.active-view {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    /* Staggered entry animation delays */
+    .stagger-1 { transition-delay: 0.08s !important; }
+    .stagger-2 { transition-delay: 0.16s !important; }
+    .stagger-3 { transition-delay: 0.24s !important; }
+    .stagger-4 { transition-delay: 0.32s !important; }
+    .stagger-5 { transition-delay: 0.4s !important; }
+
+    /* ════════════════════════════════════════════════════════════
+       1. DYNAMIC HEADER (Transparent to White)
+       ════════════════════════════════════════════════════════════ */
+    .ag-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1050;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--header-border);
+      box-shadow: var(--header-shadow);
+      transition: var(--transition-base);
+    }
+
+    .ag-header.scrolled {
+      --header-bg: rgba(255, 255, 255, 0.95);
+      --header-border: var(--ag-border);
+      --header-text: var(--ag-text);
+      --header-brand-blue: var(--mp-blue);
+      --header-brand-green: var(--mp-green);
+      --header-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+    }
+
+    .ag-nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      padding: 0 40px;
+    }
+
+    .ag-brand {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    .ag-brand img {
+      height: 48px;
+      width: auto;
+      background-color: transparent;
+      padding: 0;
+      filter: none;
+      transition: var(--transition-base);
+    }
+
+    .ag-header.scrolled .ag-brand img {
+      filter: invert(1) brightness(0.15);
+    }
+
+    .ag-nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+      margin-bottom: 0;
+      padding-left: 0;
+    }
+
+    .ag-nav-menu a {
+      color: var(--header-text);
+      opacity: 0.85;
+      font-weight: 600;
+      font-size: 0.92rem;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: var(--transition-base);
+    }
+
+    .ag-nav-menu a:hover,
+    .ag-nav-menu a.active {
+      opacity: 1;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .ag-header.scrolled .ag-nav-menu a {
+      color: var(--ag-text);
+    }
+
+    .ag-header.scrolled .ag-nav-menu a:hover,
+    .ag-header.scrolled .ag-nav-menu a.active {
+      color: var(--mp-blue);
+      background-color: rgba(0, 91, 172, 0.04);
+    }
+
+    .ag-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-ag-pill-outline {
+      background: none;
+      border: 1px solid var(--header-text);
+      padding: 8px 20px;
+      border-radius: 100px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--header-text);
+      text-decoration: none;
+      transition: var(--transition-base);
+    }
+
+    .btn-ag-pill-outline:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .ag-header.scrolled .btn-ag-pill-outline {
+      border-color: var(--ag-border);
+      color: var(--ag-text);
+    }
+
+    .ag-header.scrolled .btn-ag-pill-outline:hover {
+      background-color: var(--ag-grey-btn);
+      border-color: var(--ag-text-muted);
+    }
+
+    .btn-ag-pill-black {
+      background-color: #FFFFFF;
+      color: var(--mp-blue) !important;
+      border: 1px solid #FFFFFF;
+      padding: 9px 24px;
+      border-radius: 100px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: var(--transition-base);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-ag-pill-black:hover {
+      background-color: rgba(255, 255, 255, 0.9);
+      transform: translateY(-1px);
+    }
+
+    .ag-header.scrolled .btn-ag-pill-black {
+      background-color: var(--ag-text);
+      color: #FFFFFF !important;
+      border-color: var(--ag-text);
+    }
+
+    .ag-header.scrolled .btn-ag-pill-black:hover {
+      background-color: #2D3748;
+    }
+
+    .ag-mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.6rem;
+      color: var(--header-text);
+      cursor: pointer;
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       2. HERO SECTION, GLOW ORBS & BRAND WATERMARK
+       ════════════════════════════════════════════════════════════ */
+    .ag-hero {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+
+
+    /* Glowing gradient mesh blobs in background */
+    .hero-glow-blob {
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.22;
+      z-index: 1;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      animation: float-glow 22s infinite alternate ease-in-out;
+    }
+
+    .blob-1 {
+      background-color: var(--mp-green-light);
+      top: 15%;
+      left: 15%;
+    }
+
+    .blob-2 {
+      background-color: #3B82F6;
+      bottom: 15%;
+      right: 15%;
+      animation-delay: -6s;
+    }
+
+    .blob-3 {
+      background-color: var(--mp-yellow);
+      top: 45%;
+      left: 45%;
+      width: 320px;
+      height: 320px;
+      animation-delay: -12s;
+    }
+
+    /* Faint SaaS Digital Dot Grid Overlay */
+    .hero-dot-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px);
+      background-size: 32px 32px;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    /* Abstract Rotating Tech Radar Rings */
+    .hero-radar-line {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 680px;
+      height: 680px;
+      border: 1px dashed rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      animation: rotate-radar-clockwise 50s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .hero-radar-line-inner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 440px;
+      height: 440px;
+      border: 1px double rgba(255, 255, 255, 0.03);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      animation: rotate-radar-counter 35s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .hero-radar-line-outer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 920px;
+      height: 920px;
+      border: 1px dashed rgba(255, 255, 255, 0.03);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      animation: rotate-radar-clockwise 70s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    @keyframes rotate-radar-clockwise {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes rotate-radar-counter {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(-360deg); }
+    }
+
+    @keyframes float-glow {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(80px, -60px) scale(1.15); }
+      100% { transform: translate(-50px, 70px) scale(0.9); }
+    }
+
+    .ag-hero-wrapper {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+      text-align: center;
+    }
+
+    .ag-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.95);
+      background-color: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 18px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .ag-hero-badge i {
+      color: var(--mp-green-light);
+    }
+
+    .ag-hero-title {
+      font-family: "Plus Jakarta Sans", "Sarabun", sans-serif;
+      font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+      font-weight: 850;
+      line-height: 1.25;
+      letter-spacing: -2px;
+      color: #FFFFFF;
+      margin-bottom: 24px;
+    }
+
+    .ag-hero-title span.gradient-text {
+      background: linear-gradient(135deg, #FFFFFF 0%, var(--mp-green-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .ag-hero-lead {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.85;
+      max-width: 720px;
+      margin: 0 auto 44px;
+      font-weight: 400;
+    }
+
+    /* Largified Pill Buttons */
+    .btn-hero-white-pill {
+      min-height: 60px;
+      padding: 14px 44px;
+      font-size: 1.1rem;
+      border-radius: 100px;
+      font-weight: 750;
+      background-color: #FFFFFF;
+      color: var(--mp-blue);
+      border: 2px solid #FFFFFF;
+      transition: var(--transition-base);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .btn-hero-white-pill:hover {
+      background-color: rgba(255, 255, 255, 0.92);
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-hero-glass-pill {
+      min-height: 60px;
+      padding: 14px 44px;
+      font-size: 1.1rem;
+      border-radius: 100px;
+      font-weight: 650;
+      background-color: rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(8px);
+      transition: var(--transition-base);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .btn-hero-glass-pill:hover {
+      background-color: rgba(255, 255, 255, 0.18);
+      border-color: #FFFFFF;
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 28px rgba(255, 255, 255, 0.05);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       3. HIGH DENSITY OPERATION MAP & WIDGET CARD
+       ════════════════════════════════════════════════════════════ */
+    .ag-section-title {
+      max-width: 700px;
+      margin-bottom: 32px;
+    }
+
+    .ag-section-title p {
+      color: var(--mp-blue);
+      font-weight: 800;
+      font-size: 0.88rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .ag-section-title h2 {
+      font-family: "Plus Jakarta Sans", "Sarabun", sans-serif;
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--ag-text);
+      line-height: 1.3;
+    }
+
+    .ag-card {
+      background: #FFFFFF;
+      border: 1px solid var(--ag-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+      transition: var(--transition-base);
+    }
+
+    .ag-card:hover {
+      border-color: var(--mp-blue);
+      box-shadow: 0 12px 30px rgba(0, 91, 172, 0.05);
+    }
+
+    .map-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .map-header h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ag-text);
+    }
+
+    .map-header h3 i {
+      color: var(--mp-blue);
+    }
+
+    .map-badge {
+      background-color: rgba(15, 142, 69, 0.08);
+      color: var(--mp-green);
+      font-weight: 750;
+      font-size: 0.82rem;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+
+    .leaflet-map-widget {
+      width: 100%;
+      height: 300px;
+      border-radius: 12px;
+      border: 1px solid var(--ag-border);
+      overflow: hidden;
+    }
+
+    .map-footer {
+      text-align: center;
+      margin-top: 14px;
+    }
+
+    .map-footer a {
+      color: var(--mp-blue);
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-base);
+    }
+
+    .map-footer a:hover {
+      color: var(--mp-blue-hover);
+      gap: 10px;
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       4. FEATURE CARD GRID
+       ════════════════════════════════════════════════════════════ */
+    .ag-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    .ag-feature-card {
+      background-color: #FFFFFF;
+      border: 1px solid var(--ag-border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: var(--transition-base);
+    }
+
+    .ag-feature-card:hover {
+      border-color: var(--ag-text);
+      transform: translateY(-4px);
+    }
+
+    .ag-feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background-color: var(--ag-grey-btn);
+      color: var(--mp-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+      transition: var(--transition-base);
+    }
+
+    .ag-feature-card:hover .ag-feature-icon {
+      background-color: var(--ag-text);
+      color: #FFFFFF;
+    }
+
+    .ag-feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 750;
+      color: var(--ag-text);
+      margin-bottom: 8px;
+    }
+
+    .ag-feature-card p {
+      font-size: 0.88rem;
+      color: var(--ag-text-muted);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       5. ABOUT PRECISION SECTION
+       ════════════════════════════════════════════════════════════ */
+    .about-image-wrap {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--ag-border);
+    }
+
+    .about-image-wrap img {
+      width: 100%;
+      height: 350px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .about-content-wrap {
+      padding-left: 24px;
+    }
+
+    .about-content-wrap h3 {
+      font-family: "Plus Jakarta Sans", "Sarabun", sans-serif;
+      font-size: 1.7rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .about-content-wrap p {
+      font-size: 0.98rem;
+      color: var(--ag-text-muted);
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    .about-checklist {
+      list-style: none;
+      padding-left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .about-check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--ag-text);
+    }
+
+    .about-check-item i {
+      color: var(--mp-green-light);
+      font-size: 1.2rem;
+      margin-top: 1px;
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       6. COMPARISON SYSTEM MATRIX
+       ════════════════════════════════════════════════════════════ */
+    .ag-table-card {
+      border: 1px solid var(--ag-border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #FFFFFF;
+    }
+
+    .ag-table {
+      margin-bottom: 0;
+    }
+
+    .ag-table th,
+    .ag-table td {
+      padding: 14px 18px;
+      vertical-align: middle;
+      font-size: 0.92rem;
+      border-bottom: 1px solid var(--ag-border);
+    }
+
+    .ag-table thead th {
+      background-color: var(--ag-grey-btn);
+      font-weight: 750;
+      color: var(--ag-text);
+      border-bottom: 2px solid var(--ag-border);
+    }
+
+    .ag-table-highlight {
+      background-color: rgba(0, 91, 172, 0.02);
+      font-weight: 600;
+      border-left: 1px dashed rgba(0, 91, 172, 0.1);
+      border-right: 1px dashed rgba(0, 91, 172, 0.1);
+    }
+
+    .ag-recommended-chip {
+      background-color: var(--ag-text);
+      color: #FFFFFF;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      margin-left: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Responsive mobile settings */
+    @media (max-width: 992px) {
+      .scroll-container {
+        scroll-snap-type: none !important;
+        height: auto;
+        overflow-y: visible;
+      }
+      .scroll-reveal {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+      }
+      .ag-nav-menu, .ag-nav-actions {
+        display: none;
+      }
+      .ag-mobile-toggle {
+        display: block;
+      }
+      .ag-nav-container {
+        padding: 0 24px;
+      }
+      .about-content-wrap {
+        padding-left: 0;
+      }
+      .ag-header {
+        position: sticky;
+        --header-bg: var(--mp-blue);
+        --header-border: rgba(255,255,255,0.1);
+      }
+      .ag-header.scrolled {
+        --header-bg: var(--mp-blue);
+      }
+      .ag-sub-section {
+        padding: 40px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. DYNAMIC HEADER (Transparent to White) -->
+  <header class="ag-header" id="dynamic-header">
+    <div class="ag-nav-container">
+      <a class="ag-brand" href="#">
+        <img src="mordin-public/assets/img/logo-mitr-phol-white.png" alt="MITR PHOL Innovation & Research Center">
+      </a>
+      
+      <ul class="ag-nav-menu">
+        <li><a href="#" class="active">หน้าหลัก</a></li>
+        <li><a href="services/price">บริการ&amp;ราคา</a></li>
+        <li><a href="calendar">ปฏิทินให้บริการ</a></li>
+        <li><a href="soil-improvement">ความรู้เรื่องดิน</a></li>
+        <li><a href="shops">ร้านค้าแนะนำ</a></li>
+        <li><a href="contact">ติดต่อเรา</a></li>
+      </ul>
+
+      <div class="ag-nav-actions">
+        <a href="services/book/login" class="btn-ag-pill-outline" data-bs-toggle="modal" data-bs-target="#loginModal">เข้าสู่ระบบ</a>
+        <a href="services/book/login" class="btn-ag-pill-black" data-bs-toggle="modal" data-bs-target="#loginModal">จองคิววิเคราะห์ดิน <i class="bi bi-calendar-check-fill ms-1"></i></a>
+      </div>
+
+      <button class="ag-mobile-toggle" aria-label="Menu" type="button">
+        <i class="bi bi-list"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Scroll snap container -->
+  <div class="scroll-container" id="scroll-wrapper">
+
+    <!-- PART 1: DYNAMIC HERO (Full Page height, snaps vertically, glowing meshes & white logo watermark) -->
+    <section class="snap-section section-hero-blue active-view">
+      <div class="ag-hero">
+        
+
+
+        <!-- Interactive HTML5 Canvas Particles -->
+        <canvas id="particle-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 2;"></canvas>
+
+        <!-- Faint SaaS Digital Dot Grid -->
+        <div class="hero-dot-grid"></div>
+
+        <!-- Abstract Tech Radar Rings -->
+        <div class="hero-radar-line"></div>
+        <div class="hero-radar-line-inner"></div>
+        <div class="hero-radar-line-outer"></div>
+
+        <!-- Premium Floating Glow Orbs in Background -->
+        <div class="hero-glow-blob blob-1"></div>
+        <div class="hero-glow-blob blob-2"></div>
+        <div class="hero-glow-blob blob-3"></div>
+
+        <div class="ag-hero-wrapper">
+          <span class="ag-hero-badge">
+            <i class="fa-solid fa-leaf"></i> Mitr Phol Soil Service
+          </span>
+          <h1 class="ag-hero-title text-center mb-3">
+            วิเคราะห์คุณภาพดินอัจฉริยะ<br>
+            <span class="gradient-text">กับแพลตฟอร์มหมอดินโมบาย</span>
+          </h1>
+          <p class="ag-hero-lead text-center mb-4 mx-auto" style="max-width: 760px;">
+            ยกระดับผลผลิตแปลงอ้อยด้วยรถตรวจดินเคลื่อนที่วิเคราะห์แม่นยำรายแปลง ทราบผลเร็วใน 6 ชั่วโมง พร้อมวางแผนการใส่ปุ๋ยอ้อยและคำนวณอัตราส่วนเฉพาะบุคคลฟรีเพื่อลดต้นทุนอย่างมีประสิทธิภาพสูงสุด
+          </p>
+          <div class="ag-hero-actions d-flex flex-wrap gap-3 justify-content-center">
+            <a href="services/book/login" class="btn-hero-white-pill" data-bs-toggle="modal" data-bs-target="#loginModal">
+              <i class="bi bi-calendar-check-fill"></i> จองคิววิเคราะห์ดิน ฟรี
+            </a>
+            <a href="services/price" class="btn-hero-glass-pill">
+              <i class="bi bi-card-list"></i> ดูอัตราค่าบริการและราคา
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 2: CONTINUOUS CONTENT BLOCK (Snaps ONLY as it enters from Hero, then scrolls naturally) -->
+    <section class="snap-section section-content-wrapper" id="content-block">
+
+      <!-- SUB-SECTION 2.1: OPERATIONAL MAP & INFRASTRUCTURE -->
+      <div class="ag-sub-section" id="rounds-section">
+        <div class="container-xl">
+          <div class="row align-items-center gy-4">
+            
+            <!-- Left: Leaflet Map Widget -->
+            <div class="col-lg-6 scroll-reveal stagger-1">
+              <div class="ag-card">
+                <div class="map-header">
+                  <h3><i class="bi bi-geo-alt-fill"></i> จุดให้บริการโมบายที่กำลังจะมาถึง</h3>
+                  <span class="map-badge">3 จุดบริการพร้อมลุย</span>
+                </div>
+                <div id="ag-leaflet-map" class="leaflet-map-widget"></div>
+                <div class="map-footer">
+                  <a href="calendar">ตรวจสอบปฏิทินปฏิบัติงานทั้งหมด <i class="bi bi-chevron-right"></i></a>
+                </div>
+              </div>
+            </div>
+ 
+             <!-- Right: Text details -->
+             <div class="col-lg-6 ps-lg-5 scroll-reveal stagger-2">
+              <div class="ag-section-title text-start mb-3">
+                <p>Service Locations</p>
+                <h2>เดินทางไปตรวจดินแปลงอ้อยของท่านถึงตำบล</h2>
+              </div>
+              <p class="text-muted mb-4" style="font-size:0.95rem; line-height:1.75;">
+                ทีมหมอดินโมบายเดินทางพร้อมชุดเซนเซอร์วิเคราะห์ดินคุณภาพมาตรฐานแล็บกลาง ให้บริการวิเคราะห์ธาตุอาหารดินรายแปลงของชาวไร่คู่สัญญาอ้อยมิตรผล ครอบคลุมทุกพื้นที่ส่งเสริมเพื่อความสะดวกสูงสุด
+              </p>
+              <div class="d-flex gap-4">
+                <div class="border-start border-3 border-primary ps-3">
+                  <h4 class="fw-bold mb-1" style="font-family:'Plus Jakarta Sans',sans-serif; color: var(--mp-blue);">6 Hours</h4>
+                  <p class="small text-muted mb-0">ระยะเวลารอคอยผลตรวจดินด่วน</p>
+                </div>
+                <div class="border-start border-3 border-success ps-3">
+                  <h4 class="fw-bold mb-1" style="font-family:'Plus Jakarta Sans',sans-serif; color: var(--mp-green);">ISO 17025</h4>
+                  <p class="small text-muted mb-0">มาตรฐานรับรองความเที่ยงตรง</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-SECTION 2.2: CORE CAPABILITIES -->
+      <div class="ag-sub-section ag-sub-section-light" id="features-section">
+        <div class="container-xl">
+          <div class="ag-section-title text-center mb-4 scroll-reveal stagger-1">
+            <p>Core Capabilities</p>
+            <h2>เหตุผลที่เกษตรกรชาวไร่เลือกใช้บริการกับเรา</h2>
+          </div>
+          
+          <div class="ag-feature-grid">
+            <div class="ag-feature-card scroll-reveal stagger-2">
+              <div class="ag-feature-icon"><i class="bi bi-gift-fill"></i></div>
+              <h3>ฟรี ไม่มีค่าบริการ</h3>
+              <p>เปิดให้บริการตรวจดินแก่ชาวไร่คู่สัญญากลุ่มบริษัทมิตรผลทุกรายโดยไม่มีค่าใช้จ่ายในรอบปีแรก</p>
+            </div>
+
+            <div class="ag-feature-card scroll-reveal stagger-3">
+              <div class="ag-feature-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+              <h3>ทราบผลด่วนใน 6 ชม.</h3>
+              <p>ใช้เทคโนโลยีสเปกโตรสโกปีความแม่นยำสูง ทราบผลการวิเคราะห์ธาตุอาหารดินภายในวันเดียว</p>
+            </div>
+
+            <div class="ag-feature-card scroll-reveal stagger-4">
+              <div class="ag-feature-icon"><i class="bi bi-geo-alt-fill"></i></div>
+              <h3>ตรวจตรงถึงพื้นที่</h3>
+              <p>รถโมบายแล็บเดินทางเข้าพื้นที่เขตส่งเสริมและชุมชน ให้ชาวไร่มาส่งตัวอย่างใกล้บ้านได้ทันที</p>
+            </div>
+
+            <div class="ag-feature-card scroll-reveal stagger-5">
+              <div class="ag-feature-icon"><i class="bi bi-bar-chart-fill"></i></div>
+              <h3>ธาตุอาหารครบครัน</h3>
+              <p>วิเคราะห์ครอบคลุมทั้ง N, P, K, ค่าความเป็นกรด-ด่าง (pH) และปริมาณอินทรียวัตถุ (OM) อย่างละเอียด</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-SECTION 2.3: ABOUT PRECISION SECTION -->
+      <div class="ag-sub-section" id="about-section">
+        <div class="container-xl">
+          <div class="row align-items-center gy-4">
+            
+            <div class="col-lg-5 scroll-reveal stagger-1">
+              <div class="about-image-wrap">
+                <img src="mordin-public/assets/img/soil-car.jpg" alt="รถวิเคราะห์ดินเคลื่อนที่ มิตรผล">
+              </div>
+            </div>
+
+            <div class="col-lg-7 scroll-reveal stagger-2">
+              <div class="about-content-wrap">
+                <h3>ใส่ปุ๋ยอ้อยตามค่าวิเคราะห์ดิน เพื่อผลกำไรที่ยั่งยืน</h3>
+                <p>
+                  ในภาวะที่ราคาปุ๋ยปรับตัวสูงขึ้นอย่างต่อเนื่อง โครงการหมอดินเคลื่อนที่ช่วยให้เกษตรกรสามารถบำรุงดินได้ตรงตามความต้องการของพืชอย่างเฉพาะเจาะจง ช่วยลดปุ๋ยส่วนเกิน รักษาความสมบูรณ์ของอินทรียวัตถุในดินระยะยาว และสร้างมูลค่าอ้อยความหวานสูง (C.C.S.) ที่คุ้มค่าการลงทุน
+                </p>
+                
+                <ul class="about-checklist">
+                  <li class="about-check-item scroll-reveal stagger-3">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>ช่วยเพิ่มปริมาณความหวานและน้ำหนักต่อไร่เฉลี่ยของอ้อย</span>
+                  </li>
+                  <li class="about-check-item scroll-reveal stagger-4">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>ลดความสิ้นเปลืองค่าปุ๋ยเคมีเกินความจำเป็นได้มากถึง 30% - 40%</span>
+                  </li>
+                  <li class="about-check-item scroll-reveal stagger-5">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>ช่วยปรับปรุงคุณภาพดินเพื่อรักษาผลผลิตที่ดีในระยะยาวอย่างเป็นระบบ</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-SECTION 2.4: COMPARISON MATRIX & FOOTER -->
+      <div class="ag-sub-section ag-sub-section-light" style="border-bottom:none; padding-bottom:0;" id="matrix-section">
+        <div class="container-xl">
+          <div class="ag-section-title text-center mb-4 scroll-reveal stagger-1">
+            <p>Comparison Matrix</p>
+            <h2>ตารางเปรียบเทียบคุณภาพทางเลือกวิเคราะห์ดิน</h2>
+          </div>
+          
+          <div class="ag-table-card scroll-reveal stagger-2">
+            <div class="table-responsive">
+              <table class="table ag-table">
+                <thead>
+                  <tr>
+                    <th scope="col">หัวข้อการประเมิน</th>
+                    <th scope="col">ชุดทดสอบเคมีด่วน (Test Kit)</th>
+                    <th scope="col">ส่งตรวจแล็บเคมีทั่วไป</th>
+                    <th scope="col" class="ag-table-highlight">
+                      รถวิเคราะห์ดินเคลื่อนที่มิตรผล
+                      <span class="ag-recommended-chip">แนะนำ</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">อัตราค่าบริการวิเคราะห์</th>
+                    <td>ประมาณ 70 บาท/ตัวอย่าง</td>
+                    <td>มากกว่า 2,000 บาท/ตัวอย่าง</td>
+                    <td class="ag-table-highlight text-success fw-bold">ฟรี (ปีที่ 1 สำหรับคู่สัญญา)</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">ระยะเวลารอคอยผล</th>
+                    <td>30 - 45 นาที</td>
+                    <td>2 - 3 สัปดาห์</td>
+                    <td class="ag-table-highlight fw-bold">ภายใน 6 ชั่วโมง (ทราบผลวันเดียวกัน)</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">ความละเอียดของธาตุอาหาร</th>
+                    <td>เฉพาะค่า NPK อย่างง่าย</td>
+                    <td>วิเคราะห์ครบถ้วนทุกธาตุอาหาร</td>
+                    <td class="ag-table-highlight fw-bold">วิเคราะห์ครบถ้วนตามความจำเป็น (N, P, K, pH, OM)</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">คำแนะนำและสูตรปุ๋ยอ้อย</th>
+                    <td>ต้องแปลเทียบสีเคมีเอง</td>
+                    <td>ได้ข้อมูลผลดิบ ไม่มีบริการปุ๋ย</td>
+                    <td class="ag-table-highlight text-primary fw-bold">ระบบคำนวณสูตรปุ๋ยและอัตราการใส่เฉพาะแปลงบุคคล</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer sitting snugly right below the comparison widget -->
+        <footer class="footer w-100 border-top bg-white py-3 mt-5">
+          <div class="container-xl">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center text-muted small gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <img src="mordin-public/assets/img/logo-mitr-phol.png" alt="MITR PHOL Logo" style="height:24px;">
+                <span>© 2026 MITR PHOL Cane and Sugar Research Center. All Rights Reserved.</span>
+              </div>
+              <div>
+                <a href="https://www.mitrphol.com/home" target="_blank" class="text-muted text-decoration-none me-3"><i class="bi bi-link-45deg"></i> กลุ่มบริษัทมิตรผล</a>
+                <span>Designed to Google Antigravity UX/UI standards.</span>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- REQUIRE LOGIN MODAL (Antigravity Clean Style) -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content overflow-hidden border-0 shadow-lg" style="border-radius: 16px;">
+        <div class="ag-modal-header">
+          <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="ag-modal-icon">
+            <i class="bi bi-shield-lock-fill"></i>
+          </div>
+          <h5 class="modal-title fw-bold fs-5" id="loginModalLabel">เข้าสู่ระบบสมาชิกจองคิวตรวจดิน</h5>
+          <p class="mb-0 text-muted small">จัดการจองคิวตรวจดินเคลื่อนที่และค้นหาประวัติรายงานผลดินของท่าน</p>
+        </div>
+        <div class="ag-modal-body">
+          <form id="mockLoginForm" onsubmit="event.preventDefault(); alert('ระบบกำลังประมวลผลการจำลองล็อกอิน...');">
+            <div class="ag-modal-toggle-tab">
+              <label class="ag-modal-tab-option">
+                <input type="radio" name="loginType" value="farmer_id" checked onchange="toggleModalInputs('farmer')">
+                <span>รหัสสมาชิกเกษตรกร</span>
+              </label>
+              <label class="ag-modal-tab-option">
+                <input type="radio" name="loginType" value="thai_id" onchange="toggleModalInputs('thai')">
+                <span>เลขบัตรประชาชน</span>
+              </label>
+            </div>
+
+            <div class="ag-form-group">
+              <label id="modalInputLabel" for="modal_user_id">รหัสชาวไร่มิตรผล</label>
+              <input type="text" class="form-control" id="modal_user_id" placeholder="กรอกหมายเลขรหัสชาวไร่คู่สัญญา" required>
+            </div>
+
+            <div class="ag-form-group">
+              <label for="modal_user_phone">หมายเลขโทรศัพท์</label>
+              <input type="tel" class="form-control" id="modal_user_phone" placeholder="กรอกเบอร์โทรศัพท์มือถือที่ผูกกับรหัส" required>
+            </div>
+
+            <button type="submit" class="btn-ag-pill-black w-100 mt-2 py-3 fs-6 justify-content-center">
+              ยืนยันข้อมูลเพื่อดำเนินการต่อ
+            </button>
+          </form>
+
+          <div class="ag-modal-divider">
+            <span>ยังไม่ได้ลงทะเบียนสิทธิ์?</span>
+          </div>
+
+          <a href="services/book/register" class="ag-modal-link">
+            สมัครสมาชิกชาวไร่ใหม่เพื่อจองตรวจคิว
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS Bundle via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Leaflet Map JS via CDN -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- ═════════ GOOGLE ANTIGRAVITY DYNAMIC HEADER & SCROLL SNAP CONTROL ═════════ -->
+  <script>
+    (function () {
+      const scrollWrapper = document.getElementById("scroll-wrapper");
+      const header = document.getElementById("dynamic-header");
+      if (!scrollWrapper || !header) return;
+
+      const heroSection = document.querySelector(".section-hero-blue");
+      const heroWrapper = document.querySelector(".ag-hero-wrapper");
+      const glowBlobs = document.querySelectorAll(".hero-glow-blob");
+
+      function isDesktop() {
+        return window.innerWidth > 992;
+      }
+
+      scrollWrapper.addEventListener("scroll", function () {
+        const scrollTop = scrollWrapper.scrollTop;
+        const heroHeight = window.innerHeight;
+
+        // Calculate scroll percentage (0 to 1) for Hero section
+        const percent = Math.min(scrollTop / heroHeight, 1);
+
+        // 1. Dynamic background color fade (from Mitr Phol Blue rgb(0, 91, 172) to White rgb(255, 255, 255))
+        const r = Math.round(0 + (255 - 0) * percent);
+        const g = Math.round(91 + (255 - 91) * percent);
+        const b = Math.round(172 + (255 - 172) * percent);
+        if (heroSection) {
+          heroSection.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // 2. Fade out Hero content and shift it up parallax style (completing fade out early at 60% scroll for readability)
+        if (heroWrapper) {
+          const textOpacity = Math.max(0, 1 - percent * 1.6);
+          heroWrapper.style.opacity = textOpacity;
+          heroWrapper.style.transform = `translateY(${-percent * 60}px)`;
+        }
+
+        // 3. Fade out background glow blobs
+        glowBlobs.forEach(blob => {
+          blob.style.opacity = 0.16 * (1 - percent);
+        });
+
+        // 4. Header background color scroll toggle
+        if (scrollTop > 60) {
+          header.classList.add("scrolled");
+        } else {
+          header.classList.remove("scrolled");
+        }
+
+        // 5. [UX ENHANCEMENT] Crisp scroll snap lock only for the first transition (Hero -> Content)
+        if (isDesktop()) {
+          // Disable scroll snap INSTANTLY once snapped down onto Page 2
+          if (scrollTop >= heroHeight - 12) {
+            scrollWrapper.style.scrollSnapType = "none";
+          } else {
+            scrollWrapper.style.scrollSnapType = "y mandatory";
+          }
+        }
+      });
+
+      // Mouse Parallax Effect on Hero Background blobs
+      if (heroSection) {
+        heroSection.addEventListener("mousemove", function (e) {
+          if (!isDesktop()) return;
+          const { clientX, clientY } = e;
+          const { innerWidth, innerHeight } = window;
+          
+          // Calculate displacement from center (-0.5 to 0.5)
+          const moveX = (clientX - innerWidth / 2) / innerWidth;
+          const moveY = (clientY - innerHeight / 2) / innerHeight;
+          
+          // Translate blobs based on mouse movement
+          const b1 = document.querySelector(".blob-1");
+          const b2 = document.querySelector(".blob-2");
+          const b3 = document.querySelector(".blob-3");
+          
+          if (b1) b1.style.transform = `translate(${moveX * 40}px, ${moveY * 40}px)`;
+          if (b2) b2.style.transform = `translate(${moveY * -40}px, ${moveX * -40}px)`;
+          if (b3) b3.style.transform = `translate(${moveX * -20}px, ${moveY * 20}px)`;
+        });
+        
+        // Reset translation on mouse leave
+        heroSection.addEventListener("mouseleave", function () {
+          const b1 = document.querySelector(".blob-1");
+          const b2 = document.querySelector(".blob-2");
+          const b3 = document.querySelector(".blob-3");
+          if (b1) b1.style.transform = `translate(0, 0)`;
+          if (b2) b2.style.transform = `translate(0, 0)`;
+          if (b3) b3.style.transform = `translate(0, 0)`;
+        });
+      }
+    })();
+  </script>
+
+  <!-- ═════════ INTERSECTION OBSERVER FOR CONTENT FADE-IN REVEALS ═════════ -->
+  <script>
+    (function () {
+      const observerOptions = {
+        root: document.getElementById("scroll-wrapper"),
+        threshold: 0.12 // Trigger reveal immediately as user scrolls into the sub-section
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active-view");
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll(".scroll-reveal").forEach(sec => {
+        observer.observe(sec);
+      });
+    })();
+  </script>
+
+  <!-- ═════════ LEAFLET MAP INJECTION SCRIPT (CHAIYAPHUM REGIONS) ═════════ -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const spots = [
+        { lat: 16.3685, lng: 102.1345, address: "บ้านหนองแวง ต.โคกสะอาด อ.ภูเขียว จ.ชัยภูมิ (เขตส่งเสริมที่ 1)" },
+        { lat: 16.3920, lng: 102.1520, address: "บ้านโนนสะอาด ต.หนองตูม อ.ภูเขียว จ.ชัยภูมิ (เขตส่งเสริมที่ 2)" },
+        { lat: 16.3240, lng: 102.0950, address: "บ้านดอนจำปา ต.โอโล อ.ภูเขียว จ.ชัยภูมิ (เขตส่งเสริมที่ 3)" }
+      ];
+
+      const customPin = L.icon({
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+
+      const map = L.map('ag-leaflet-map', { 
+        scrollWheelZoom: false,
+        dragging: !L.Browser.mobile, 
+        tap: !L.Browser.mobile 
+      }).setView([16.3685, 102.1345], 11);
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap contributors, CartoDB'
+      }).addTo(map);
+
+      const markerList = [];
+      spots.forEach(function(s) {
+        const marker = L.marker([s.lat, s.lng], { icon: customPin }).addTo(map);
+        marker.bindPopup(`
+          <div style="font-family:'Sarabun',sans-serif; padding:4px;">
+            <strong style="color:var(--mp-blue); font-size:0.92rem;"><i class="bi bi-geo-alt-fill"></i> จุดจอดตรวจดินเคลื่อนที่</strong>
+            <p style="margin:5px 0 0; font-size:0.82rem; color:var(--ag-text-muted); line-height:1.45;">${s.address}</p>
+          </div>
+        `);
+        markerList.push(marker);
+      });
+
+      if(markerList.length > 0) {
+        const group = new L.featureGroup(markerList);
+        map.fitBounds(group.getBounds().pad(0.15));
+      }
+
+      // Quick tab-resize trigger fix
+      setTimeout(function() {
+        map.invalidateSize();
+      }, 500);
+    });
+
+    function toggleModalInputs(type) {
+      const label = document.getElementById("modalInputLabel");
+      const input = document.getElementById("modal_user_id");
+      if (type === "farmer") {
+        label.textContent = "รหัสชาวไร่มิตรผล";
+        input.placeholder = "กรอกหมายเลขรหัสชาวไร่คู่สัญญา";
+      } else {
+        label.textContent = "เลขประจำตัวประชาชน";
+        input.placeholder = "กรอกเลขบัตรประชาชน 13 หลัก";
+      }
+      input.value = "";
+    }
+  </script>
+
+  <!-- ═════════ INTERACTIVE CANVAS PARTICLES & CONNECTIVE CHEMISTRY MESH ═════════ -->
+  <script>
+    (function () {
+      const canvas = document.getElementById("particle-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      let width = 0;
+      let height = 0;
+      const textRect = { x: 0, y: 0, width: 0, height: 0 };
+
+      function updateTextRect() {
+        const wrapper = document.querySelector(".ag-hero-wrapper");
+        if (wrapper && canvas) {
+          const rect = wrapper.getBoundingClientRect();
+          const canvasRect = canvas.getBoundingClientRect();
+          textRect.x = rect.left - canvasRect.left;
+          textRect.y = rect.top - canvasRect.top;
+          textRect.width = rect.width;
+          textRect.height = rect.height;
+        }
+      }
+
+      function resizeCanvas() {
+        width = canvas.width = canvas.offsetWidth;
+        height = canvas.height = canvas.offsetHeight;
+        updateTextRect();
+      }
+
+      window.addEventListener("resize", function () {
+        resizeCanvas();
+      });
+
+      // Chemistry Elements mapping grouped by compound families (Soil, Water, Fertilizer)
+      const elementsList = {
+        SOIL: [
+          { name: 'Si', color: 'rgba(186, 230, 253, 0.85)', size: 3.5 }, // Silicon (Clay mineral)
+          { name: 'OM', color: 'rgba(217, 119, 6, 0.85)', size: 3.8 },   // Organic Matter (Humus / Carbon)
+          { name: 'O', color: 'rgba(255, 255, 255, 0.85)', size: 2.8 }    // Oxygen
+        ],
+        WATER: [
+          { name: 'O', color: 'rgba(255, 255, 255, 0.85)', size: 2.8 },    // Oxygen
+          { name: 'H', color: 'rgba(147, 197, 253, 0.85)', size: 2.2 }     // Hydrogen (Water Cyan color)
+        ],
+        FERTILIZER: [
+          { name: 'N', color: 'rgba(52, 211, 153, 0.85)', size: 3.2 },   // Nitrogen (Green growth)
+          { name: 'P', color: 'rgba(248, 113, 113, 0.85)', size: 3.4 },  // Phosphorus (Root development)
+          { name: 'K', color: 'rgba(251, 191, 36, 0.85)', size: 3.2 }    // Potassium (Sweetness / Yield)
+        ]
+      };
+
+      const particles = [];
+      const particleCount = 100;
+      const connectionDistance = 35;
+      
+      // Track mouse position and drag status
+      const mouse = { x: null, y: null, radius: 90, isDown: false };
+      const shockwaves = []; // Visual feedback on group explosions
+
+      const heroSection = document.querySelector(".section-hero-blue");
+      if (heroSection) {
+        heroSection.addEventListener("mousemove", function (e) {
+          const rect = canvas.getBoundingClientRect();
+          mouse.x = e.clientX - rect.left;
+          mouse.y = e.clientY - rect.top;
+        });
+        
+        heroSection.addEventListener("mouseleave", () => {
+          mouse.x = null;
+          mouse.y = null;
+          mouse.isDown = false;
+        });
+
+        heroSection.addEventListener("mousedown", () => {
+          mouse.isDown = true;
+        });
+
+        heroSection.addEventListener("mouseup", () => {
+          mouse.isDown = false;
+        });
+
+        // Mobile touchscreen compatibility (Touch events)
+        heroSection.addEventListener("touchstart", function (e) {
+          mouse.isDown = true;
+          handleTouch(e);
+        }, { passive: true });
+
+        heroSection.addEventListener("touchmove", function (e) {
+          handleTouch(e);
+        }, { passive: true });
+
+        heroSection.addEventListener("touchend", function () {
+          mouse.x = null;
+          mouse.y = null;
+          mouse.isDown = false;
+        });
+
+        function handleTouch(e) {
+          if (e.touches && e.touches.length > 0) {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.touches[0].clientX - rect.left;
+            mouse.y = e.touches[0].clientY - rect.top;
+          }
+        }
+      }
+
+      class Particle {
+        constructor() {
+          // Assign random molecule family (SOIL, WATER, or FERTILIZER)
+          const families = ['SOIL', 'WATER', 'FERTILIZER'];
+          this.family = families[Math.floor(Math.random() * families.length)];
+          const familyElements = elementsList[this.family];
+          
+          this.element = familyElements[Math.floor(Math.random() * familyElements.length)];
+          this.reset();
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+        }
+
+        reset() {
+          this.vx = (Math.random() - 0.5) * 0.8;
+          this.vy = (Math.random() - 0.5) * 0.8;
+          this.radius = this.element.size;
+          this.explosionCooldown = 0;
+          this.bondedRatio = 0; // 0 to 1, increases when forming soil molecules
+        }
+
+        update() {
+          if (this.explosionCooldown > 0) {
+            this.explosionCooldown--;
+          }
+
+          this.x += this.vx;
+          this.y += this.vy;
+
+          // Drag / Friction
+          this.vx *= 0.975;
+          this.vy *= 0.975;
+
+          // Boundary collision
+          if (this.x < 0) { this.x = 0; this.vx *= -1; }
+          if (this.x > width) { this.x = width; this.vx *= -1; }
+          if (this.y < 0) { this.y = 0; this.vy *= -1; }
+          if (this.y > height) { this.y = height; this.vy *= -1; }
+
+          // 1. Organic random self-drifting force (constant drift for both free and bonded particles)
+          const driftStrength = 0.12;
+          this.vx += (Math.random() - 0.5) * driftStrength;
+          this.vy += (Math.random() - 0.5) * driftStrength;
+
+          // 2. Repel from mouse if close (steer/push away from cursor)
+          if (mouse.x !== null && mouse.y !== null) {
+            const dx = mouse.x - this.x;
+            const dy = mouse.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            if (dist < mouse.radius) {
+              const force = (mouse.radius - dist) / mouse.radius;
+              // If mouse is pressed (clicking/dragging), push is much stronger
+              const pushStrength = mouse.isDown ? 0.35 : 0.08;
+              this.vx -= (dx / dist) * force * pushStrength;
+              this.vy -= (dy / dist) * force * pushStrength;
+            }
+          }
+
+          // 3. Text Avoidance Force (Steer particles away from the central hero copy text area)
+          if (textRect.width > 0 && textRect.height > 0) {
+            const paddingX = 40;
+            const paddingY = 25;
+            const minX = textRect.x - paddingX;
+            const maxX = textRect.x + textRect.width + paddingX;
+            const minY = textRect.y - paddingY;
+            const maxY = textRect.y + textRect.height + paddingY;
+
+            if (this.x > minX && this.x < maxX && this.y > minY && this.y < maxY) {
+              const leftDist = this.x - minX;
+              const rightDist = maxX - this.x;
+              const topDist = this.y - minY;
+              const bottomDist = maxY - this.y;
+
+              const minDist = Math.min(leftDist, rightDist, topDist, bottomDist);
+              const pushForce = 0.06; // Smooth outward acceleration
+
+              if (minDist === leftDist) {
+                this.vx -= pushForce;
+              } else if (minDist === rightDist) {
+                this.vx += pushForce;
+              } else if (minDist === topDist) {
+                this.vy -= pushForce;
+              } else if (minDist === bottomDist) {
+                this.vy += pushForce;
+              }
+            }
+          }
+        }
+
+        getColor() {
+          if (this.bondedRatio <= 0.1) {
+            return `rgba(255, 255, 255, ${0.45 + (1 - this.bondedRatio) * 0.1})`;
+          }
+          // Blend particle alpha as it bonds
+          const targetAlpha = 0.5 + this.bondedRatio * 0.45;
+          return this.element.color.replace(/[\d\.]+\)$/, `${targetAlpha})`);
+        }
+
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = this.getColor();
+          
+          // Extra glow for highly bonded soil molecules
+          ctx.shadowBlur = this.bondedRatio > 0.4 ? 12 : 0;
+          ctx.shadowColor = this.element.color;
+          ctx.fill();
+          ctx.shadowBlur = 0; // reset
+        }
+      }
+
+      // Nodes will be created in initCanvas after sizing
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Update nodes
+        particles.forEach(p => {
+          p.update();
+        });
+
+        // Calculate bonded ratio for each particle based on neighboring bonds of the SAME family
+        particles.forEach(p1 => {
+          let connections = 0;
+          particles.forEach(p2 => {
+            if (p1 === p2) return;
+            if (p1.family !== p2.family) return;
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < connectionDistance * connectionDistance) {
+              connections++;
+            }
+          });
+
+          if (connections >= 2) {
+            p1.bondedRatio += (1 - p1.bondedRatio) * 0.08;
+          } else {
+            p1.bondedRatio += (0 - p1.bondedRatio) * 0.08;
+          }
+        });
+
+        // 3. Mutual Attraction between nearby particles of the SAME family to naturally form clusters
+        for (let i = 0; i < particles.length; i++) {
+          const p1 = particles[i];
+          for (let j = i + 1; j < particles.length; j++) {
+            const p2 = particles[j];
+            if (p1.family !== p2.family) continue;
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+            if (dist < 45) {
+              if (dist > 12) {
+                // Attract
+                const force = ((45 - dist) / 45) * 0.008;
+                p1.vx += (dx / dist) * force;
+                p1.vy += (dy / dist) * force;
+                p2.vx -= (dx / dist) * force;
+                p2.vy -= (dy / dist) * force;
+              } else {
+                // Repel slightly to keep molecular spacing
+                const force = ((12 - dist) / 12) * 0.08;
+                p1.vx -= (dx / dist) * force;
+                p1.vy -= (dy / dist) * force;
+                p2.vx += (dx / dist) * force;
+                p2.vy += (dy / dist) * force;
+              }
+            }
+          }
+        }
+
+        // 4. Density-triggered explosions (Gathered to a certain point -> burst apart)
+        particles.forEach(p => {
+          if (p.explosionCooldown > 0) return;
+
+          // Count neighbors of the SAME family within a tight radius
+          let neighbors = 0;
+          particles.forEach(other => {
+            if (p === other) return;
+            if (p.family !== other.family) return;
+            const dx = other.x - p.x;
+            const dy = other.y - p.y;
+            const distSq = dx * dx + dy * dy;
+            const checkRadius = 18;
+            
+            if (distSq < checkRadius * checkRadius) {
+              neighbors++;
+            }
+          });
+
+          // Trigger local burst when cluster of the same family is extremely dense (5+ particles within 18px)
+          if (neighbors >= 5) {
+            // Family-specific shockwave glow color
+            let waveColor = 'rgba(32, 201, 151, 0.65)'; // default green
+            if (p.family === 'SOIL') waveColor = 'rgba(217, 119, 6, 0.7)'; // Ochre/orange-brown
+            else if (p.family === 'WATER') waveColor = 'rgba(147, 197, 253, 0.7)'; // Cyan/blue
+            else if (p.family === 'FERTILIZER') waveColor = 'rgba(52, 211, 153, 0.7)'; // Green/emerald
+
+            particles.forEach(other => {
+              const dx = other.x - p.x;
+              const dy = other.y - p.y;
+              const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              if (dist < 50) {
+                const force = (50 - dist) / 50;
+                const speed = 3.5 + Math.random() * 2.5;
+                other.vx += (dx / dist) * force * speed;
+                other.vy += (dy / dist) * force * speed;
+                other.explosionCooldown = 120; // prevent re-explosion immediately
+              }
+            });
+
+            // Add shockwave ring at center of explosion
+            shockwaves.push({
+              x: p.x,
+              y: p.y,
+              radius: 5,
+              maxRadius: 50,
+              alpha: 0.65,
+              color: waveColor
+            });
+          }
+        });
+
+        // 5. Draw connective chemical bonds within same family
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const p1 = particles[i];
+            const p2 = particles[j];
+            if (p1.family !== p2.family) continue;
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < connectionDistance) {
+              const alpha = (1 - dist / connectionDistance) * 0.16;
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+
+              // If both are bonded in a molecule, draw a colored covalent bond line
+              if (p1.bondedRatio > 0.4 && p2.bondedRatio > 0.4) {
+                const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+                grad.addColorStop(0, p1.getColor());
+                grad.addColorStop(1, p2.getColor());
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 1.25;
+              } else {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = 0.85;
+              }
+              ctx.stroke();
+            }
+          }
+
+          // Cursor connections removed for repulsion effect
+        }
+
+        // Draw and update shockwaves
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+          const wave = shockwaves[i];
+          wave.radius += 4;
+          wave.alpha = Math.max(0, 0.65 * (1 - wave.radius / wave.maxRadius));
+
+          ctx.beginPath();
+          ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(32, 201, 151, ${wave.alpha})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          if (wave.radius >= wave.maxRadius) {
+            shockwaves.splice(i, 1);
+          }
+        }
+
+        // Render nodes
+        particles.forEach(p => {
+          p.draw();
+        });
+
+        animId = requestAnimationFrame(animate);
+      }
+
+      let animId = null;
+      function initCanvas() {
+        resizeCanvas();
+        if (particles.length === 0) {
+          for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+          }
+        }
+        if (animId) cancelAnimationFrame(animId);
+        animate();
+      }
+
+      if (document.readyState === 'complete') {
+        initCanvas();
+      } else {
+        window.addEventListener('load', initCanvas);
+      }
+    })();
+  </script>
+</body>
+</html>

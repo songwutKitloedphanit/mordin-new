@@ -274,6 +274,14 @@ export const GenFormDate2: React.FC<GenFormDate2Props> = ({
             highlightDates={highlightDates}
             className="form-control py-2"
             dateFormat="yyyy-MM-dd"
+            // การ์ดแม่ (.private-card) มี overflow:hidden และ :hover ยังใส่ transform
+            // (สร้าง containing block) ทำให้ปฏิทินที่ render อยู่ในการ์ดโดน clip
+            // แล้ว floating-ui เด้งขึ้นบนทับหัวข้อ — render ผ่าน portal ไปไว้ที่ body
+            // เพื่อให้หลุดทุกกรอบ แล้วเด้งลงล่างตามปกติ
+            popperPlacement="bottom-start"
+            popperProps={{ strategy: 'fixed' }}
+            // portalId รองรับใน runtime v8 แต่ถูก omit ออกจาก type
+            portalId="react-datepicker-portal"
             onMonthChange={date => {
               const year = date.getFullYear();
               const month = date.getMonth() + 1;

@@ -90,19 +90,17 @@ const Login = () => {
           object-fit: contain;
         }
 
-        .private-login-hero-logo-white {
-          width: 52px;
-          height: auto;
-          flex-shrink: 0;
+        .private-login-hero-logo-main {
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .private-login-hero-logo-white img {
-          width: 100%;
+        .private-login-hero-logo-main img {
+          width: min(78%, 460px);
           height: auto;
           object-fit: contain;
+          filter: drop-shadow(0 12px 32px rgba(0, 21, 45, 0.35));
         }
 
         .private-login-hero-brand {
@@ -116,23 +114,6 @@ const Login = () => {
           letter-spacing: 0.8px;
           color: rgba(255, 255, 255, 0.55);
           text-transform: uppercase;
-        }
-
-        .private-login-hero h1 {
-          max-width: 460px;
-          margin: 0;
-          font-size: clamp(26px, 2.6vw, 34px);
-          font-weight: 800;
-          line-height: 1.3;
-          letter-spacing: -0.5px;
-        }
-
-        .private-login-hero-desc {
-          max-width: 430px;
-          margin: 14px 0 0;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 14.5px;
-          line-height: 1.7;
         }
 
         .private-login-hero-features {
@@ -248,32 +229,11 @@ const Login = () => {
         className="private-login-hero d-none d-lg-flex flex-column justify-content-between"
         aria-hidden="true"
       >
-        <div className="d-flex align-items-center gap-3">
-          <div className="private-login-hero-logo-white">
-            <img
-              src={`${assetBaseUrl}assets/img/logo-mitr-phol-white.png`}
-              alt="Mitr Phol Research"
-            />
-          </div>
-          <div>
-            <div className="private-login-hero-brand">MITR PHOL-SOIL</div>
-            <div className="private-login-hero-brand-sub">
-              Soil Analysis Platform
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h1>
-            วิเคราะห์ดินแม่นยำ
-            <br />
-            เพื่อผลผลิตอ้อยที่ยั่งยืน
-          </h1>
-          <p className="private-login-hero-desc">
-            แพลตฟอร์มบริหารจัดการการวิเคราะห์ดินครบวงจร ตั้งแต่เก็บตัวอย่างด้วย
-            QR Code และรถวิเคราะห์เคลื่อนที่
-            ไปจนถึงคำแนะนำปุ๋ยรายแปลงและรายงานสำหรับผู้บริหาร
-          </p>
+        <div className="private-login-hero-logo-main flex-grow-1 d-flex align-items-center justify-content-center">
+          <img
+            src={`${assetBaseUrl}assets/img/logo-mitr-phol-white.png`}
+            alt="Mitr Phol Research"
+          />
         </div>
 
         <ul className="private-login-hero-features">

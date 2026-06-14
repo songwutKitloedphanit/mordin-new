@@ -1,11 +1,8 @@
 import { BaseLogEntity } from 'src/common/entities/base.log.entity';
-import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+// History table: no UNIQUE business-key constraint (see analysis-standard.log.entity).
 @Entity('soil_grades_logs')
-@Unique('unique_service_type_laboratory_logs', [
-  'serviceTypeId',
-  'laboratoryId',
-])
 export class SoilGradeLog extends BaseLogEntity {
   @PrimaryGeneratedColumn({ name: 'soil_grade_id' })
   soilGradeId: number;

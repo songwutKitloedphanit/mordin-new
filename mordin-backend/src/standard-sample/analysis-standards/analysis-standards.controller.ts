@@ -13,7 +13,7 @@ import { User } from 'src/auth/decorators/user.decorator';
 
 import { AnalysisStandardsService } from './analysis-standards.service';
 import { CreateAnalysisStandardDto } from './dto/create-analysis-standard.dto';
-import { UpdateAnalysisStandardDto } from './dto/update-analysis-standard.dto';
+import { UpdateAnalysisStandardRepeatDto } from './dto/update-analysis-standard-repeat.dto';
 
 @Controller('analysis-standards')
 export class AnalysisStandardsController {
@@ -59,19 +59,19 @@ export class AnalysisStandardsController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() updateAnalysisStandardDto: UpdateAnalysisStandardDto,
+    @Body() updateAnalysisStandardRepeatDto: UpdateAnalysisStandardRepeatDto,
     @User('sub') userId: number
   ) {
     return this.analysisStandardsService.update(
       +id,
-      updateAnalysisStandardDto,
+      updateAnalysisStandardRepeatDto,
       userId
     );
   }
 
   @UseGuards(AuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.analysisStandardsService.remove(+id);
+  remove(@Param('id') id: string, @User('sub') userId: number) {
+    return this.analysisStandardsService.remove(+id, userId);
   }
 }

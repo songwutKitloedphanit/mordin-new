@@ -916,3 +916,173 @@
   color: var(--exr-brand);
   margin-bottom: 6px;
 }
+
+/* ───────────────────────── GridWidgetBoard: กริดลากวาง + ย่อขยาย ───────────────────────── */
+
+/* โหมดปรับแต่ง: พื้นจุดประให้เห็นว่ากำลังจัดหน้า */
+.exr-grid-board.is-customizing {
+  background-image: radial-gradient(var(--exr-line) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  border-radius: var(--exr-radius);
+}
+
+/* วิดเจ็ตต้องสูงเต็มช่องกริดเสมอ เนื้อหาเกินให้เลื่อนภายใน */
+.exr-grid-widget {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.exr-grid-widget-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.exr-grid-widget.is-customizing {
+  outline: 2px dashed #9bbcd9;
+  outline-offset: 3px;
+  border-radius: var(--exr-radius);
+}
+
+.exr-grid-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ที่จับลาก (หัวการ์ดตอนปรับแต่ง) */
+.exr-drag-handle {
+  cursor: grab;
+  user-select: none;
+}
+
+.exr-drag-handle:active {
+  cursor: grabbing;
+}
+
+.exr-grip {
+  color: var(--exr-ink-3);
+  margin-right: 8px;
+  font-size: 12px;
+}
+
+/* เงาตำแหน่งปลายทางตอนลาก */
+.exr-grid-board .react-grid-placeholder {
+  background: var(--exr-brand) !important;
+  opacity: 0.12;
+  border-radius: var(--exr-radius);
+}
+
+.exr-grid-board .react-grid-item.react-draggable-dragging .exr-grid-widget,
+.exr-grid-board .react-grid-item.resizing .exr-grid-widget {
+  box-shadow: 0 18px 44px rgba(0, 80, 146, 0.22);
+}
+
+/* มุมจับย่อ/ขยายให้เข้าธีม (แทนรูปสามเหลี่ยมเทาของ lib) */
+.exr-grid-board .react-resizable-handle {
+  background-image: none;
+  width: 22px;
+  height: 22px;
+}
+
+.exr-grid-board .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 10px;
+  height: 10px;
+  border-right: 2.5px solid var(--exr-brand);
+  border-bottom: 2.5px solid var(--exr-brand);
+  border-radius: 1px;
+  opacity: 0.65;
+}
+
+.exr-grid-board .react-resizable-handle:hover::after {
+  opacity: 1;
+}
+
+/* เมนูสลับชนิดกราฟบนหัววิดเจ็ต */
+.exr-viz-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--exr-line);
+  border-radius: 999px;
+  background: var(--exr-surface);
+}
+
+.exr-viz-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--exr-ink-2);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.exr-viz-btn:hover {
+  background: rgba(0, 80, 146, 0.08);
+  color: var(--exr-brand);
+}
+
+.exr-viz-btn.on {
+  background: var(--exr-brand);
+  color: #fff;
+}
+
+.exr-board-hint {
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--exr-ink-2);
+}
+
+/* วิดเจ็ตแผนที่บนกริด: แท็บธาตุด้านบน แผนที่ยืดเต็มที่เหลือ legend ปิดท้าย */
+.exr-map-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+.exr-map-widget .exr-tabs {
+  align-self: flex-start;
+}
+
+.exr-map-canvas-fill {
+  flex: 1;
+  min-height: 260px;
+}
+
+/* แผงรายละเอียด/ภาพรวมที่อยู่ในวิดเจ็ตของตัวเอง — ยืดเต็มความสูงวิดเจ็ต */
+.exr-map-detail-fill {
+  height: 100%;
+  min-height: 0;
+}
+
+/* dark mode */
+.private-layout-dark main .exr-grid-widget.is-customizing {
+  outline-color: #3d5a78;
+}
+
+.private-layout-dark main .exr-grid-board.is-customizing {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.12) 1.5px,
+    transparent 1.5px
+  );
+}
+
+.private-layout-dark main .exr-grid-board .react-grid-placeholder {
+  opacity: 0.22;
+}

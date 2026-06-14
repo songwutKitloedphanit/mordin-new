@@ -3,6 +3,7 @@ export interface CollectSampleInput {
   landId?: number | null;
   firstName: string;
   lastName: string;
+  birthDate: string;
   phoneNumber: string;
   thaiNationalId: string;
   serviceAreaId: number;

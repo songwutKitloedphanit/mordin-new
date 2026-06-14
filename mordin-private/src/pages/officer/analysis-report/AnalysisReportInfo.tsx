@@ -7,7 +7,6 @@ import { B_LIST, GenButtonCircle } from '../../../components/gui/GuiButton';
 
 import SampleFlow from '@/components/gui/SampleFlow';
 import LeafletMap, { MapMarkerData } from '@/components/map/LeafletMap';
-import { AnalysisReportInfoSummaryCard } from '@/components/pages/analysis-report/AnalysisReportSummaryCard';
 import AnalysisResultTable from '@/components/pages/analysis-report/AnalysisResultTable';
 import InfoTable from '@/components/pages/analysis-report/Infotable';
 import ResultGradeTable from '@/components/pages/analysis-report/ResultGradeTable';
@@ -264,9 +263,6 @@ const AnalysisReportInfo = () => {
 
   return (
     <>
-      {/* Cards Section */}
-      <AnalysisReportInfoSummaryCard />
-
       {/* Timeline สถานะตัวอย่าง */}
       {!loading && reportData.qrCode?.status && (
         <SampleFlow status={reportData.qrCode.status} />

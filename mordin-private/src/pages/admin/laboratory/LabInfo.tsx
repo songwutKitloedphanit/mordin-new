@@ -286,7 +286,7 @@ const LabInfo = () => {
               </div>
             </div>
             <div className="private-card-body">
-              <div className="table-responsive">
+              <div>
                 <table
                   id="multi-filter-select"
                   className="display table table-striped table-hover"

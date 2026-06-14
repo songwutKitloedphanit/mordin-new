@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($farmerData['factoryId'])) {
             $serviceAreas = serviceAreaAPI::getServiceAreasByFactory($farmerData['factoryId'])['data'] ?? [];
         }
-        
+
         if (!empty($farmerData['birthDate'])) {
             $parts = explode('-', $farmerData['birthDate']);
             if (count($parts) === 3) {

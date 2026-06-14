@@ -1,0 +1,53 @@
+import api from '../../Axios';
+import {
+  CreateAnalysisStandardInput,
+  AnalysisStandardInterface,
+  UpdateAnalysisStandardResultDto,
+  InputCrmCertificateCompositeDto,
+} from '@/types/standard-sample/AnalysisStandards';
+
+export async function createAnalysisStandard(
+  data: CreateAnalysisStandardInput
+) {
+  try {
+    const response = await api.post('/analysis-standards', data);
+    console.log('responsedataAPI', response);
+    return response.data;
+  } catch (error) {
+    console.error('Cannot create analysis standard:', error);
+    throw error;
+  }
+}
+
+export async function getAnalysisStandardsByCalendar(
+  serviceCalendarId: number
+): Promise<AnalysisStandardInterface[]> {
+  try {
+    const response = await api.get(
+      `/analysis-standards/calendar/${serviceCalendarId}`
+    );
+    console.log('getAnalysisStandardsByCalendarData', response);
+    return response.data;
+  } catch (error) {
+    console.error('Cannot fetch analysis standards by calendar:', error);
+    throw error;
+  }
+}
+
+/** BLANK / SAMPLE: อัปเดต preValue ของ analysis-standard-results */
+export async function inputAnalysisStandardResults(
+  payload: UpdateAnalysisStandardResultDto[]
+) {
+  const { data } = await api.patch('/analysis-standard-results/input', payload);
+  return data; // { updatedCount, data }
+}
+// 🔁 alias
+export const inputBlankResults = inputAnalysisStandardResults;
+
+/** CRM: อัปเดต certificate_value ของ standard_certificates (composite key: standard_id + laboratory_id) */
+export async function inputStandardCertificates(
+  payload: InputCrmCertificateCompositeDto[]
+) {
+  const { data } = await api.patch('/standard-certificates/input', payload);
+  return data;
+}

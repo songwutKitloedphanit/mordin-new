@@ -79,10 +79,13 @@ const DashboardFilters = ({
             name="typeId"
             label="ประเภทบริการ"
             value={values?.typeId ?? ''}
-            options={serviceTypeList.map(t => ({
-              value: t.serviceTypeId,
-              name: t.name,
-            }))}
+            options={[
+              { value: '', name: 'ทุกประเภท' },
+              ...serviceTypeList.map(t => ({
+                value: t.serviceTypeId,
+                name: t.name,
+              })),
+            ]}
             onChange={handleTypeChange}
           />
         </div>
@@ -95,8 +98,8 @@ const DashboardFilters = ({
             id="year"
             name="year"
             label="ปีงบประมาณ"
-            options={yearList}
-            value={values?.year}
+            options={[{ value: '', name: 'ทุกปี' }, ...yearList]}
+            value={values?.year ?? ''}
             onChange={handleChange}
           />
         </div>

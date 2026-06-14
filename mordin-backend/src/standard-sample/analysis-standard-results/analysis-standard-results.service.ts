@@ -35,15 +35,37 @@ export class AnalysisStandardResultsService {
   ) {}
 
   async createWithAnalysisStandard(analysisStandard: AnalysisStandard) {
+    // Create the full set of result rows for repeat 1..repeatCount.
+    await this.createResultsForRepeatRange(
+      analysisStandard,
+      1,
+      analysisStandard.repeatCount
+    );
+  }
+
+  /**
+   * Create AnalysisStandardResult rows for a contiguous range of repeat numbers
+   * (inclusive), per matching laboratory setting. Used both when an analysis
+   * standard is first created (1..repeatCount) and when its repeat count is
+   * increased (oldCount+1..newCount).
+   */
+  async createResultsForRepeatRange(
+    analysisStandard: AnalysisStandard,
+    fromRepeat: number,
+    toRepeat: number
+  ) {
+    if (toRepeat < fromRepeat) return;
+
+    const laboratorySetting = await this.laboratorySettingRepo.find({
+      where: { serviceCalendarId: analysisStandard.serviceCalendarId },
+    });
+    if (!laboratorySetting || laboratorySetting.length === 0) {
+      throw new NotFoundException(
+        'Laboratory setting not found for the given service calendar'
+      );
+    }
+
     if (analysisStandard.type === StandardType.CRM) {
-      const laboratorySetting = await this.laboratorySettingRepo.find({
-        where: { serviceCalendarId: analysisStandard.serviceCalendarId },
-      });
-      if (!laboratorySetting || laboratorySetting.length === 0) {
-        throw new NotFoundException(
-          'Laboratory setting not found for the given service calendar'
-        );
-      }
       const standard = await this.standardRepo.findOne({
         where: { standardId: analysisStandard.standardId },
         relations: {
@@ -58,8 +80,7 @@ export class AnalysisStandardResultsService {
           lab => lab.laboratoryId === certificate.laboratoryId
         );
         if (matchLabSetting) {
-          // Create a new AnalysisStandardResult for each certificate
-          for (let i = 1; i <= analysisStandard.repeatCount; i++) {
+          for (let i = fromRepeat; i <= toRepeat; i++) {
             const analysisStandardResult =
               this.analysisStandardResultRepo.create({
                 analysisStandardId: analysisStandard.analysisStandardId,
@@ -72,16 +93,8 @@ export class AnalysisStandardResultsService {
         }
       }
     } else if (analysisStandard.type === StandardType.BLANK) {
-      const laboratorySetting = await this.laboratorySettingRepo.find({
-        where: { serviceCalendarId: analysisStandard.serviceCalendarId },
-      });
-      if (!laboratorySetting || laboratorySetting.length === 0) {
-        throw new NotFoundException(
-          'Laboratory setting not found for the given service calendar'
-        );
-      }
       for (const labSetting of laboratorySetting) {
-        for (let i = 1; i <= analysisStandard.repeatCount; i++) {
+        for (let i = fromRepeat; i <= toRepeat; i++) {
           const analysisStandardResult = this.analysisStandardResultRepo.create(
             {
               analysisStandardId: analysisStandard.analysisStandardId,
@@ -94,6 +107,27 @@ export class AnalysisStandardResultsService {
         }
       }
     }
+  }
+
+  /**
+   * Remove all result rows of an analysis standard whose repeatNumber exceeds
+   * maxRepeat. Goes through .remove() (with removedBy attached) so the logging
+   * subscriber stamps deleted_at on the audit log.
+   */
+  async removeResultsAboveRepeat(
+    analysisStandardId: number,
+    maxRepeat: number,
+    userId: number
+  ) {
+    const results = await this.analysisStandardResultRepo.find({
+      where: { analysisStandardId },
+    });
+    const toRemove = results.filter(r => r.repeatNumber > maxRepeat);
+    if (toRemove.length === 0) return;
+    for (const r of toRemove) {
+      (r as any).removedBy = userId;
+    }
+    await this.analysisStandardResultRepo.remove(toRemove);
   }
 
   async processBlankCsv(

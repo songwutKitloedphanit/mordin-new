@@ -257,8 +257,8 @@ export const QrCodeTable: React.FC<QrCodeTableProps> = ({
 
       <div className="d-flex justify-content-between align-items-center mt-3">
         <span>
-          Showing {pageIndex + 1} to {pageCount} | Total rows:{' '}
-          {table.getFilteredRowModel().rows.length}
+          หน้า {pageIndex + 1} จาก {pageCount} · ทั้งหมด{' '}
+          {table.getFilteredRowModel().rows.length} รายการ
         </span>
         <ul className="pagination mb-0">
           <li className={`page-item ${pageIndex === 0 ? 'disabled' : ''}`}>

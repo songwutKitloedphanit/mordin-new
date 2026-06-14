@@ -17,13 +17,6 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -rts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:integration": "node scripts/run-integration-tests.js",
-    "test:db:reset": "node scripts/reset-test-db.js",
-    "migrate:check": "node scripts/migrate.js check",
-    "migrate:status": "node scripts/migrate.js status",
-    "migrate:up": "node scripts/migrate.js up",
-    "migrate:down": "node scripts/migrate.js down",
-    "migrate:service-area": "node scripts/migrate-service-area-outbox.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate-env": "node generate-env.js"

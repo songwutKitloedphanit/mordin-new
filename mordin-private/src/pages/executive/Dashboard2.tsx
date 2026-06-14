@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import ChoroplethMap from '@/components/chart/ChoroplethMap';
+import DataChart from '@/components/chart/DataChart';
 import DashboardFilters from '@/components/pages/executive/dashboard/DashboardFilter';
 import {
   ELEMENT_LABELS,
@@ -9,6 +10,8 @@ import {
 } from '@/components/pages/executive/executive-elements';
 import { StatusNotice } from '@/components/pages/executive/ExecutiveDashboardUI';
 import ExecutiveReportToolbar from '@/components/pages/executive/ExecutiveReportToolbar';
+import GridWidgetBoard from '@/components/pages/executive/widgets/GridWidgetBoard';
+import type { WidgetDef } from '@/components/pages/executive/widgets/types';
 import EmptyState from '@/components/ui/EmptyState';
 import LoadingState from '@/components/ui/LoadingState';
 import { getAllGeoGraphies } from '@/services/api/address/GeographiesApi';
@@ -26,6 +29,9 @@ import { ServiceType } from '@/types/service-type/ServiceTypes';
 import '@/components/pages/executive/executive-redesign.css';
 
 type SelectedSearch = GetGraphFilterParams;
+
+// คีย์ localStorage สำหรับจำการจัดวางวิดเจ็ตของหน้ารายงานนี้
+const REPORT_GRID_STORAGE_KEY = 'exec-report-grid-v1';
 
 const toMapKey = (value?: string) =>
   (value || '').replace(/\s+/g, '').replace(/^Mueang/i, 'Muang');
@@ -166,14 +172,9 @@ const Report = () => {
           }
         }
         setProvinceThaiNames(thaiNames);
-        // ใช้ฟิลเตอร์จาก URL ถ้ามี ไม่งั้น default = ประเภทบริการแรก
+        // ใช้ฟิลเตอร์จาก URL ถ้ามี ไม่งั้น default = "ทุกประเภท" (ไม่บังคับเลือกประเภทแรก)
         const urlFilters = initialUrlRef.current ?? {};
-        const initialSearch: SelectedSearch = {
-          ...urlFilters,
-          typeId:
-            urlFilters.typeId ??
-            (safeTypes.length > 0 ? safeTypes[0].serviceTypeId : 0),
-        };
+        const initialSearch: SelectedSearch = { ...urlFilters };
         setDraftSearch(initialSearch);
         setGeographyList(safeGeographies);
         // เติมจังหวัด/ระดับแผนที่ ให้ตรงกับ URL ก่อนปลดสถานะโหลด เพื่อยิงข้อมูลรอบเดียว
@@ -363,6 +364,49 @@ const Report = () => {
     );
   };
 
+  // คลิกพื้นที่บนแผนที่: ระดับภูมิภาค = เจาะลึกเข้าจังหวัด (ฟิลเตอร์),
+  // ระดับจังหวัดแล้ว = เลือกอำเภอเพื่อดูรายละเอียดในแผงด้านขวา
+  const handleMapSelect = (name: string) => {
+    if (!appliedSearch?.provinceCode) {
+      const province = provinceList.find(p => toMapKey(p.nameEn) === name);
+      if (province) {
+        setDraftSearch(prev => ({
+          ...prev,
+          provinceCode: province.code,
+          districtCode: undefined,
+          subdistrictCode: undefined,
+        }));
+        setDraftFilterLevel({
+          level: MapLevel.Province,
+          name: province.nameEn.replace(/\s+/g, ''),
+        });
+        setSelectedLocation(null);
+        return;
+      }
+    }
+    setSelectedLocation(prev => (prev === name ? null : name));
+  };
+
+  // ปุ่มย้อนกลับขึ้นระดับบน (จังหวัด → ภูมิภาค)
+  const handleDrillUp = () => {
+    setSelectedLocation(null);
+    setDraftSearch(prev => ({
+      ...prev,
+      provinceCode: undefined,
+      districtCode: undefined,
+      subdistrictCode: undefined,
+    }));
+    setDraftFilterLevel(
+      draftSearch.geographyId
+        ? {
+            level: MapLevel.Region,
+            name: geographyList.find(g => g.id === draftSearch.geographyId)
+              ?.name,
+          }
+        : undefined
+    );
+  };
+
   const mapElements = elements.filter(item => item.locations.length > 0);
   const barElements = elements.filter(item => item.bars.length > 0);
 
@@ -422,6 +466,212 @@ const Report = () => {
     return best;
   })();
 
+  // ===== นิยามวิดเจ็ตของหน้านี้ =====
+  // แผนที่ / รายละเอียดพื้นที่ที่คลิก / ภาพรวมทุกพื้นที่ — จัดวาง ย่อ/ขยาย
+  // และสลับชนิดการแสดงผลได้บน GridWidgetBoard (จำค่าใน localStorage)
+  const reportWidgets: WidgetDef[] = [
+    {
+      id: 'map',
+      title: 'แผนที่การกระจายตัวผลวิเคราะห์ดิน',
+      subtitle: 'สีของพื้นที่ = ระดับผลวิเคราะห์ที่พบมากที่สุดของธาตุที่เลือก',
+      icon: 'fas fa-map-location-dot',
+      defaultSpan: 'full',
+      defaultGrid: { w: 8, h: 9, minW: 5, minH: 5 },
+      render: () =>
+        activeElement ? (
+          <div className="exr-map-widget">
+            {appliedSearch?.provinceCode && (
+              <button
+                type="button"
+                className="exr-board-btn executive-report-no-print"
+                onClick={handleDrillUp}
+                style={{ alignSelf: 'flex-start', marginBottom: 8 }}
+              >
+                <i className="fas fa-arrow-left me-1"></i>
+                กลับไปดูทั้งภูมิภาค
+              </button>
+            )}
+            {mapElements.length > 1 && (
+              <div
+                className="exr-tabs executive-report-no-print"
+                role="tablist"
+              >
+                {mapElements.map(element => (
+                  <button
+                    key={element.elementName}
+                    type="button"
+                    role="tab"
+                    aria-selected={
+                      element.elementName === activeElement.elementName
+                    }
+                    className={`exr-tab ${
+                      element.elementName === activeElement.elementName
+                        ? 'on'
+                        : ''
+                    }`}
+                    onClick={() => setActiveElementName(element.elementName)}
+                  >
+                    {ELEMENT_LABELS[element.elementName]?.symbol ??
+                      element.elementName}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="exr-map-canvas-fill">
+              <ChoroplethMap
+                data={activeElement.locations.map(location => ({
+                  name: location.key,
+                  value: location.totalCount,
+                  itemStyle: { color: location.color },
+                }))}
+                options={{ name: '', pieces: [] }}
+                filter={appliedFilterLevel}
+                onSelect={handleMapSelect}
+                height="100%"
+              />
+            </div>
+            {/* คำอธิบายสีของธาตุที่เลือก */}
+            <div className="exr-map-legend">
+              {activeElement.bars.map(bar => (
+                <span key={bar.label} className="exr-legend-item">
+                  <span
+                    className="exr-dot"
+                    style={{ background: bar.color }}
+                  ></span>
+                  {bar.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />
+        ),
+    },
+    {
+      id: 'detail',
+      title: 'รายละเอียดพื้นที่ที่เลือก',
+      icon: 'fas fa-location-dot',
+      defaultSpan: 'half',
+      defaultGrid: { w: 4, h: 9, minW: 3, minH: 4 },
+      render: () => (
+        <div className="exr-map-detail exr-map-detail-fill">
+          {selectedLocation ? (
+            <>
+              <div className="exr-map-detail-head">
+                <div>
+                  <div className="exr-map-detail-label">พื้นที่ที่เลือก</div>
+                  <div className="exr-map-detail-title">
+                    <i className="fas fa-location-dot me-2"></i>
+                    {displayLocationName(selectedLocation)}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="exr-board-btn"
+                  onClick={() => setSelectedLocation(null)}
+                >
+                  <i className="fas fa-xmark me-1"></i>
+                  ล้าง
+                </button>
+              </div>
+              {selectedDetails.map(detail => (
+                <div key={detail.elementName} className="exr-map-row">
+                  <span className="exr-map-row-name">
+                    {formatElementTitle(detail.elementName)}
+                  </span>
+                  {detail.location ? (
+                    <span className="exr-map-row-value">
+                      <span
+                        className="exr-dot"
+                        style={{ background: detail.location.color }}
+                      ></span>
+                      <b>{detail.location.gradeName ?? '—'}</b>
+                      <small>
+                        · {detail.location.totalCount.toLocaleString()} ตัวอย่าง
+                      </small>
+                    </span>
+                  ) : (
+                    <span className="exr-map-row-empty">ไม่มีข้อมูล</span>
+                  )}
+                </div>
+              ))}
+              <div className="exr-note">
+                <i className="fas fa-circle-info"></i>
+                สีและระดับ = ผลวิเคราะห์ที่พบมากที่สุดของแต่ละธาตุในพื้นที่นี้
+              </div>
+            </>
+          ) : (
+            <div className="exr-map-hint">
+              <i className="fas fa-hand-pointer"></i>
+              คลิกพื้นที่บนแผนที่ เพื่อดูผลวิเคราะห์ดินรายพื้นที่ของจุดนั้น
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: 'overview',
+      title: 'ภาพรวมทุกพื้นที่',
+      subtitle: 'ระดับที่พบมากที่สุดของแต่ละธาตุ จากทุกพื้นที่บนแผนที่',
+      icon: 'fas fa-chart-simple',
+      defaultSpan: 'half',
+      defaultGrid: { w: 4, h: 5, minW: 3, minH: 3 },
+      vizOptions: [
+        { id: 'list', label: 'รายการสรุป', icon: 'fas fa-list' },
+        {
+          id: 'bar-h',
+          label: 'กราฟแท่ง (% ระดับเด่น)',
+          icon: 'fas fa-chart-bar',
+        },
+      ],
+      render: ctx => {
+        if (barElements.length === 0) {
+          return <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />;
+        }
+        const rows = barElements.map(element => {
+          const total = element.bars.reduce((sum, bar) => sum + bar.value, 0);
+          const top = element.bars.reduce((a, b) =>
+            b.value > a.value ? b : a
+          );
+          const pct = total > 0 ? (top.value / total) * 100 : 0;
+          return { element, top, pct };
+        });
+        if (ctx?.viz === 'bar-h') {
+          return (
+            <DataChart
+              type="bar-h"
+              dataItems={rows.map(row => ({
+                label: `${formatElementTitle(row.element.elementName)} · ${row.top.label}`,
+                value: Number(row.pct.toFixed(0)),
+                color: row.top.color,
+              }))}
+              height="100%"
+            />
+          );
+        }
+        return (
+          <div>
+            {rows.map(row => (
+              <div key={row.element.elementName} className="exr-map-row">
+                <span className="exr-map-row-name">
+                  {formatElementTitle(row.element.elementName)}
+                </span>
+                <span className="exr-map-row-value">
+                  <span
+                    className="exr-dot"
+                    style={{ background: row.top.color }}
+                  ></span>
+                  <b>{row.top.label}</b>
+                  <small>· {row.pct.toFixed(0)}%</small>
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="executive-report-content exr">
       {/* ===================== PAGE HEADER ===================== */}
@@ -429,8 +679,8 @@ const Report = () => {
         <div>
           <h2 className="exr-page-title">แผนที่ผลวิเคราะห์ดินรายพื้นที่</h2>
           <p className="exr-page-sub">
-            คลิกพื้นที่บนแผนที่เพื่อดูผลวิเคราะห์ดินของพื้นที่นั้น ·
-            เลือกธาตุอาหารเพื่อเปลี่ยนการระบายสี
+            คลิกจังหวัดบนแผนที่เพื่อเจาะดูรายอำเภอ ·
+            คลิกพื้นที่เพื่อดูรายละเอียด · เลือกธาตุอาหารเพื่อเปลี่ยนการระบายสี
           </p>
         </div>
         <ExecutiveReportToolbar
@@ -501,191 +751,13 @@ const Report = () => {
       {dashboardError && <StatusNotice type="error" message={dashboardError} />}
       {!hasDashboardLoaded && <LoadingState label="กำลังโหลดข้อมูลรายงาน..." />}
 
-      {/* ===================== แผนที่เดียว + แผงรายละเอียดตามจุดที่คลิก ===================== */}
+      {/* ===================== WIDGET BOARD: แผนที่ / รายละเอียด / ภาพรวม ===================== */}
       {hasDashboardLoaded && (
         <div className="position-relative">
-          <div className="exr-card">
-            <div className="exr-card-head">
-              <div className="min-w-0">
-                <h4 className="exr-card-title">
-                  <i className="fas fa-map-location-dot"></i>
-                  แผนที่การกระจายตัวผลวิเคราะห์ดิน
-                </h4>
-                <p className="exr-card-sub">
-                  สีของพื้นที่ = ระดับผลวิเคราะห์ที่พบมากที่สุดของธาตุที่เลือก
-                </p>
-              </div>
-              {mapElements.length > 1 && activeElement && (
-                <div
-                  className="exr-tabs executive-report-no-print"
-                  role="tablist"
-                >
-                  {mapElements.map(element => (
-                    <button
-                      key={element.elementName}
-                      type="button"
-                      role="tab"
-                      aria-selected={
-                        element.elementName === activeElement.elementName
-                      }
-                      className={`exr-tab ${
-                        element.elementName === activeElement.elementName
-                          ? 'on'
-                          : ''
-                      }`}
-                      onClick={() => setActiveElementName(element.elementName)}
-                    >
-                      {ELEMENT_LABELS[element.elementName]?.symbol ??
-                        element.elementName}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="exr-card-body">
-              {activeElement ? (
-                <div className="exr-map-layout">
-                  <div className="exr-map-canvas">
-                    <ChoroplethMap
-                      data={activeElement.locations.map(location => ({
-                        name: location.key,
-                        value: location.totalCount,
-                        itemStyle: { color: location.color },
-                      }))}
-                      options={{ name: '', pieces: [] }}
-                      filter={appliedFilterLevel}
-                      onSelect={name =>
-                        setSelectedLocation(prev =>
-                          prev === name ? null : name
-                        )
-                      }
-                      height={520}
-                    />
-                    {/* คำอธิบายสีของธาตุที่เลือก */}
-                    <div className="exr-map-legend">
-                      {activeElement.bars.map(bar => (
-                        <span key={bar.label} className="exr-legend-item">
-                          <span
-                            className="exr-dot"
-                            style={{ background: bar.color }}
-                          ></span>
-                          {bar.label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* แผงรายละเอียดพื้นที่ที่คลิก */}
-                  <div className="exr-map-detail">
-                    {selectedLocation ? (
-                      <>
-                        <div className="exr-map-detail-head">
-                          <div>
-                            <div className="exr-map-detail-label">
-                              พื้นที่ที่เลือก
-                            </div>
-                            <div className="exr-map-detail-title">
-                              <i className="fas fa-location-dot me-2"></i>
-                              {displayLocationName(selectedLocation)}
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            className="exr-board-btn"
-                            onClick={() => setSelectedLocation(null)}
-                          >
-                            <i className="fas fa-xmark me-1"></i>
-                            ล้าง
-                          </button>
-                        </div>
-                        {selectedDetails.map(detail => (
-                          <div key={detail.elementName} className="exr-map-row">
-                            <span className="exr-map-row-name">
-                              {formatElementTitle(detail.elementName)}
-                            </span>
-                            {detail.location ? (
-                              <span className="exr-map-row-value">
-                                <span
-                                  className="exr-dot"
-                                  style={{
-                                    background: detail.location.color,
-                                  }}
-                                ></span>
-                                <b>{detail.location.gradeName ?? '—'}</b>
-                                <small>
-                                  ·{' '}
-                                  {detail.location.totalCount.toLocaleString()}{' '}
-                                  ตัวอย่าง
-                                </small>
-                              </span>
-                            ) : (
-                              <span className="exr-map-row-empty">
-                                ไม่มีข้อมูล
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                        <div className="exr-note">
-                          <i className="fas fa-circle-info"></i>
-                          สีและระดับ =
-                          ผลวิเคราะห์ที่พบมากที่สุดของแต่ละธาตุในพื้นที่นี้
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="exr-map-detail-head">
-                          <div>
-                            <div className="exr-map-detail-label">
-                              ภาพรวมพื้นที่ที่แสดง
-                            </div>
-                            <div className="exr-map-detail-title">
-                              <i className="fas fa-chart-simple me-2"></i>
-                              ทุกพื้นที่บนแผนที่
-                            </div>
-                          </div>
-                        </div>
-                        {barElements.map(element => {
-                          const total = element.bars.reduce(
-                            (sum, bar) => sum + bar.value,
-                            0
-                          );
-                          const top = element.bars.reduce((a, b) =>
-                            b.value > a.value ? b : a
-                          );
-                          const pct = total > 0 ? (top.value / total) * 100 : 0;
-                          return (
-                            <div
-                              key={element.elementName}
-                              className="exr-map-row"
-                            >
-                              <span className="exr-map-row-name">
-                                {formatElementTitle(element.elementName)}
-                              </span>
-                              <span className="exr-map-row-value">
-                                <span
-                                  className="exr-dot"
-                                  style={{ background: top.color }}
-                                ></span>
-                                <b>{top.label}</b>
-                                <small>· {pct.toFixed(0)}%</small>
-                              </span>
-                            </div>
-                          );
-                        })}
-                        <div className="exr-map-hint">
-                          <i className="fas fa-hand-pointer"></i>
-                          คลิกพื้นที่บนแผนที่
-                          เพื่อดูผลวิเคราะห์ดินรายพื้นที่ของจุดนั้น
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />
-              )}
-            </div>
-          </div>
+          <GridWidgetBoard
+            storageKey={REPORT_GRID_STORAGE_KEY}
+            widgets={reportWidgets}
+          />
 
           {isDashboardLoading && (
             <div

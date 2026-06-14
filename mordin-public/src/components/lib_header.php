@@ -67,7 +67,15 @@ $isActive = function ($aliases, $paths = []) use ($pageAlias, $requestPath) {
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title><?= htmlspecialchars($pageName !== '' ? $pageName . ' | MITR PHOL-SOIL' : 'MITR PHOL-SOIL', ENT_QUOTES, 'UTF-8') ?></title>
+  <?php
+    // Brand-first title so every tab consistently reads "MITR PHOL-SOIL" on the
+    // left (tabs truncate from the right). Home shows the brand only.
+    $brandTitle = 'MITR PHOL-SOIL';
+    $documentTitle = ($pageAlias === 'home' || $pageName === '')
+      ? $brandTitle
+      : $brandTitle . ' | ' . $pageName;
+  ?>
+  <title><?= htmlspecialchars($documentTitle, ENT_QUOTES, 'UTF-8') ?></title>
   <meta name="description" content="<?= htmlspecialchars($pageDesc, ENT_QUOTES, 'UTF-8') ?>">
   <meta name="keywords" content="">
 

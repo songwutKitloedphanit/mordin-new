@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Mockup — ระบบวิเคราะห์ดิน</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* ─── Base ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f0f2f5;
+      color: #1e2a3a;
+      font-size: 14px;
+    }
+
+    /* ─── Page shell ─────────────────────────────────────────── */
+    .shell { display: flex; min-height: 100vh; }
+
+    /* Fake sidebar */
+    .sidebar {
+      width: 220px; min-width: 220px;
+      background: #1a2332;
+      padding: 24px 0;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .sidebar-brand {
+      padding: 0 20px 20px;
+      font-size: 18px; font-weight: 700; color: #fff;
+      border-bottom: 1px solid #2a3548; margin-bottom: 8px;
+    }
+    .sidebar-brand small { display: block; font-size: 11px; font-weight: 400; color: #6b7a90; margin-top: 2px; }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 20px; color: #8a98aa; font-size: 13px;
+      text-decoration: none; border-radius: 0;
+      transition: background 0.15s;
+    }
+    .sidebar-item:hover { background: #243040; color: #c8d4e3; }
+    .sidebar-item.active { background: #243756; color: #5ba4f5; font-weight: 600; }
+    .sidebar-item .fa { width: 16px; text-align: center; }
+
+    /* Main content */
+    .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+    /* ─── Page header ────────────────────────────────────────── */
+    .page-header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #163354 60%, #0d2240 100%);
+      padding: 28px 32px 24px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .page-header::after {
+      content: '';
+      position: absolute; right: -60px; top: -60px;
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(91,164,245,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .page-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .page-header-title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; margin: 0 0 4px; }
+    .page-header-sub { font-size: 13px; color: rgba(255,255,255,0.6); margin: 0; }
+
+    /* Active filter chips in header */
+    .filter-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.9); border-radius: 20px;
+      padding: 3px 10px; font-size: 12px;
+    }
+    .filter-chip .chip-label {
+      color: rgba(255,255,255,0.55); font-size: 11px;
+    }
+    .btn-export {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
+      color: #fff; border-radius: 8px; padding: 8px 16px; font-size: 13px;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .btn-export:hover { background: rgba(255,255,255,0.2); }
+
+    /* ─── Filter bar ──────────────────────────────────────────── */
+    .filter-bar {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 32px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .filter-bar-label { font-size: 12px; font-weight: 600; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    .filter-select {
+      appearance: none;
+      border: 1px solid #dce3ec;
+      border-radius: 7px;
+      padding: 6px 28px 6px 10px;
+      font-size: 13px; color: #1e2a3a;
+      background: #f7f9fb url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7a90'/%3E%3C/svg%3E") no-repeat right 9px center;
+      cursor: pointer; min-width: 130px;
+    }
+    .filter-select:focus { outline: 2px solid #5ba4f5; border-color: #5ba4f5; }
+    .filter-divider { width: 1px; height: 24px; background: #e2e8f0; }
+    .filter-reset {
+      color: #5ba4f5; background: none; border: none; font-size: 13px; cursor: pointer; padding: 0; display: flex; align-items: center; gap: 5px;
+    }
+    .filter-reset:hover { text-decoration: underline; }
+
+    /* ─── Body padding ───────────────────────────────────────── */
+    .page-body { padding: 24px 32px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* ─── Insight strip ──────────────────────────────────────── */
+    .insight-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .insight-card {
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex; align-items: flex-start; gap: 14px;
+      border: 1px solid;
+    }
+    .insight-card.blue  { background: #eef5ff; border-color: #c7dbf5; }
+    .insight-card.green { background: #edfaf3; border-color: #b9e8cf; }
+    .insight-card.amber { background: #fef9ee; border-color: #f5dfa0; }
+    .insight-icon {
+      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 19px;
+    }
+    .insight-card.blue  .insight-icon { background: #d0e6ff; color: #3b7fd9; }
+    .insight-card.green .insight-icon { background: #c3f0d8; color: #2d9b5e; }
+    .insight-card.amber .insight-icon { background: #fde9b8; color: #c17900; }
+    .insight-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 3px; }
+    .insight-value { font-size: 18px; font-weight: 700; line-height: 1.2; color: #1e2a3a; }
+    .insight-sub { font-size: 12px; color: #6b7a90; margin-top: 3px; }
+    .insight-badge {
+      display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 600;
+    }
+    .insight-card.blue  .insight-badge { background: #3b7fd9; color: #fff; }
+    .insight-card.green .insight-badge { background: #2d9b5e; color: #fff; }
+    .insight-card.amber .insight-badge { background: #c17900; color: #fff; }
+
+    /* ─── KPI metrics ─────────────────────────────────────────── */
+    .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .kpi-card {
+      background: #fff; border-radius: 12px;
+      padding: 18px 20px;
+      border-left: 4px solid;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .kpi-icon {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .kpi-label { font-size: 12px; color: #6b7a90; font-weight: 500; margin-bottom: 4px; }
+    .kpi-num { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+    .kpi-unit { font-size: 13px; color: #6b7a90; margin-left: 4px; font-weight: 400; }
+
+    /* ─── Section card ────────────────────────────────────────── */
+    .section-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    .section-head {
+      padding: 16px 24px 14px;
+      border-bottom: 1px solid #f0f3f7;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-title { font-size: 15px; font-weight: 700; color: #1e2a3a; margin: 0; display: flex; align-items: center; gap: 8px; }
+    .section-title .fa { color: #5ba4f5; }
+    .section-sub { font-size: 12px; color: #8a98aa; margin-top: 3px; }
+    .section-body { padding: 20px 24px; }
+
+    /* ─── Tab nav ─────────────────────────────────────────────── */
+    .tab-nav { display: flex; gap: 4px; background: #f0f2f5; border-radius: 10px; padding: 4px; }
+    .tab-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 8px 16px; border-radius: 7px; border: none; background: none;
+      font-size: 13px; color: #6b7a90; cursor: pointer; font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab-btn:hover { background: rgba(255,255,255,0.7); color: #1e2a3a; }
+    .tab-btn.active { background: #fff; color: #1e2a3a; font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .tab-btn .fa { font-size: 13px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ─── Soil bar chart ──────────────────────────────────────── */
+    .soil-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .soil-card {
+      border: 1px solid #edf0f4; border-radius: 10px;
+      padding: 16px; background: #fafbfc;
+    }
+    .soil-card-title { font-size: 13px; font-weight: 700; color: #1e2a3a; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .soil-card-title .top-badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; background: #e8f0fe; color: #3b7fd9; }
+    .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+    .bar-name { font-size: 12px; color: #6b7a90; min-width: 52px; }
+    .bar-track { flex: 1; background: #edf0f4; border-radius: 4px; height: 14px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; transition: width 0.4s; }
+    .bar-count { font-size: 11px; color: #6b7a90; min-width: 28px; text-align: right; }
+    .soil-bottom { font-size: 12px; color: #6b7a90; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf0f4; text-align: center; }
+
+    /* ─── Fertilizer table ────────────────────────────────────── */
+    .fert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .fert-card { border: 1px solid #edf0f4; border-radius: 10px; padding: 16px; background: #fafbfc; }
+    .fert-card-title { font-size: 13px; font-weight: 700; color: #1e2a3a; margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+    .usage-section { margin-bottom: 14px; }
+    .usage-label { font-size: 12px; font-weight: 600; color: #5ba4f5; margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+    .formula-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 7px; margin-bottom: 4px;
+      background: #fff; border: 1px solid #edf0f4;
+    }
+    .formula-row:first-child { background: #f0f7ff; border-color: #c7dbf5; }
+    .rank-badge {
+      width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .rank-1 { background: #ffd700; color: #7a5500; }
+    .rank-2 { background: #d0d8e0; color: #4a5568; }
+    .rank-3 { background: #cd9f6a; color: #5a3200; }
+    .rank-n { background: #edf0f4; color: #6b7a90; font-size: 10px; }
+    .formula-name { flex: 1; font-size: 13px; font-weight: 500; color: #1e2a3a; }
+    .formula-row:first-child .formula-name { font-weight: 700; }
+    .formula-count { font-size: 12px; color: #6b7a90; white-space: nowrap; }
+    .formula-rate { font-size: 12px; font-weight: 600; color: #3b7fd9; white-space: nowrap; }
+
+    /* ─── Improvement cards ───────────────────────────────────── */
+    .improve-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .improve-card {
+      border: 1px solid #edf0f4; border-radius: 12px;
+      padding: 20px; background: #fafbfc;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .improve-icon-wrap {
+      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(21,114,232,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; color: #3b7fd9;
+    }
+    .improve-name { font-size: 15px; font-weight: 700; color: #1e2a3a; margin-bottom: 4px; }
+    .improve-sub { font-size: 12px; color: #8a98aa; margin-bottom: 10px; }
+    .improve-stats { display: flex; gap: 16px; }
+    .improve-stat-label { font-size: 11px; color: #8a98aa; margin-bottom: 2px; }
+    .improve-stat-val { font-size: 22px; font-weight: 800; color: #3b7fd9; line-height: 1; }
+    .improve-stat-unit { font-size: 12px; color: #8a98aa; }
+    .progress-ring { position: relative; }
+    .progress-ring svg { transform: rotate(-90deg); }
+    .progress-ring-text {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: #3b7fd9;
+    }
+
+    /* ─── Responsive tweaks ───────────────────────────────────── */
+    @media (max-width: 1100px) {
+      .soil-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-strip  { grid-template-columns: 1fr 1fr; }
+      .insight-strip { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .fert-grid, .improve-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Misc ────────────────────────────────────────────────── */
+    .dot-live {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      background: #4caf7d; animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+    .badge-pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <i class="fas fa-leaf me-2" style="color:#4caf7d"></i>ระบบดิน
+      <small>Soil Analysis Platform</small>
+    </div>
+    <a class="sidebar-item active" href="#">
+      <i class="fas fa-chart-pie fa"></i> Dashboard
+    </a>
+    <a class="sidebar-item" href="#">
+      <i class="fas fa-vial fa"></i> วิเคราะห์ดิน
+    </a>
+    <a class="sidebar-item" href="#">
+      <i class="fas fa-seedling fa"></i> คำแนะนำปุ๋ย
+    </a>
+    <a class="sidebar-item" href="#">
+      <i class="fas fa-leaf fa"></i> ปรับปรุงดิน
+    </a>
+    <a class="sidebar-item" href="#">
+      <i class="fas fa-users fa"></i> ชาวไร่
+    </a>
+    <a class="sidebar-item" href="#">
+      <i class="fas fa-archway fa"></i> โรงงาน / เขต
+    </a>
+    <a class="sidebar-item" href="#">
+      <i class="fas fa-cog fa"></i> ตั้งค่า
+    </a>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="page-header-row">
+        <div>
+          <p class="page-header-sub">
+            <span class="dot-live"></span>
+            &nbsp;ข้อมูลอัปเดตล่าสุด · ประเภทบริการ: ส่งเสริมการใส่ปุ๋ย
+          </p>
+          <h1 class="page-header-title">รายงานภาพรวมผลการวิเคราะห์ดินและคำแนะนำ</h1>
+        </div>
+        <button class="btn-export">
+          <i class="fas fa-file-pdf"></i> ส่งออกรายงาน
+        </button>
+      </div>
+      <!-- Active filter chips -->
+      <div class="filter-chips">
+        <span class="filter-chip"><span class="chip-label">ประเภทบริการ</span>&nbsp;ส่งเสริมการใส่ปุ๋ย</span>
+        <span class="filter-chip"><span class="chip-label">ปี</span>&nbsp;2568</span>
+        <span class="filter-chip"><span class="chip-label">โรงงาน</span>&nbsp;โรงงานน้ำตาลสุพรรณ</span>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <span class="filter-bar-label"><i class="fas fa-filter me-1"></i> กรองข้อมูล</span>
+      <select class="filter-select">
+        <option>ส่งเสริมการใส่ปุ๋ย</option>
+        <option>บริการวิเคราะห์ดิน</option>
+      </select>
+      <select class="filter-select">
+        <option>2568</option>
+        <option>2567</option>
+        <option>ทุกปี</option>
+      </select>
+      <div class="filter-divider"></div>
+      <select class="filter-select">
+        <option>โรงงานน้ำตาลสุพรรณ (KSL)</option>
+        <option>ทั้งหมด</option>
+      </select>
+      <select class="filter-select">
+        <option>ทั้งหมด</option>
+        <option>เขต 01</option>
+        <option>เขต 02</option>
+      </select>
+      <div class="filter-divider"></div>
+      <select class="filter-select">
+        <option>ทุกจังหวัด</option>
+        <option>สุพรรณบุรี</option>
+      </select>
+      <select class="filter-select" style="min-width:110px">
+        <option>ทุกอำเภอ</option>
+      </select>
+      <button class="filter-reset"><i class="fas fa-times-circle"></i> รีเซ็ต</button>
+    </div>
+
+    <!-- Body -->
+    <div class="page-body">
+
+      <!-- ─── KPI strip ─── -->
+      <div class="kpi-strip">
+        <div class="kpi-card" style="border-left-color:#3b9bd9">
+          <div>
+            <div class="kpi-label">พื้นที่วิเคราะห์ดิน</div>
+            <div class="kpi-num" style="color:#3b9bd9">24,310<span class="kpi-unit">ไร่</span></div>
+          </div>
+          <div class="kpi-icon" style="background:rgba(59,155,217,0.1); color:#3b9bd9">
+            <i class="fas fa-map-marked"></i>
+          </div>
+        </div>
+        <div class="kpi-card" style="border-left-color:#4caf7d">
+          <div>
+            <div class="kpi-label">จำนวนชาวไร่</div>
+            <div class="kpi-num" style="color:#4caf7d">3,841<span class="kpi-unit">คน</span></div>
+          </div>
+          <div class="kpi-icon" style="background:rgba(76,175,125,0.1); color:#4caf7d">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+        <div class="kpi-card" style="border-left-color:#f4a62a">
+          <div>
+            <div class="kpi-label">ตัวอย่างดินวิเคราะห์</div>
+            <div class="kpi-num" style="color:#f4a62a">8,204<span class="kpi-unit">ตัวอย่าง</span></div>
+          </div>
+          <div class="kpi-icon" style="background:rgba(244,166,42,0.1); color:#f4a62a">
+            <i class="fas fa-vial"></i>
+          </div>
+        </div>
+        <div class="kpi-card" style="border-left-color:#9c6fe4">
+          <div>
+            <div class="kpi-label">วันทำงานทั้งหมด</div>
+            <div class="kpi-num" style="color:#9c6fe4">147<span class="kpi-unit">วัน</span></div>
+          </div>
+          <div class="kpi-icon" style="background:rgba(156,111,228,0.1); color:#9c6fe4">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Insight strip ─── -->
+      <div class="insight-strip">
+        <div class="insight-card blue">
+          <div class="insight-icon"><i class="fas fa-vial"></i></div>
+          <div>
+            <div class="insight-label">ธาตุอาหารหลักที่น่าติดตาม</div>
+            <div class="insight-value">อินทรียวัตถุ <small style="font-size:13px;color:#6b7a90">(O.M.)</small></div>
+            <div class="insight-sub">
+              ส่วนใหญ่อยู่ระดับ <span class="insight-badge">ต่ำมาก</span>&nbsp;
+              <span style="color:#3b7fd9;font-weight:600">62%</span> ของตัวอย่าง
+            </div>
+          </div>
+        </div>
+        <div class="insight-card green">
+          <div class="insight-icon"><i class="fas fa-star"></i></div>
+          <div>
+            <div class="insight-label">สูตรปุ๋ยที่แนะนำมากที่สุด</div>
+            <div class="insight-value">16-8-8</div>
+            <div class="insight-sub">
+              แนะนำใน <span class="insight-badge">2,140 แปลง</span>&nbsp;
+              อัตรา 50 กก./ไร่
+            </div>
+          </div>
+        </div>
+        <div class="insight-card amber">
+          <div class="insight-icon"><i class="fas fa-leaf"></i></div>
+          <div>
+            <div class="insight-label">สารปรับปรุงดินที่ใช้มากที่สุด</div>
+            <div class="insight-value">ปูนขาว</div>
+            <div class="insight-sub">
+              ครอบคลุม <span class="insight-badge">78%</span> ของพื้นที่
+              · เฉลี่ย 120 กก./ไร่
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Tabbed explorer ─── -->
+      <div class="section-card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">
+              <i class="fas fa-chart-bar"></i>
+              รายละเอียดข้อมูล
+            </div>
+            <div class="section-sub">เลือกมุมมองที่ต้องการวิเคราะห์</div>
+          </div>
+          <!-- Tab nav -->
+          <div class="tab-nav" style="min-width:360px">
+            <button class="tab-btn active" onclick="switchTab('soil',this)">
+              <i class="fas fa-chart-bar"></i> ผลวิเคราะห์ดิน
+            </button>
+            <button class="tab-btn" onclick="switchTab('fert',this)">
+              <i class="fas fa-seedling"></i> คำแนะนำปุ๋ย
+            </button>
+            <button class="tab-btn" onclick="switchTab('improve',this)">
+              <i class="fas fa-leaf"></i> ปรับปรุงดิน
+            </button>
+          </div>
+        </div>
+
+        <div class="section-body">
+
+          <!-- ── Tab: Soil ── -->
+          <div id="tab-soil" class="tab-panel active">
+            <p style="font-size:13px;color:#8a98aa;margin-bottom:16px">
+              สัดส่วนตัวอย่างดินในแต่ละระดับความอุดมสมบูรณ์ แยกตามธาตุอาหาร
+            </p>
+            <div class="soil-grid">
+
+              <!-- N card -->
+              <div class="soil-card">
+                <div class="soil-card-title">
+                  ไนโตรเจนรวม (TN)
+                  <span class="top-badge">ต่ำมาก 62%</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ต่ำมาก</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:62%;background:#e74c3c"></div></div>
+                  <span class="bar-count">5,087</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ต่ำ</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:22%;background:#f39c12"></div></div>
+                  <span class="bar-count">1,805</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ปานกลาง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:10%;background:#f1c40f"></div></div>
+                  <span class="bar-count">820</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">สูง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:6%;background:#2ecc71"></div></div>
+                  <span class="bar-count">492</span>
+                </div>
+                <div class="soil-bottom">รวม 8,204 ตัวอย่าง</div>
+              </div>
+
+              <!-- P card -->
+              <div class="soil-card">
+                <div class="soil-card-title">
+                  ฟอสฟอรัสที่เป็นประโยชน์ (P)
+                  <span class="top-badge">ต่ำ 41%</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ต่ำมาก</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:28%;background:#e74c3c"></div></div>
+                  <span class="bar-count">2,297</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ต่ำ</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:41%;background:#f39c12"></div></div>
+                  <span class="bar-count">3,364</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ปานกลาง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:19%;background:#f1c40f"></div></div>
+                  <span class="bar-count">1,559</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">สูง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:12%;background:#2ecc71"></div></div>
+                  <span class="bar-count">984</span>
+                </div>
+                <div class="soil-bottom">รวม 8,204 ตัวอย่าง</div>
+              </div>
+
+              <!-- K card -->
+              <div class="soil-card">
+                <div class="soil-card-title">
+                  โพแทสเซียมที่แลกเปลี่ยนได้ (K)
+                  <span class="top-badge">ปานกลาง 38%</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ต่ำมาก</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:12%;background:#e74c3c"></div></div>
+                  <span class="bar-count">984</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ต่ำ</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:25%;background:#f39c12"></div></div>
+                  <span class="bar-count">2,051</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ปานกลาง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:38%;background:#f1c40f"></div></div>
+                  <span class="bar-count">3,117</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">สูง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:25%;background:#2ecc71"></div></div>
+                  <span class="bar-count">2,051</span>
+                </div>
+                <div class="soil-bottom">รวม 8,204 ตัวอย่าง</div>
+              </div>
+
+              <!-- OM card -->
+              <div class="soil-card">
+                <div class="soil-card-title">
+                  อินทรียวัตถุ (O.M.)
+                  <span class="top-badge">ต่ำมาก 58%</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ต่ำมาก</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:58%;background:#e74c3c"></div></div>
+                  <span class="bar-count">4,758</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ต่ำ</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:28%;background:#f39c12"></div></div>
+                  <span class="bar-count">2,297</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ปานกลาง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:11%;background:#f1c40f"></div></div>
+                  <span class="bar-count">902</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">สูง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:3%;background:#2ecc71"></div></div>
+                  <span class="bar-count">246</span>
+                </div>
+                <div class="soil-bottom">รวม 8,204 ตัวอย่าง</div>
+              </div>
+
+              <!-- pH card -->
+              <div class="soil-card">
+                <div class="soil-card-title">
+                  ความเป็นกรด-ด่าง (pH)
+                  <span class="top-badge">กรดจัด 45%</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">กรดจัด</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:45%;background:#e74c3c"></div></div>
+                  <span class="bar-count">3,692</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">กรดปาน</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:32%;background:#f39c12"></div></div>
+                  <span class="bar-count">2,625</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">เป็นกลาง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:18%;background:#2ecc71"></div></div>
+                  <span class="bar-count">1,477</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ด่าง</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:5%;background:#3498db"></div></div>
+                  <span class="bar-count">410</span>
+                </div>
+                <div class="soil-bottom">รวม 8,204 ตัวอย่าง</div>
+              </div>
+
+              <!-- EC card -->
+              <div class="soil-card">
+                <div class="soil-card-title">
+                  ความเค็มของดิน (EC)
+                  <span class="top-badge">ปกติ 71%</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">ปกติ</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:71%;background:#2ecc71"></div></div>
+                  <span class="bar-count">5,825</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">เค็มเล็กน้อย</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:20%;background:#f1c40f"></div></div>
+                  <span class="bar-count">1,641</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">เค็มปาน</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:7%;background:#f39c12"></div></div>
+                  <span class="bar-count">574</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-name">เค็มมาก</span>
+                  <div class="bar-track"><div class="bar-fill" style="width:2%;background:#e74c3c"></div></div>
+                  <span class="bar-count">164</span>
+                </div>
+                <div class="soil-bottom">รวม 8,204 ตัวอย่าง</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── Tab: Fertilizer ── -->
+          <div id="tab-fert" class="tab-panel">
+            <p style="font-size:13px;color:#8a98aa;margin-bottom:16px">
+              สูตรปุ๋ยที่ถูกแนะนำมากที่สุด แยกตามช่วงการเพาะปลูกและหมวดบริการ
+            </p>
+            <div class="fert-grid">
+
+              <div class="fert-card">
+                <div class="fert-card-title">
+                  <i class="fas fa-flask" style="color:#5ba4f5"></i> อ้อยโรงงาน
+                </div>
+                <div class="usage-section">
+                  <div class="usage-label"><i class="fas fa-seedling"></i> รองพื้น</div>
+                  <div class="formula-row">
+                    <span class="rank-badge rank-1">1</span>
+                    <span class="formula-name">16-8-8</span>
+                    <span class="formula-count">2,140 แปลง</span>
+                    <span class="formula-rate">50 กก./ไร่</span>
+                  </div>
+                  <div class="formula-row">
+                    <span class="rank-badge rank-2">2</span>
+                    <span class="formula-name">15-15-15</span>
+                    <span class="formula-count">820 แปลง</span>
+                    <span class="formula-rate">50 กก./ไร่</span>
+                  </div>
+                  <div class="formula-row">
+                    <span class="rank-badge rank-3">3</span>
+                    <span class="formula-name">13-13-21</span>
+                    <span class="formula-count">410 แปลง</span>
+                    <span class="formula-rate">50 กก./ไร่</span>
+                  </div>
+                </div>
+                <div class="usage-section">
+                  <div class="usage-label"><i class="fas fa-seedling"></i> แต่งหน้า</div>
+                  <div class="formula-row">
+                    <span class="rank-badge rank-1">1</span>
+                    <span class="formula-name">46-0-0</span>
+                    <span class="formula-count">1,980 แปลง</span>
+                    <span class="formula-rate">25 กก./ไร่</span>
+                  </div>
+                  <div class="formula-row">
+                    <span class="rank-badge rank-2">2</span>
+                    <span class="formula-name">21-0-0</span>
+                    <span class="formula-count">650 แปลง</span>
+                    <span class="formula-rate">50 กก./ไร่</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="fert-card">
+                <div class="fert-card-title">
+                  <i class="fas fa-flask" style="color:#5ba4f5"></i> อ้อยตอ
+                </div>
+                <div class="usage-section">
+                  <div class="usage-label"><i class="fas fa-seedling"></i> รองพื้น</div>
+                  <div class="formula-row">
+                    <span class="rank-badge rank-1">1</span>
+                    <span class="formula-name">16-20-0</span>
+                    <span class="formula-count">1,430 แปลง</span>
+                    <span class="formula-rate">50 กก./ไร่</span>
+                  </div>
+                  <div class="formula-row">
+                    <span class="rank-badge rank-2">2</span>
+                    <span class="formula-name">13-0-46</span>
+                    <span class="formula-count">710 แปลง</span>
+                    <span class="formula-rate">25 กก./ไร่</span>
+                  </div>
+                </div>
+                <div class="usage-section">
+                  <div class="usage-label"><i class="fas fa-seedling"></i> แต่งหน้า</div>
+                  <div class="formula-row">
+                    <span class="rank-badge rank-1">1</span>
+                    <span class="formula-name">46-0-0</span>
+                    <span class="formula-count">1,620 แปลง</span>
+                    <span class="formula-rate">25 กก./ไร่</span>
+                  </div>
+                  <div class="formula-row">
+                    <span class="rank-badge rank-2">2</span>
+                    <span class="formula-name">0-0-60</span>
+                    <span class="formula-count">320 แปลง</span>
+                    <span class="formula-rate">25 กก./ไร่</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── Tab: Improve ── -->
+          <div id="tab-improve" class="tab-panel">
+            <p style="font-size:13px;color:#8a98aa;margin-bottom:16px">
+              สัดส่วนพื้นที่ที่แนะนำให้ปรับปรุงดินและอัตราการใช้เฉลี่ยต่อไร่
+            </p>
+            <div class="improve-grid">
+
+              <div class="improve-card">
+                <div class="improve-icon-wrap">
+                  <i class="fas fa-mountain"></i>
+                </div>
+                <div style="flex:1">
+                  <div class="improve-name">ปูนขาว</div>
+                  <div class="improve-sub">สารปรับปรุงดิน · ลดความเป็นกรด</div>
+                  <div class="improve-stats">
+                    <div>
+                      <div class="improve-stat-label"><i class="fas fa-chart-pie me-1"></i>สัดส่วนพื้นที่</div>
+                      <div class="improve-stat-val">78%</div>
+                    </div>
+                    <div style="width:1px;background:#edf0f4"></div>
+                    <div>
+                      <div class="improve-stat-label"><i class="fas fa-weight-hanging me-1"></i>อัตราเฉลี่ย/ไร่</div>
+                      <div>
+                        <span class="improve-stat-val">120</span>
+                        <span class="improve-stat-unit"> กก.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Mini donut SVG -->
+                <div class="progress-ring">
+                  <svg width="60" height="60" viewBox="0 0 60 60">
+                    <circle cx="30" cy="30" r="24" fill="none" stroke="#edf0f4" stroke-width="7"/>
+                    <circle cx="30" cy="30" r="24" fill="none" stroke="#3b9bd9" stroke-width="7"
+                      stroke-dasharray="150.8" stroke-dashoffset="33.2" stroke-linecap="round"/>
+                  </svg>
+                  <div class="progress-ring-text">78%</div>
+                </div>
+              </div>
+
+              <div class="improve-card">
+                <div class="improve-icon-wrap">
+                  <i class="fas fa-recycle"></i>
+                </div>
+                <div style="flex:1">
+                  <div class="improve-name">กากหม้อกรอง</div>
+                  <div class="improve-sub">สารปรับปรุงดิน · เพิ่มอินทรียวัตถุ</div>
+                  <div class="improve-stats">
+                    <div>
+                      <div class="improve-stat-label"><i class="fas fa-chart-pie me-1"></i>สัดส่วนพื้นที่</div>
+                      <div class="improve-stat-val">54%</div>
+                    </div>
+                    <div style="width:1px;background:#edf0f4"></div>
+                    <div>
+                      <div class="improve-stat-label"><i class="fas fa-weight-hanging me-1"></i>อัตราเฉลี่ย/ไร่</div>
+                      <div>
+                        <span class="improve-stat-val">2</span>
+                        <span class="improve-stat-unit"> ตัน</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="progress-ring">
+                  <svg width="60" height="60" viewBox="0 0 60 60">
+                    <circle cx="30" cy="30" r="24" fill="none" stroke="#edf0f4" stroke-width="7"/>
+                    <circle cx="30" cy="30" r="24" fill="none" stroke="#4caf7d" stroke-width="7"
+                      stroke-dasharray="150.8" stroke-dashoffset="69.4" stroke-linecap="round"/>
+                  </svg>
+                  <div class="progress-ring-text" style="color:#4caf7d">54%</div>
+                </div>
+              </div>
+
+              <div class="improve-card">
+                <div class="improve-icon-wrap" style="background:rgba(244,166,42,0.1); color:#f4a62a">
+                  <i class="fas fa-cube"></i>
+                </div>
+                <div style="flex:1">
+                  <div class="improve-name">ยิปซัม</div>
+                  <div class="improve-sub">สารปรับปรุงดิน · แก้ปัญหาดินเค็ม</div>
+                  <div class="improve-stats">
+                    <div>
+                      <div class="improve-stat-label"><i class="fas fa-chart-pie me-1"></i>สัดส่วนพื้นที่</div>
+                      <div class="improve-stat-val" style="color:#f4a62a">31%</div>
+                    </div>
+                    <div style="width:1px;background:#edf0f4"></div>
+                    <div>
+                      <div class="improve-stat-label"><i class="fas fa-weight-hanging me-1"></i>อัตราเฉลี่ย/ไร่</div>
+                      <div>
+                        <span class="improve-stat-val" style="color:#f4a62a">80</span>
+                        <span class="improve-stat-unit"> กก.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="progress-ring">
+                  <svg width="60" height="60" viewBox="0 0 60 60">
+                    <circle cx="30" cy="30" r="24" fill="none" stroke="#edf0f4" stroke-width="7"/>
+                    <circle cx="30" cy="30" r="24" fill="none" stroke="#f4a62a" stroke-width="7"
+                      stroke-dasharray="150.8" stroke-dashoffset="104.1" stroke-linecap="round"/>
+                  </svg>
+                  <div class="progress-ring-text" style="color:#f4a62a">31%</div>
+                </div>
+              </div>
+
+              <div class="improve-card">
+                <div class="improve-icon-wrap" style="background:rgba(156,111,228,0.1); color:#9c6fe4">
+                  <i class="fas fa-leaf"></i>
+                </div>
+                <div style="flex:1">
+                  <div class="improve-name">ปุ๋ยอินทรีย์</div>
+                  <div class="improve-sub">สารปรับปรุงดิน · เพิ่มธาตุอาหาร</div>
+                  <div class="improve-stats">
+                    <div>
+                      <div class="improve-stat-label"><i class="fas fa-chart-pie me-1"></i>สัดส่วนพื้นที่</div>
+                      <div class="improve-stat-val" style="color:#9c6fe4">22%</div>
+                    </div>
+                    <div style="width:1px;background:#edf0f4"></div>
+                    <div>
+                      <div class="improve-stat-label"><i class="fas fa-weight-hanging me-1"></i>อัตราเฉลี่ย/ไร่</div>
+                      <div>
+                        <span class="improve-stat-val" style="color:#9c6fe4">200</span>
+                        <span class="improve-stat-unit"> กก.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="progress-ring">
+                  <svg width="60" height="60" viewBox="0 0 60 60">
+                    <circle cx="30" cy="30" r="24" fill="none" stroke="#edf0f4" stroke-width="7"/>
+                    <circle cx="30" cy="30" r="24" fill="none" stroke="#9c6fe4" stroke-width="7"
+                      stroke-dasharray="150.8" stroke-dashoffset="117.6" stroke-linecap="round"/>
+                  </svg>
+                  <div class="progress-ring-text" style="color:#9c6fe4">22%</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div><!-- /section-body -->
+      </div><!-- /section-card -->
+
+    </div><!-- /page-body -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+  function switchTab(key, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + key).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>

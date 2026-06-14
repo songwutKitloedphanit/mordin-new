@@ -54,9 +54,28 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
     $table.DataTable({
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
+      // หุ้ม "เฉพาะตัวตาราง" ด้วย .table-responsive (overflow-x) — search/length อยู่บน,
+      // info/pagination อยู่ล่าง ทั้งคู่นิ่งนอกกล่องเลื่อน ไม่ถูก scrollbar ทับ
+      // (ไม่ใช้ scrollX เพราะจะ clone thead/tfoot ทำให้หัวตาราง/แถวฟิลเตอร์ซ้ำ)
+      dom:
+        "<'d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2'lf>" +
+        "<'table-responsive'rt>" +
+        "<'d-flex flex-column align-items-center gap-2 mt-3'ip>",
       language: {
+        search: '_INPUT_',
+        searchPlaceholder: 'ค้นหา...',
+        lengthMenu: 'แสดง _MENU_ รายการ',
+        info: 'รายการที่ _START_–_END_ จาก _TOTAL_ รายการ',
+        infoEmpty: 'ไม่มีข้อมูล',
+        infoFiltered: '(กรองจาก _MAX_ รายการ)',
         emptyTable: 'ไม่มีข้อมูลในตาราง',
         zeroRecords: 'ไม่พบข้อมูลที่ตรงกับเงื่อนไข',
+        paginate: {
+          first: '«',
+          last: '»',
+          next: '›',
+          previous: '‹',
+        },
       },
       search: {
         regex: false,

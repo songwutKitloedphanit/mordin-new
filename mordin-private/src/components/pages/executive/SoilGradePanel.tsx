@@ -1,5 +1,6 @@
 import { formatElementTitle } from './executive-elements';
 
+import DataChart from '@/components/chart/DataChart';
 import EmptyState from '@/components/ui/EmptyState';
 
 export interface SoilGradeElement {
@@ -8,10 +9,40 @@ export interface SoilGradeElement {
 }
 
 // แผงผลวิเคราะห์ดิน: แสดง "ครบทุกธาตุ" พร้อมกันโดยไม่ต้องกดสลับ
-// แต่ละธาตุเป็นบล็อกแถบแนวนอน เห็นชื่อระดับ จำนวน และ % ในบรรทัดเดียว — อ่านปราดเดียวรู้เรื่อง
-const SoilGradePanel = ({ elements }: { elements: SoilGradeElement[] }) => {
+// ค่าเริ่มต้นเป็นบล็อกแถบแนวนอน (อ่านปราดเดียวรู้เรื่อง) — ผู้ใช้สลับเป็น
+// กราฟแท่งตั้ง/โดนัทได้ผ่านเมนูชนิดกราฟของวิดเจ็ต (prop viz)
+const SoilGradePanel = ({
+  elements,
+  viz,
+}: {
+  elements: SoilGradeElement[];
+  viz?: string | null;
+}) => {
   if (elements.length === 0) {
     return <EmptyState title="ไม่พบข้อมูลตามเงื่อนไขที่เลือก" />;
+  }
+
+  if (viz === 'bar-v' || viz === 'doughnut') {
+    return (
+      <div className="exr-grid">
+        {elements.map(element => {
+          const total = element.bars.reduce((sum, bar) => sum + bar.value, 0);
+          return (
+            <div key={element.elementName}>
+              <div className="exr-mini-label">
+                {formatElementTitle(element.elementName)} ·{' '}
+                {total.toLocaleString()} ตัวอย่าง
+              </div>
+              <DataChart
+                type={viz}
+                dataItems={element.bars}
+                height={viz === 'doughnut' ? 240 : 220}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
   }
 
   return (

@@ -1,11 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { AnalysisStandardResultsService } from '../analysis-standard-results/analysis-standard-results.service';
 
 import { CreateAnalysisStandardDto } from './dto/create-analysis-standard.dto';
-import { UpdateAnalysisStandardDto } from './dto/update-analysis-standard.dto';
+import { UpdateAnalysisStandardRepeatDto } from './dto/update-analysis-standard-repeat.dto';
 import { AnalysisStandard } from './entities/analysis-standard.entity';
 import { AnalysisStandardLog } from './entities/analysis-standard.log.entity';
 
@@ -78,16 +82,64 @@ export class AnalysisStandardsService {
     return `This action returns a #${id} analysisStandard`;
   }
 
-  update(
+  async update(
     id: number,
-    updateAnalysisStandardDto: UpdateAnalysisStandardDto,
+    updateAnalysisStandardRepeatDto: UpdateAnalysisStandardRepeatDto,
     Uid: number
   ) {
-    return `This action updates a #${id} analysisStandard`;
+    const newCount = updateAnalysisStandardRepeatDto.repeatCount;
+
+    const analysisStandard = await this.analysisStandardRepo.findOne({
+      where: { analysisStandardId: id },
+      relations: ['analysisStandardResults'],
+    });
+    if (!analysisStandard) {
+      throw new NotFoundException('Analysis standard not found');
+    }
+
+    const oldCount = analysisStandard.repeatCount;
+    if (newCount === oldCount) return;
+
+    if (newCount > oldCount) {
+      // grow: append result rows for the new repeat numbers only
+      await this.analysisStandardResultsService.createResultsForRepeatRange(
+        analysisStandard,
+        oldCount + 1,
+        newCount
+      );
+    } else {
+      // shrink: drop result rows for the trailing repeat numbers
+      await this.analysisStandardResultsService.removeResultsAboveRepeat(
+        id,
+        newCount,
+        Uid
+      );
+    }
+
+    // Update the repeat count on a fresh (relationless) entity so saving does
+    // not cascade back into analysisStandardResults. Going through .save()
+    // fires the logging subscriber's afterUpdate.
+    const head = await this.analysisStandardRepo.findOneBy({
+      analysisStandardId: id,
+    });
+    head!.repeatCount = newCount;
+    head!.updateUid = Uid;
+    await this.analysisStandardRepo.save(head!);
   }
 
-  async remove(id: number) {
-    await this.analysisStandardRepo.delete(id);
+  async remove(id: number, userId: number) {
+    // Load the entity and go through .remove() (not .delete(id)) so the
+    // LoggingSubscriber.beforeRemove fires and stamps deleted_at on the audit
+    // log. .delete(id) issues a raw DELETE that bypasses entity subscribers,
+    // which previously left orphaned "active" log rows behind.
+    const analysisStandard = await this.analysisStandardRepo.findOneBy({
+      analysisStandardId: id,
+    });
+    if (!analysisStandard) {
+      throw new NotFoundException('Analysis standard not found');
+    }
+    (analysisStandard as any).removedBy = userId;
+    await this.analysisStandardRepo.remove(analysisStandard);
   }
 
   getLogs() {

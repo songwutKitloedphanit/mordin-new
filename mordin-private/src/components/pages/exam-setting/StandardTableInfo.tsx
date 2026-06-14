@@ -10,6 +10,12 @@ interface StandardTableInfoProps {
   onRemove: (standardId: number) => void;
   onDelete: (analysisStandardId: number) => Promise<void>;
   onRepeatChange?: (standardId: number, repeatCount: number) => void;
+  /** ค่าจำนวน repeat ที่กำลังแก้ของตัวที่บันทึกแล้ว (key = analysisStandardId) */
+  existingRepeatEdits?: Record<number, number>;
+  onExistingRepeatChange?: (
+    analysisStandardId: number,
+    newCount: number
+  ) => void;
 }
 
 const StandardTableInfo: React.FC<StandardTableInfoProps> = ({
@@ -18,6 +24,8 @@ const StandardTableInfo: React.FC<StandardTableInfoProps> = ({
   onRemove,
   onDelete,
   onRepeatChange,
+  existingRepeatEdits = {},
+  onExistingRepeatChange,
 }) => {
   const [repeatCounts, setRepeatCounts] = useState<Record<number, number>>({});
 
@@ -62,6 +70,34 @@ const StandardTableInfo: React.FC<StandardTableInfoProps> = ({
                 const analysisStandard = existingAnalysisStandards.find(
                   a => a.standardId === standard.standardId
                 );
+                // ค่าจำนวน repeat ที่จะแสดง/แก้
+                const editCount =
+                  isExisting && analysisStandard
+                    ? existingRepeatEdits[analysisStandard.analysisStandardId] ??
+                      analysisStandard.repeatCount
+                    : repeatCounts[standard.standardId] ?? 1;
+
+                const onMinus = () => {
+                  if (isExisting && analysisStandard) {
+                    onExistingRepeatChange?.(
+                      analysisStandard.analysisStandardId,
+                      editCount - 1
+                    );
+                  } else {
+                    updateRepeat(standard.standardId, editCount - 1);
+                  }
+                };
+                const onPlus = () => {
+                  if (isExisting && analysisStandard) {
+                    onExistingRepeatChange?.(
+                      analysisStandard.analysisStandardId,
+                      editCount + 1
+                    );
+                  } else {
+                    updateRepeat(standard.standardId, editCount + 1);
+                  }
+                };
+
                 return (
                   <li
                     key={standard.standardId}
@@ -78,37 +114,21 @@ const StandardTableInfo: React.FC<StandardTableInfoProps> = ({
                           )}
                         </div>
                         <div className="d-flex align-items-center">
-                          {!isExisting && (
-                            <>
-                              <small className="ms-2 text-muted">
-                                จำนวน repeat &nbsp;
-                              </small>
-                              <GenButtonCircle
-                                color="btn-outline-secondary btn-sm"
-                                icon="fa fa-minus"
-                                onClick={() =>
-                                  updateRepeat(
-                                    standard.standardId,
-                                    repeatCounts[standard.standardId] - 1
-                                  )
-                                }
-                              />
-                              <span className="mx-2">
-                                {repeatCounts[standard.standardId] ?? 1}
-                              </span>
-                              <GenButtonCircle
-                                color="btn-outline-secondary btn-sm"
-                                icon="fa fa-plus"
-                                onClick={() =>
-                                  updateRepeat(
-                                    standard.standardId,
-                                    repeatCounts[standard.standardId] + 1
-                                  )
-                                }
-                              />
-                              <small className="ms-2 text-muted">ครั้ง</small>
-                            </>
-                          )}
+                          <small className="ms-2 text-muted">
+                            จำนวน repeat &nbsp;
+                          </small>
+                          <GenButtonCircle
+                            color="btn-outline-secondary btn-sm"
+                            icon="fa fa-minus"
+                            onClick={onMinus}
+                          />
+                          <span className="mx-2">{editCount}</span>
+                          <GenButtonCircle
+                            color="btn-outline-secondary btn-sm"
+                            icon="fa fa-plus"
+                            onClick={onPlus}
+                          />
+                          <small className="ms-2 text-muted">ครั้ง</small>
                           <GenButtonCircle
                             color="btn-danger btn-sm ms-3"
                             icon="fa fa-trash"

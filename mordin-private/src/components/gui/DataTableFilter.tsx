@@ -45,7 +45,7 @@ export const DataTableFilter: React.FC<DataTableFilterProps> = ({
       const dt = $table.DataTable({
         pageLength: 10,
         lengthMenu: [10, 25, 50, 100],
-        dom: '<"d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"lf>rt<"d-flex justify-content-center mt-3"p><"text-center mt-1 dt-info-row"i>',
+        dom: '<"d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"lf><"table-responsive"rt><"d-flex justify-content-center mt-3"p><"text-center mt-1 dt-info-row"i>',
         language: {
           search: '_INPUT_',
           searchPlaceholder: 'ค้นหา...',

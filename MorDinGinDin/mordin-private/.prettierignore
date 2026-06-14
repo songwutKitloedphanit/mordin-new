@@ -1,0 +1,14 @@
+// filepath: /Users/mhuuprimo/workspace/jai/jai-webview/.prettierignore
+# Ignore artifacts:
+build/
+dist/
+coverage/
+.next/
+node_modules/
+
+# Ignore all markdown files:
+*.md
+
+# Ignore package files
+package-lock.json
+yarn.lock

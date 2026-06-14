@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-import LabResultSummaryCard from '@/components/pages/lab-result/LabResultSummaryCard';
 import { GetResultComponent } from '@/components/pages/lab-result-muti-input/InputResult';
 import { ResultComponent } from '@/components/pages/lab-result-muti-input/Result';
 import { getAllLaboratories } from '@/services/api/laboratory/LaboratoryApi';
@@ -166,8 +165,6 @@ const LabResultMultiInput: React.FC = () => {
         หน้ากรอกผลแบบตารางเหมาะกับจอคอมพิวเตอร์/แท็บเล็ตแนวนอน
         หากใช้มือถืออาจกรอกไม่สะดวก
       </div>
-      {/* Cards Section */}
-      <LabResultSummaryCard />
       {serviceCalendarId && (
         <>
           {step === 1 && (

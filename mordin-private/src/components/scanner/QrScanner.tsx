@@ -158,12 +158,22 @@ const QrScanner: React.FC<QrScannerProps> = ({
           </option>
         ))}
       </select>
+      {/* บังคับให้ video/canvas ที่ html5-qrcode ฉีดเข้ามา เติมเต็มกล่องแบบไม่เหลือขอบเทา */}
+      <style>{`
+        #${readerId} { position: relative; }
+        #${readerId} video {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          display: block;
+        }
+      `}</style>
       <div
         id={readerId}
         style={{
           width: '100%',
           maxWidth: qrbox,
-          minHeight: qrbox,
+          aspectRatio: '1 / 1',
           margin: '0 auto',
           background: '#eef2f7',
           borderRadius: 12,
