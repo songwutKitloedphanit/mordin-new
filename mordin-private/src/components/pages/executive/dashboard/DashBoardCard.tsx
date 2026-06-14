@@ -86,7 +86,7 @@ const DashboardSummary = () => {
         });
       } catch (error: any) {
         console.error('Error loading summary:', error);
-        const serverError = error?.response?.data?.error || error?.response?.data?.message || error?.message || '';
+        const serverError = error?.response?.data?.message || error?.response?.data?.error || error?.message || '';
         setError(`ไม่สามารถโหลดข้อมูลสรุปได้: ${serverError}`);
       } finally {
         setLoading(false);
